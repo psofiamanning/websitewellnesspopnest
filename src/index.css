@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Scrollbar hide para carrusel horizontal */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    font-family: 'Epilogue', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #374151;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 1.1;
+    color: #374151;
+  }
+
+  h2 {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 1.4;
+    color: #374151;
+  }
+
+  h3 {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1.4;
+    color: #374151;
+  }
+
+  h4 {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 1.1;
+    color: #374151;
+  }
+
+  h5 {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.1;
+    color: #374151;
+  }
+
+  h6 {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.4;
+    color: #374151;
+  }
+
+  p {
+    font-family: 'Epilogue', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #374151;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Reglas para asegurar contraste en botones - NUNCA texto blanco sobre fondo blanco */
+button {
+  /* Asegurar que los botones nunca tengan texto blanco sobre fondo blanco */
+  color: inherit;
+}
+
+/* Si un botón tiene fondo blanco o claro, el texto DEBE ser oscuro */
+button.bg-white,
+button[class*="bg-white"] {
+  color: #374151 !important; /* Color body/text-body - oscuro */
+}
+
+/* Si un botón tiene fondo claro (quaternary, neutral), el texto debe ser oscuro */
+button.bg-quaternary,
+button.bg-neutral,
+button[class*="bg-quaternary"],
+button[class*="bg-neutral"] {
+  color: #374151 !important; /* Color body/text-body - oscuro */
+}
+
+/* Botones con fondo primario DEBEN tener texto blanco */
+button.bg-primary,
+button.bg-secondary,
+button[class*="bg-primary"],
+button[class*="bg-secondary"] {
+  color: #FFFFFF !important;
+}
+
+/* Asegurar que los botones con estilos inline también respeten estas reglas */
+button[style*="background-color: #FFFFFF"],
+button[style*="background-color: #FFF"],
+button[style*="background-color: white"] {
+  color: #374151 !important; /* Forzar texto oscuro en fondo blanco */
+}
+
+button[style*="background-color: #E5B3B0"],
+button[style*="background-color: #DED5D5"] {
+  color: #374151 !important; /* Forzar texto oscuro en fondos claros */
+}
+
+button[style*="background-color: #B73D37"],
+button[style*="background-color: #C76661"] {
+  color: #FFFFFF !important; /* Forzar texto blanco en fondos oscuros */
+}
+
+/* Estilos para el Logo */
+.logo {
+  display: block;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  background: transparent;
+}
+
+.logo:hover {
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+/* Asegurar que el logo se renderice correctamente */
+img.logo {
+  vertical-align: middle;
+  background: transparent;
+  border: none;
+  outline: none;
+}

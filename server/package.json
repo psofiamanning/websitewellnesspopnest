@@ -1,0 +1,18 @@
+{
+  "name": "estudio-popnest-wellness-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "nodemailer": "^8.0.1",
+    "stripe": "^14.10.0"
+  }
+}

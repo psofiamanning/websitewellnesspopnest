@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1770753571801",
+    "type": "package",
+    "packageId": "package-10-classes",
+    "packageName": "Paquete de 10 Clases",
+    "classes": 10,
+    "customer": {
+      "firstName": "Sofia",
+      "lastName": "Test",
+      "email": "psmanningr@gmail.com",
+      "phone": "80934871908",
+      "fullName": "Sofia Test"
+    },
+    "payment": {
+      "method": "Tarjeta de Crédito/Débito",
+      "amount": 30000,
+      "currency": "MXN",
+      "cardLastFour": "****",
+      "status": "succeeded"
+    },
+    "stripeInfo": {
+      "paymentIntentId": "pi_3SzN5nA0gqRxLoT307SYawSn",
+      "clientSecret": "pi_3SzN5nA0gqRxLoT307SYawSn_secret_q1g5lVJYqpmjSf3kNjLEY78YA",
+      "amount": 30000,
+      "currency": "mxn",
+      "error": null
+    },
+    "purchaseDate": "2026-02-10T19:59:31.796Z",
+    "status": "confirmed",
+    "createdAt": "2026-02-10T19:59:31.801Z",
+    "classesRemaining": 9,
+    "classesUsed": 1,
+    "userId": "1770273461255",
+    "lastUsed": "2026-02-10T20:00:04.998Z"
+  }
+]

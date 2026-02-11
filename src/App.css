@@ -1,0 +1,503 @@
+/* Estilos para fondo energético de wellness */
+.wellness-background {
+  position: relative;
+  min-height: 100vh;
+  background: 
+    radial-gradient(ellipse at top left, rgba(229, 179, 176, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(212, 141, 136, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at center, rgba(199, 102, 97, 0.2) 0%, transparent 70%),
+    linear-gradient(135deg, #f5f0ef 0%, #E5B3B0 15%, #D48D88 35%, #f5f0ef 50%, #E5B3B0 65%, #D48D88 85%, #f5f0ef 100%);
+  background-size: 400% 400%, 300% 300%, 500% 500%, 400% 400%;
+  animation: gradientShift 20s ease infinite, backgroundPulse 25s ease infinite;
+  overflow: hidden;
+}
+
+.wellness-background::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(183, 61, 55, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 20s ease-in-out infinite;
+}
+
+.wellness-background::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -5%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(199, 102, 97, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 25s ease-in-out infinite reverse;
+}
+
+.wellness-shapes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wellness-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+  filter: blur(60px);
+  mix-blend-mode: soft-light;
+}
+
+.shape-1 {
+  width: 350px;
+  height: 350px;
+  background: #B73D37;
+  top: 10%;
+  right: 15%;
+  animation: pulse 8s ease-in-out infinite;
+}
+
+.shape-2 {
+  width: 450px;
+  height: 450px;
+  background: #C76661;
+  bottom: 20%;
+  left: 10%;
+  animation: pulse 10s ease-in-out infinite 2s;
+}
+
+.shape-3 {
+  width: 300px;
+  height: 300px;
+  background: #D48D88;
+  top: 50%;
+  right: 30%;
+  animation: pulse 12s ease-in-out infinite 4s;
+}
+
+.shape-4 {
+  width: 200px;
+  height: 200px;
+  background: #B73D37;
+  top: 70%;
+  left: 50%;
+  animation: pulse 9s ease-in-out infinite 1s;
+}
+
+.shape-5 {
+  width: 250px;
+  height: 250px;
+  background: #C76661;
+  top: 30%;
+  left: 20%;
+  animation: pulse 11s ease-in-out infinite 3s;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%, 100% 50%, 50% 50%, 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%, 0% 50%, 50% 50%, 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%, 100% 50%, 50% 50%, 0% 50%;
+  }
+}
+
+@keyframes backgroundPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1) rotate(5deg);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9) rotate(-5deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.08;
+  }
+  50% {
+    transform: scale(1.2) translate(15px, -15px);
+    opacity: 0.12;
+  }
+}
+
+.wellness-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Estilos para la página de inicio */
+.hero-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-icon {
+  transition: transform 0.3s ease;
+}
+
+.feature-icon:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Elementos decorativos de wellness */
+.wellness-decorations {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.wellness-leaf {
+  position: absolute;
+  opacity: 0.15;
+  animation: leafFloat 20s ease-in-out infinite;
+}
+
+.leaf-1 {
+  top: 10%;
+  left: 5%;
+  width: 120px;
+  height: 120px;
+  animation-delay: 0s;
+}
+
+.leaf-2 {
+  top: 60%;
+  right: 8%;
+  width: 100px;
+  height: 100px;
+  animation-delay: 3s;
+}
+
+.leaf-3 {
+  bottom: 15%;
+  left: 15%;
+  width: 80px;
+  height: 80px;
+  animation-delay: 6s;
+}
+
+.leaf-4 {
+  top: 30%;
+  right: 20%;
+  width: 90px;
+  height: 90px;
+  animation-delay: 9s;
+}
+
+.leaf-5 {
+  bottom: 40%;
+  right: 5%;
+  width: 110px;
+  height: 110px;
+  animation-delay: 12s;
+}
+
+@keyframes leafFloat {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(20px, -30px) rotate(5deg);
+  }
+  50% {
+    transform: translate(-15px, -50px) rotate(-5deg);
+  }
+  75% {
+    transform: translate(10px, -20px) rotate(3deg);
+  }
+}
+
+.wellness-mandala {
+  position: absolute;
+  opacity: 0.08;
+  animation: mandalaRotate 30s linear infinite;
+}
+
+.mandala-1 {
+  top: 20%;
+  right: 10%;
+  width: 200px;
+  height: 200px;
+}
+
+.mandala-2 {
+  bottom: 25%;
+  left: 8%;
+  width: 150px;
+  height: 150px;
+  animation-direction: reverse;
+  animation-duration: 25s;
+}
+
+@keyframes mandalaRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hero-decoration {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.organic-shape {
+  position: absolute;
+  opacity: 0.1;
+  filter: blur(30px);
+}
+
+.shape-organic-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(ellipse, #B73D37 0%, transparent 70%);
+  top: 15%;
+  left: -5%;
+  border-radius: 40% 60% 50% 50%;
+  animation: organicMove 15s ease-in-out infinite;
+}
+
+.shape-organic-2 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(ellipse, #C76661 0%, transparent 70%);
+  bottom: 20%;
+  right: -3%;
+  border-radius: 60% 40% 50% 50%;
+  animation: organicMove 18s ease-in-out infinite reverse;
+}
+
+@keyframes organicMove {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    border-radius: 40% 60% 50% 50%;
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.1);
+    border-radius: 50% 50% 40% 60%;
+  }
+  66% {
+    transform: translate(-20px, 30px) scale(0.9);
+    border-radius: 60% 40% 50% 50%;
+  }
+}
+
+/* Patrones de bienestar */
+.wellness-pattern {
+  position: absolute;
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+.pattern-wave {
+  width: 100%;
+  height: 200px;
+  background: repeating-linear-gradient(
+    45deg,
+    #B73D37,
+    #B73D37 10px,
+    #C76661 10px,
+    #C76661 20px
+  );
+  mask: linear-gradient(90deg, transparent, rgba(0,0,0,0.3), transparent);
+  animation: waveMove 15s linear infinite;
+}
+
+@keyframes waveMove {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Mejoras visuales adicionales - Efectos sensoriales */
+.hero-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(183, 61, 55, 0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(100px);
+  animation: glowPulse 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hero-glow-1 {
+  top: -250px;
+  right: -250px;
+}
+
+.hero-glow-2 {
+  bottom: -250px;
+  left: -250px;
+  animation-delay: 6s;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.6;
+  }
+}
+
+/* Efectos sensoriales adicionales */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.sensory-element {
+  animation: breathe 8s ease-in-out infinite;
+}
+
+.sensory-float {
+  animation: gentleFloat 6s ease-in-out infinite;
+}
+
+/* Estilos para imágenes del salón */
+.gallery-image {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.gallery-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 20px 40px rgba(183, 61, 55, 0.2);
+}
+
+.gallery-image img {
+  transition: transform 0.5s ease;
+}
+
+.gallery-image:hover img {
+  transform: scale(1.05);
+}
+
+/* Estilos para imágenes responsivas */
+.studio-image {
+  border-radius: 12px;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.studio-image:hover {
+  opacity: 0.9;
+}
+
+/* Mejoras para el Hero rediseñado */
+.hero-badge {
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.hero-title {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-content {
+  animation: fadeInUp 1s ease-out;
+}
+
+.hero-image {
+  animation: fadeInRight 1.2s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Estilos para el Navbar */
+.navbar {
+  transition: all 0.3s ease;
+}
+
+.navbar.scrolled {
+  box-shadow: 0 4px 20px rgba(183, 61, 55, 0.1);
+}

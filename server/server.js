@@ -28,9 +28,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2024-11-20.acacia',
 })
 
-// Email: transporter solo si hay credenciales (Gmail con App Password)
-const mailUser = process.env.SMTP_MAIL_USER || ''
-const mailAppPassword = process.env.SMTP_MAIL_APP_PASSWORD || ''
+// Email: transporter solo si hay credenciales (Gmail/Google Workspace con App Password)
+const mailUser = (process.env.SMTP_MAIL_USER || '').trim()
+const mailAppPassword = (process.env.SMTP_MAIL_APP_PASSWORD || '').trim().replace(/\s/g, '') // quitar espacios del App Password
 const mailTransporter = (mailUser && mailAppPassword)
   ? nodemailer.createTransport({
       host: 'smtp.gmail.com',
@@ -40,8 +40,24 @@ const mailTransporter = (mailUser && mailAppPassword)
     })
   : null
 
+// Verificar SMTP al arrancar (solo log; no bloquea)
+if (mailTransporter) {
+  mailTransporter.verify().then(() => {
+    console.log('✅ SMTP listo (correo desde:', mailUser + ')')
+  }).catch((err) => {
+    console.error('❌ SMTP no pudo conectar/autenticar:', err.message)
+    if (err.response) console.error('   Respuesta:', err.response)
+  })
+} else {
+  console.warn('⚠️ SMTP no configurado: faltan SMTP_MAIL_USER o SMTP_MAIL_APP_PASSWORD. No se enviarán correos.')
+}
+
 async function sendWelcomeEmail(user) {
-  if (!mailTransporter || !user?.email) return
+  if (!user?.email) return
+  if (!mailTransporter) {
+    console.warn('⚠️ Email de bienvenida no enviado (SMTP no configurado):', user.email)
+    return
+  }
   try {
     await mailTransporter.sendMail({
       from: `"Estudio Popnest Wellness" <${mailUser}>`,
@@ -56,7 +72,8 @@ async function sendWelcomeEmail(user) {
     })
     console.log('✅ Email de bienvenida enviado a:', user.email)
   } catch (err) {
-    console.error('❌ Error enviando email de bienvenida:', err.message)
+    console.error('❌ Error enviando email de bienvenida a', user.email, ':', err.message)
+    if (err.response) console.error('   Respuesta SMTP:', err.response)
   }
 }
 

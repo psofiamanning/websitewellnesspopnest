@@ -1471,8 +1471,9 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' })
 })
 
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
+const HOST = process.env.HOST || '0.0.0.0'
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on http://${HOST}:${PORT}`)
   console.log(`📝 Bookings file: ${BOOKINGS_FILE}`)
   console.log(`👥 Users file: ${USERS_FILE}`)
   if (!process.env.STRIPE_SECRET_KEY) {

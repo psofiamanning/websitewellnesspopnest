@@ -31,6 +31,11 @@ function Home() {
             
             {/* Columna Izquierda - Contenido (en móvil order-2 = aparece debajo de la imagen) */}
             <div className="flex flex-col justify-center space-y-8 lg:pr-8 order-2 lg:order-none">
+              {/* Nombre de la marca (solo desktop; en móvil va arriba de la imagen) */}
+              <p className="hidden lg:block text-xl md:text-2xl font-heading font-medium tracking-wide mb-2"
+                 style={{ color: '#B73D37', letterSpacing: '0.05em' }}>
+                Popnest Wellness
+              </p>
               {/* Título Principal */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-light leading-tight mb-6"
                   style={{ color: '#1F2937', letterSpacing: '-0.02em' }}>
@@ -87,6 +92,11 @@ function Home() {
             
             {/* Columna Derecha - Imagen + CTA en móvil (order-first = arriba) */}
             <div className="order-1 lg:order-none flex flex-col gap-6">
+              {/* En móvil: nombre de marca arriba de la imagen */}
+              <p className="lg:hidden text-xl font-heading font-medium tracking-wide text-center"
+                 style={{ color: '#B73D37', letterSpacing: '0.05em' }}>
+                Popnest Wellness
+              </p>
               <div className="relative w-full aspect-[4/3] max-h-[50vh] lg:max-h-[70vh] rounded-lg overflow-hidden">
                 <img 
                   src={studioPhoto} 

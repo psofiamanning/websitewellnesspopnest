@@ -26,11 +26,11 @@ function Home() {
         <section className="min-h-screen flex items-center px-6 sm:px-8 lg:px-12 relative overflow-hidden"
                  style={{ backgroundColor: '#FAFAFA' }}>
           
-          {/* Grid Layout Profesional */}
+          {/* Grid Layout Profesional: en móvil imagen + CTA arriba, texto abajo */}
           <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-screen py-20">
             
-            {/* Columna Izquierda - Contenido */}
-            <div className="flex flex-col justify-center space-y-8 lg:pr-8">
+            {/* Columna Izquierda - Contenido (en móvil order-2 = aparece debajo de la imagen) */}
+            <div className="flex flex-col justify-center space-y-8 lg:pr-8 order-2 lg:order-none">
               {/* Título Principal */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-light leading-tight mb-6"
                   style={{ color: '#1F2937', letterSpacing: '-0.02em' }}>
@@ -60,8 +60,8 @@ function Home() {
                 </p>
               </div>
               
-              {/* CTA Button */}
-              <div className="pt-4">
+              {/* CTA Button - oculto en móvil (ahí se muestra el que está bajo la imagen) */}
+              <div className="pt-4 hidden lg:block">
                 <button 
                   onClick={() => navigate('/classes')}
                   className="px-8 py-4 rounded-md transition-all duration-200 font-body font-medium text-base flex items-center gap-2 group"
@@ -85,15 +85,39 @@ function Home() {
               </div>
             </div>
             
-            {/* Columna Derecha - Imagen (proporción natural para evitar que se alargue) */}
-            <div className="relative w-full aspect-[4/3] max-h-[70vh] rounded-lg overflow-hidden">
-              <img 
-                src={studioPhoto} 
-                alt="Estudio Popnest Wellness"
-                className="w-full h-full object-cover object-center"
-              />
-              {/* Overlay sutil */}
-              <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/5"></div>
+            {/* Columna Derecha - Imagen + CTA en móvil (order-first = arriba) */}
+            <div className="order-1 lg:order-none flex flex-col gap-6">
+              <div className="relative w-full aspect-[4/3] max-h-[50vh] lg:max-h-[70vh] rounded-lg overflow-hidden">
+                <img 
+                  src={studioPhoto} 
+                  alt="Estudio Popnest Wellness"
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/5"></div>
+              </div>
+              {/* CTA solo visible en móvil, justo debajo de la imagen */}
+              <div className="lg:hidden">
+                <button 
+                  onClick={() => navigate('/classes')}
+                  className="w-full px-8 py-4 rounded-md transition-all duration-200 font-body font-medium text-base flex items-center justify-center gap-2 group"
+                  style={{ 
+                    backgroundColor: '#B73D37', 
+                    color: '#FFFFFF',
+                    border: 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#C76661'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#B73D37'
+                  }}
+                >
+                  <span>Explorar clases</span>
+                  <svg className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </section>

@@ -31,12 +31,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 // Email: transporter solo si hay credenciales (Gmail/Google Workspace con App Password)
 const mailUser = (process.env.SMTP_MAIL_USER || '').trim()
 const mailAppPassword = (process.env.SMTP_MAIL_APP_PASSWORD || '').trim().replace(/\s/g, '') // quitar espacios del App Password
+// Puerto 465 (SSL) suele funcionar mejor desde la nube; 587 a veces da timeout en Railway
 const mailTransporter = (mailUser && mailAppPassword)
   ? nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: mailUser, pass: mailAppPassword }
+      port: 465,
+      secure: true,
+      auth: { user: mailUser, pass: mailAppPassword },
+      connectionTimeout: 15000
     })
   : null
 

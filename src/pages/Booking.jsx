@@ -537,16 +537,17 @@ function Booking() {
         throw saveError
       }
 
+      const panelMessage = '\n\nPuedes ver tus reservaciones en tu panel de usuario (Mis reservas).'
       if (usePackage) {
-        alert(`✅ ¡Reserva confirmada!\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}\n\nSe usó una clase de tu paquete.`)
+        alert(`✅ ¡Reserva confirmada!\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}\n\nSe usó una clase de tu paquete.${panelMessage}`)
       } else if (stripeError) {
         const errorMessage = stripeError.message || 'Error desconocido'
         const errorType = stripeError.type || 'unknown'
         alert(`⚠️ Reserva guardada pero el pago requiere atención.\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nError: ${errorMessage}\nTipo: ${errorType}\n\nRevisa la consola del navegador (F12) para más detalles o contacta al administrador.`)
       } else if (paymentStatus === 'succeeded') {
-        alert(`✅ ¡Reserva confirmada y pagada!\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}`)
+        alert(`✅ ¡Reserva confirmada y pagada!\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${panelMessage}`)
       } else {
-        alert(`⚠️ Reserva guardada pero el estado del pago es: ${paymentStatus}\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nRevisa el panel de administración para más detalles.`)
+        alert(`⚠️ Reserva guardada pero el estado del pago es: ${paymentStatus}\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nRevisa el panel de administración para más detalles.${panelMessage}`)
       }
       
       navigate('/classes')

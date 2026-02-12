@@ -34,6 +34,11 @@ function Classes() {
     navigate(`/booking/class/${classId}`)
   }
 
+  const scrollToClass = (classId) => {
+    const el = document.getElementById(`class-${classId}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   // Celdas del calendario (mes actual)
   const monthStart = startOfMonth(calendarMonth)
   const monthEnd = endOfMonth(calendarMonth)
@@ -65,62 +70,92 @@ function Classes() {
         </div>
       </header>
 
-      {/* Tarjetas de clases — hasta arriba, ancho completo */}
+      {/* En móvil: lista de nombres de clases arriba para ir a cada sección */}
+      <div className="lg:hidden sticky top-20 z-20 px-4 py-3 border-b bg-white/95 backdrop-blur"
+           style={{ borderColor: '#E5D7D6', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <p className="text-xs font-body font-semibold mb-2 uppercase tracking-wide" style={{ color: '#6B7280' }}>
+          Nuestras clases — toca para ver más
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {classTypes.map((classType) => (
+            <button
+              key={classType.id}
+              type="button"
+              onClick={() => scrollToClass(classType.id)}
+              className="px-4 py-2.5 rounded-lg font-body font-medium text-sm transition-all"
+              style={{
+                backgroundColor: 'rgba(183, 61, 55, 0.12)',
+                color: '#B73D37',
+                border: '1px solid rgba(183, 61, 55, 0.3)'
+              }}
+            >
+              {classType.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tarjetas de clases — cada una es una sección con id para scroll en móvil */}
       <main className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {classTypes.map((classType) => (
-            <div
+            <section
               key={classType.id}
-              onClick={() => handleClassClick(classType.id)}
-              className="bg-white rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col"
-              style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-              }}
+              id={`class-${classType.id}`}
+              className="scroll-mt-32 lg:scroll-mt-0"
             >
-              <div className="h-48 overflow-hidden relative bg-gray-100">
-                <img
-                  src={classType.image}
-                  alt={classType.name}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  style={{
-                    objectPosition: classType.id === 'sound-healing' ? 'center top' : 'center center',
-                    minHeight: '100%'
-                  }}
-                />
-              </div>
-              <div className="p-5 flex flex-col flex-1">
-                <h3 className="text-lg font-heading font-medium mb-2" style={{ color: '#1F2937' }}>
-                  {classType.name}
-                </h3>
-                <div className="space-y-1 mb-3">
-                  <p className="text-sm font-body" style={{ color: '#6B7280' }}>
-                    <span className="font-medium" style={{ color: '#1F2937' }}>Profesor:</span> {classType.teacher}
-                  </p>
-                  <p className="text-sm font-body" style={{ color: '#6B7280' }}>
-                    <span className="font-medium" style={{ color: '#1F2937' }}>Duración:</span> {classType.duration} min
-                  </p>
-                  <p className="text-sm font-body" style={{ color: '#6B7280' }}>
-                    <span className="font-medium" style={{ color: '#B73D37' }}>Precio:</span> $30.00 MXN
+              <div
+                onClick={() => handleClassClick(classType.id)}
+                className="bg-white rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col"
+                style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <div className="h-48 overflow-hidden relative bg-gray-100">
+                  <img
+                    src={classType.image}
+                    alt={classType.name}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    style={{
+                      objectPosition: classType.id === 'sound-healing' ? 'center top' : 'center center',
+                      minHeight: '100%'
+                    }}
+                  />
+                </div>
+                <div className="p-5 flex flex-col flex-1">
+                  <h3 className="text-lg font-heading font-medium mb-2" style={{ color: '#1F2937' }}>
+                    {classType.name}
+                  </h3>
+                  <div className="space-y-1 mb-3">
+                    <p className="text-sm font-body" style={{ color: '#6B7280' }}>
+                      <span className="font-medium" style={{ color: '#1F2937' }}>Profesor:</span> {classType.teacher}
+                    </p>
+                    <p className="text-sm font-body" style={{ color: '#6B7280' }}>
+                      <span className="font-medium" style={{ color: '#1F2937' }}>Duración:</span> {classType.duration} min
+                    </p>
+                    <p className="text-sm font-body" style={{ color: '#6B7280' }}>
+                      <span className="font-medium" style={{ color: '#B73D37' }}>Precio:</span> $30.00 MXN
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleClassClick(classType.id) }}
+                    className="w-full py-2.5 rounded-md transition-all duration-200 font-body font-medium text-sm mb-3"
+                    style={{ backgroundColor: '#B73D37', color: '#FFFFFF', border: 'none' }}
+                    onMouseEnter={(e) => { e.target.style.backgroundColor = '#C76661' }}
+                    onMouseLeave={(e) => { e.target.style.backgroundColor = '#B73D37' }}
+                  >
+                    Reservar Clase
+                  </button>
+                  <p className="text-xs font-body leading-relaxed flex-1" style={{ color: '#6B7280', lineHeight: '1.5' }}>
+                    {classType.description}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleClassClick(classType.id) }}
-                  className="w-full py-2.5 rounded-md transition-all duration-200 font-body font-medium text-sm mb-3"
-                  style={{ backgroundColor: '#B73D37', color: '#FFFFFF', border: 'none' }}
-                  onMouseEnter={(e) => { e.target.style.backgroundColor = '#C76661' }}
-                  onMouseLeave={(e) => { e.target.style.backgroundColor = '#B73D37' }}
-                >
-                  Reservar Clase
-                </button>
-                <p className="text-xs font-body leading-relaxed flex-1" style={{ color: '#6B7280', lineHeight: '1.5' }}>
-                  {classType.description}
-                </p>
               </div>
-            </div>
+            </section>
           ))}
         </div>
 

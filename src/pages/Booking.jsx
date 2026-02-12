@@ -237,9 +237,14 @@ function Booking() {
       
       try {
         const availability = await checkAvailability(className, dateString, selectedTime)
+        if (availability.verificationFailed) {
+          setIsProcessing(false)
+          alert('⚠️ No se pudo verificar la disponibilidad. Por favor revisa tu conexión e intenta de nuevo.')
+          return
+        }
         if (!availability.available) {
           setIsProcessing(false)
-          alert(`⚠️ Lo sentimos, esta clase ya tiene ${availability.maxBookings} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.\n\nLugares disponibles: ${availability.remainingSpots}`)
+          alert(`⚠️ Lo sentimos, esta clase ya tiene ${availability.currentCount} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.\n\nLugares disponibles: ${availability.remainingSpots}`)
           return
         }
         if (availability.remainingSpots <= 2) {

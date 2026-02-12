@@ -197,15 +197,14 @@ export const checkAvailability = async (className, date, time) => {
     const response = await fetch(`${BACKEND_URL}/api/bookings/availability/${encodeURIComponent(className)}/${date}/${time}`)
     
     if (!response.ok) {
-      // Si hay error, asumir que no está disponible
-      return { available: false, currentCount: 9, maxBookings: 9, remainingSpots: 0 }
+      // No confundir "error al verificar" con "clase llena"
+      return { available: false, verificationFailed: true, currentCount: 0, maxBookings: 9, remainingSpots: 0 }
     }
     
     return await response.json()
   } catch (error) {
     console.warn('Error checking availability:', error)
-    // En caso de error, permitir continuar pero el backend lo validará
-    return { available: true, currentCount: 0, maxBookings: 9, remainingSpots: 9 }
+    return { available: false, verificationFailed: true, currentCount: 0, maxBookings: 9, remainingSpots: 0 }
   }
 }
 

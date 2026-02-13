@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import Stripe from 'stripe'
 import nodemailer from 'nodemailer'
+import { MailerSend, EmailParams, Sender, Recipient } from 'mailersend'
 import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
@@ -20,19 +21,63 @@ const PORT = process.env.PORT || 3000
 
 // Middleware
 app.use(cors())
+// Webhook de Stripe debe recibir el body RAW (sin parsear) para verificar la firma.
+// Por eso se declara ANTES de express.json().
+app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['stripe-signature']
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  let event
+  try {
+    if (webhookSecret) {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret)
+    } else {
+      event = JSON.parse(req.body.toString())
+    }
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message)
+    return res.status(400).send(`Webhook Error: ${err.message}`)
+  }
+  switch (event.type) {
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object
+      console.log('PaymentIntent succeeded:', paymentIntent.id)
+      const bookings = getBookings()
+      const booking = bookings.find(b => b.paymentIntentId === paymentIntent.id)
+      if (booking) updateBooking(booking.id, { paymentStatus: 'succeeded', status: 'confirmed' })
+      break
+    }
+    case 'payment_intent.payment_failed': {
+      const failedPayment = event.data.object
+      console.log('PaymentIntent failed:', failedPayment.id)
+      const failedBookings = getBookings()
+      const failedBooking = failedBookings.find(b => b.paymentIntentId === failedPayment.id)
+      if (failedBooking) updateBooking(failedBooking.id, { paymentStatus: 'failed', status: 'pending' })
+      break
+    }
+    default:
+      console.log(`Unhandled event type ${event.type}`)
+  }
+  res.json({ received: true })
+})
 app.use(express.json())
-app.use(express.raw({ type: 'application/json' }))
 
 // Inicializar Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2024-11-20.acacia',
 })
 
-// Email: transporter solo si hay credenciales (Gmail/Google Workspace con App Password)
+// --- Email: MailerSend (recomendado, ecosistema MailerLite) o SMTP Gmail ---
+const MAILERSEND_API_KEY = (process.env.MAILERSEND_API_KEY || '').trim()
+const MAILERSEND_FROM_EMAIL = (process.env.MAILERSEND_FROM_EMAIL || process.env.SMTP_MAIL_USER || 'info@estudiopopnest.com').trim()
+const MAILERSEND_FROM_NAME = process.env.MAILERSEND_FROM_NAME || 'Estudio Popnest Wellness'
+
+const mailerSend = MAILERSEND_API_KEY
+  ? new MailerSend({ apiKey: MAILERSEND_API_KEY })
+  : null
+
 const mailUser = (process.env.SMTP_MAIL_USER || '').trim()
-const mailAppPassword = (process.env.SMTP_MAIL_APP_PASSWORD || '').trim().replace(/\s/g, '') // quitar espacios del App Password
-// Puerto 465 (SSL) suele funcionar mejor desde la nube; 587 a veces da timeout en Railway
-const mailTransporter = (mailUser && mailAppPassword)
+const mailAppPassword = (process.env.SMTP_MAIL_APP_PASSWORD || '').trim().replace(/\s/g, '')
+const mailTransporter = (!mailerSend && mailUser && mailAppPassword)
   ? nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 465,
@@ -42,40 +87,59 @@ const mailTransporter = (mailUser && mailAppPassword)
     })
   : null
 
-// Verificar SMTP al arrancar (solo log; no bloquea)
-if (mailTransporter) {
+if (mailerSend) {
+  console.log('✅ Correo vía MailerSend (MailerLite) desde:', MAILERSEND_FROM_EMAIL)
+} else if (mailTransporter) {
   mailTransporter.verify().then(() => {
     console.log('✅ SMTP listo (correo desde:', mailUser + ')')
   }).catch((err) => {
     console.error('❌ SMTP no pudo conectar/autenticar:', err.message)
-    if (err.response) console.error('   Respuesta:', err.response)
   })
 } else {
-  console.warn('⚠️ SMTP no configurado: faltan SMTP_MAIL_USER o SMTP_MAIL_APP_PASSWORD. No se enviarán correos.')
+  console.warn('⚠️ Correo no configurado: usa MAILERSEND_API_KEY (recomendado) o SMTP_MAIL_USER + SMTP_MAIL_APP_PASSWORD.')
+}
+
+/** Envía un correo usando MailerSend o, si no, Nodemailer (SMTP). */
+async function sendEmail({ to, toName = '', subject, text, html }) {
+  if (mailerSend) {
+    const sentFrom = new Sender(MAILERSEND_FROM_EMAIL, MAILERSEND_FROM_NAME)
+    const recipients = [new Recipient(to, toName || to)]
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setSubject(subject)
+      .setHtml(html || text)
+      .setText(text)
+    await mailerSend.email.send(emailParams)
+    return
+  }
+  if (mailTransporter) {
+    await mailTransporter.sendMail({
+      from: `"${MAILERSEND_FROM_NAME}" <${mailUser}>`,
+      to,
+      subject,
+      text,
+      html: html || text
+    })
+    return
+  }
+  throw new Error('No hay proveedor de correo configurado')
 }
 
 async function sendWelcomeEmail(user) {
   if (!user?.email) return
-  if (!mailTransporter) {
-    console.warn('⚠️ Email de bienvenida no enviado (SMTP no configurado):', user.email)
+  if (!mailerSend && !mailTransporter) {
+    console.warn('⚠️ Email de bienvenida no enviado (correo no configurado):', user.email)
     return
   }
+  const subject = 'Bienvenido a Estudio Popnest Wellness'
+  const text = `Hola ${user.firstName || ''},\n\nGracias por registrarte en Estudio Popnest Wellness. Ya puedes reservar clases y disfrutar de nuestro estudio.\n\nSaludos,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>Hola <strong>${user.firstName || ''}</strong>,</p><p>Gracias por registrarte en <strong>Estudio Popnest Wellness</strong>. Ya puedes reservar clases y disfrutar de nuestro estudio.</p><p>Saludos,<br>El equipo de Estudio Popnest Wellness</p>`
   try {
-    await mailTransporter.sendMail({
-      from: `"Estudio Popnest Wellness" <${mailUser}>`,
-      to: user.email,
-      subject: 'Bienvenido a Estudio Popnest Wellness',
-      text: `Hola ${user.firstName || ''},\n\nGracias por registrarte en Estudio Popnest Wellness. Ya puedes reservar clases y disfrutar de nuestro estudio.\n\nSaludos,\nEl equipo de Estudio Popnest Wellness`,
-      html: `
-        <p>Hola <strong>${user.firstName || ''}</strong>,</p>
-        <p>Gracias por registrarte en <strong>Estudio Popnest Wellness</strong>. Ya puedes reservar clases y disfrutar de nuestro estudio.</p>
-        <p>Saludos,<br>El equipo de Estudio Popnest Wellness</p>
-      `
-    })
+    await sendEmail({ to: user.email, toName: user.firstName, subject, text, html })
     console.log('✅ Email de bienvenida enviado a:', user.email)
   } catch (err) {
     console.error('❌ Error enviando email de bienvenida a', user.email, ':', err.message)
-    if (err.response) console.error('   Respuesta SMTP:', err.response)
   }
 }
 
@@ -106,22 +170,13 @@ const consumeResetToken = (token) => {
 }
 
 async function sendPasswordResetEmail(email, resetToken) {
-  if (!mailTransporter || !email) return
+  if (!email || (!mailerSend && !mailTransporter)) return
   const resetLink = `${FRONTEND_URL}/reset-password?token=${encodeURIComponent(resetToken)}`
+  const subject = 'Restablecer tu contraseña - Estudio Popnest Wellness'
+  const text = `Hola,\n\nRecibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el siguiente enlace (válido 1 hora):\n\n${resetLink}\n\nSi no solicitaste esto, ignora este correo.\n\nSaludos,\nEstudio Popnest Wellness`
+  const html = `<p>Hola,</p><p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p><p><a href="${resetLink}" style="color:#B73D37;font-weight:bold;">Restablecer contraseña</a></p><p>Este enlace es válido por 1 hora. Si no solicitaste esto, ignora este correo.</p><p>Saludos,<br>Estudio Popnest Wellness</p>`
   try {
-    await mailTransporter.sendMail({
-      from: `"Estudio Popnest Wellness" <${mailUser}>`,
-      to: email,
-      subject: 'Restablecer tu contraseña - Estudio Popnest Wellness',
-      text: `Hola,\n\nRecibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el siguiente enlace (válido 1 hora):\n\n${resetLink}\n\nSi no solicitaste esto, ignora este correo.\n\nSaludos,\nEstudio Popnest Wellness`,
-      html: `
-        <p>Hola,</p>
-        <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
-        <p><a href="${resetLink}" style="color:#B73D37;font-weight:bold;">Restablecer contraseña</a></p>
-        <p>Este enlace es válido por 1 hora. Si no solicitaste esto, ignora este correo.</p>
-        <p>Saludos,<br>Estudio Popnest Wellness</p>
-      `
-    })
+    await sendEmail({ to: email, subject, text, html })
     console.log('✅ Email de restablecimiento enviado a:', email)
   } catch (err) {
     console.error('❌ Error enviando email de restablecimiento:', err.message)
@@ -129,22 +184,13 @@ async function sendPasswordResetEmail(email, resetToken) {
 }
 
 async function sendAdminPasswordResetEmail(email, resetToken) {
-  if (!mailTransporter || !email) return
+  if (!email || (!mailerSend && !mailTransporter)) return
   const resetLink = `${FRONTEND_URL}/admin/reset-password?token=${encodeURIComponent(resetToken)}`
+  const subject = 'Restablecer contraseña de administrador - Estudio Popnest Wellness'
+  const text = `Hola,\n\nRecibimos una solicitud para restablecer la contraseña del panel de administración. Haz clic en el siguiente enlace (válido 1 hora):\n\n${resetLink}\n\nSi no solicitaste esto, ignora este correo.\n\nSaludos,\nEstudio Popnest Wellness`
+  const html = `<p>Hola,</p><p>Recibimos una solicitud para restablecer la contraseña del <strong>panel de administración</strong>.</p><p><a href="${resetLink}" style="color:#B73D37;font-weight:bold;">Restablecer contraseña de administrador</a></p><p>Este enlace es válido por 1 hora. Si no solicitaste esto, ignora este correo.</p><p>Saludos,<br>Estudio Popnest Wellness</p>`
   try {
-    await mailTransporter.sendMail({
-      from: `"Estudio Popnest Wellness" <${mailUser}>`,
-      to: email,
-      subject: 'Restablecer contraseña de administrador - Estudio Popnest Wellness',
-      text: `Hola,\n\nRecibimos una solicitud para restablecer la contraseña del panel de administración. Haz clic en el siguiente enlace (válido 1 hora):\n\n${resetLink}\n\nSi no solicitaste esto, ignora este correo.\n\nSaludos,\nEstudio Popnest Wellness`,
-      html: `
-        <p>Hola,</p>
-        <p>Recibimos una solicitud para restablecer la contraseña del <strong>panel de administración</strong>.</p>
-        <p><a href="${resetLink}" style="color:#B73D37;font-weight:bold;">Restablecer contraseña de administrador</a></p>
-        <p>Este enlace es válido por 1 hora. Si no solicitaste esto, ignora este correo.</p>
-        <p>Saludos,<br>Estudio Popnest Wellness</p>
-      `
-    })
+    await sendEmail({ to: email, subject, text, html })
     console.log('✅ Email de restablecimiento (admin) enviado a:', email)
   } catch (err) {
     console.error('❌ Error enviando email de restablecimiento admin:', err.message)
@@ -683,63 +729,6 @@ app.get('/api/bookings/availability/:className/:date/:time', (req, res) => {
     console.error('Error checking availability:', error)
     res.status(500).json({ error: error.message })
   }
-})
-
-// Webhook de Stripe para eventos de pago
-app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature']
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-
-  let event
-
-  try {
-    if (webhookSecret) {
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret)
-    } else {
-      // En desarrollo, parsear el evento directamente
-      event = JSON.parse(req.body.toString())
-    }
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err.message)
-    return res.status(400).send(`Webhook Error: ${err.message}`)
-  }
-
-  // Manejar diferentes tipos de eventos
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object
-      console.log('PaymentIntent succeeded:', paymentIntent.id)
-      
-      // Actualizar reserva si existe
-      const bookings = getBookings()
-      const booking = bookings.find(b => b.paymentIntentId === paymentIntent.id)
-      if (booking) {
-        updateBooking(booking.id, {
-          paymentStatus: 'succeeded',
-          status: 'confirmed',
-        })
-      }
-      break
-
-    case 'payment_intent.payment_failed':
-      const failedPayment = event.data.object
-      console.log('PaymentIntent failed:', failedPayment.id)
-      
-      const failedBookings = getBookings()
-      const failedBooking = failedBookings.find(b => b.paymentIntentId === failedPayment.id)
-      if (failedBooking) {
-        updateBooking(failedBooking.id, {
-          paymentStatus: 'failed',
-          status: 'pending',
-        })
-      }
-      break
-
-    default:
-      console.log(`Unhandled event type ${event.type}`)
-  }
-
-  res.json({ received: true })
 })
 
 // Función helper para leer usuarios

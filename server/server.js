@@ -43,7 +43,11 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) =
       console.log('PaymentIntent succeeded:', paymentIntent.id)
       const bookings = getBookings()
       const booking = bookings.find(b => b.paymentIntentId === paymentIntent.id)
-      if (booking) updateBooking(booking.id, { paymentStatus: 'succeeded', status: 'confirmed' })
+      if (booking) {
+        updateBooking(booking.id, { paymentStatus: 'succeeded', status: 'confirmed' })
+        const updated = getBookings().find(b => b.id === booking.id)
+        if (updated?.customer?.email) sendBookingConfirmationEmail(updated).catch(() => {})
+      }
       break
     }
     case 'payment_intent.payment_failed': {
@@ -170,7 +174,10 @@ const consumeResetToken = (token) => {
 }
 
 async function sendPasswordResetEmail(email, resetToken) {
-  if (!email || (!mailerSend && !mailTransporter)) return
+  if (!email || (!mailerSend && !mailTransporter)) {
+    if (!mailerSend && !mailTransporter) console.warn('⚠️ Correo no configurado: no se envía restablecimiento a', email)
+    return
+  }
   const resetLink = `${FRONTEND_URL}/reset-password?token=${encodeURIComponent(resetToken)}`
   const subject = 'Restablecer tu contraseña - Estudio Popnest Wellness'
   const text = `Hola,\n\nRecibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el siguiente enlace (válido 1 hora):\n\n${resetLink}\n\nSi no solicitaste esto, ignora este correo.\n\nSaludos,\nEstudio Popnest Wellness`
@@ -179,7 +186,8 @@ async function sendPasswordResetEmail(email, resetToken) {
     await sendEmail({ to: email, subject, text, html })
     console.log('✅ Email de restablecimiento enviado a:', email)
   } catch (err) {
-    console.error('❌ Error enviando email de restablecimiento:', err.message)
+    console.error('❌ Error enviando email de restablecimiento a', email, ':', err.message)
+    throw err
   }
 }
 
@@ -612,6 +620,9 @@ app.post('/api/bookings', (req, res) => {
     }
 
     const savedBooking = saveBooking(booking)
+    if (savedBooking.status === 'confirmed') {
+      sendBookingConfirmationEmail(savedBooking).catch(() => {})
+    }
     console.log('✅ Reserva guardada:', {
       id: savedBooking.id,
       className: savedBooking.className,
@@ -1184,6 +1195,9 @@ app.post('/api/auth/set-password', (req, res) => {
   }
 })
 
+// Cooldown para no enviar varios correos de reset al mismo email en poco tiempo (evita rate limit del proveedor)
+const RESET_EMAIL_COOLDOWN_MS = 2 * 60 * 1000 // 2 minutos
+
 // Endpoint: Olvidé mi contraseña - envía correo con enlace
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
@@ -1197,6 +1211,18 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const user = users.find(u => u.email && u.email.toLowerCase() === normalizedEmail)
     // Siempre respondemos igual para no revelar si el correo existe
     if (user) {
+      const tokens = getResetTokens()
+      const existingForEmail = tokens.find(t => t.email === normalizedEmail)
+      const now = Date.now()
+      // Si ya enviamos un correo hace menos de 2 min, no reenviar (evita bloqueos del proveedor)
+      const tokenCreatedAt = existingForEmail ? existingForEmail.expiresAt - RESET_TOKEN_EXPIRY_MS : 0
+      if (existingForEmail && (now - tokenCreatedAt) < RESET_EMAIL_COOLDOWN_MS) {
+        console.log('⏳ Restablecimiento: cooldown activo para', normalizedEmail)
+        return res.json({
+          success: true,
+          message: 'Ya enviamos un correo a esta dirección hace poco. Revisa tu bandeja y carpeta de spam. Si no llegó, espera unos minutos y solicita el enlace de nuevo.'
+        })
+      }
       const resetToken = crypto.randomBytes(32).toString('hex')
       saveResetToken(resetToken, normalizedEmail)
       await sendPasswordResetEmail(user.email, resetToken)

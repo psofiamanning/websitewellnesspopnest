@@ -1,6 +1,35 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { forgotPassword } from '../services/authService'
 
 function ForgotPassword() {
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    if (!email.trim()) {
+      setError('Ingresa tu correo electrónico')
+      return
+    }
+    setIsLoading(true)
+    try {
+      const result = await forgotPassword(email.trim())
+      if (result.success) {
+        setSent(true)
+      } else {
+        setError(result.error || 'Error al enviar')
+      }
+    } catch (err) {
+      setError(err.message || 'Error. Intenta de nuevo.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="wellness-background min-h-screen flex items-center justify-center py-20">
       <div className="wellness-shapes">
@@ -14,26 +43,82 @@ function ForgotPassword() {
           <h1 className="text-3xl font-heading font-bold mb-2 text-center" style={{ color: '#1F2937' }}>
             ¿Olvidaste tu contraseña?
           </h1>
-          <p className="text-body font-body text-center mb-6" style={{ color: '#6B7280' }}>
-            Si olvidaste tu contraseña, comunícate con el equipo de Estudio Popnest Wellness para que te ayudemos a recuperar el acceso a tu cuenta.
+          <p className="text-body font-body text-center mb-8" style={{ color: '#6B7280' }}>
+            Ingresa tu correo y te enviaremos un enlace para restablecerla
           </p>
-          <div className="mb-6 p-6 rounded-lg border-2" style={{ backgroundColor: '#fef3c7', borderColor: '#fcd34d' }}>
-            <p className="text-sm font-body text-gray-800 text-center">
-              Escríbenos a <a href="mailto:info@estudiopopnest.com" className="font-semibold underline" style={{ color: '#B73D37' }}>info@estudiopopnest.com</a> o contáctanos por nuestros canales habituales indicando el correo con el que te registraste.
-            </p>
+
+          {error && (
+            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
+              <p className="text-sm font-body text-red-800">{error}</p>
+            </div>
+          )}
+
+          {sent ? (
+            <div className="mb-6 p-6 rounded-lg border-2" style={{ backgroundColor: '#f0fdf4', borderColor: '#86efac' }}>
+              <p className="text-sm font-body text-gray-800 mb-4">
+                Si existe una cuenta con ese correo, recibirás un enlace en unos minutos. Revisa tu bandeja de entrada y la carpeta de spam. El enlace te llevará a una página donde podrás elegir una nueva contraseña (válido 1 hora).
+              </p>
+              <Link
+                to="/login"
+                className="block w-full py-3 rounded-lg font-heading font-semibold text-center transition-all"
+                style={{ color: '#B73D37', border: '2px solid #B73D37' }}
+              >
+                Volver al inicio de sesión
+              </Link>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-body font-medium mb-2" style={{ color: '#1F2937' }}>
+                  Correo electrónico
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none font-body transition-all duration-300"
+                  style={{ borderColor: '#DED5D5', backgroundColor: '#FFFFFF' }}
+                  onFocus={(e) => (e.target.style.borderColor = '#B73D37')}
+                  onBlur={(e) => (e.target.style.borderColor = '#DED5D5')}
+                  placeholder="tu@email.com"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-4 rounded-lg font-heading font-semibold text-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: '#B73D37',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  boxShadow: '0 4px 12px rgba(183, 61, 55, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading) {
+                    e.target.style.backgroundColor = '#C76661'
+                    e.target.style.boxShadow = '0 6px 16px rgba(183, 61, 55, 0.4)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLoading) {
+                    e.target.style.backgroundColor = '#B73D37'
+                    e.target.style.boxShadow = '0 4px 12px rgba(183, 61, 55, 0.3)'
+                  }
+                }}
+              >
+                {isLoading ? 'Enviando...' : 'Enviar enlace'}
+              </button>
+            </form>
+          )}
+
+          <div className="mt-6 text-center">
+            <Link to="/login" className="text-sm font-body hover:underline" style={{ color: '#B73D37' }}>
+              ← Volver al inicio de sesión
+            </Link>
           </div>
-          <Link
-            to="/login"
-            className="block w-full py-4 rounded-lg font-heading font-semibold text-lg text-center transition-all duration-300"
-            style={{
-              backgroundColor: '#B73D37',
-              color: '#FFFFFF',
-              border: 'none',
-              boxShadow: '0 4px 12px rgba(183, 61, 55, 0.3)'
-            }}
-          >
-            Volver al inicio de sesión
-          </Link>
         </div>
       </div>
     </div>

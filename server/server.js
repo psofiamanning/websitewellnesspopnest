@@ -197,6 +197,29 @@ async function sendAdminPasswordResetEmail(email, resetToken) {
   }
 }
 
+/** Envía correo de confirmación de reserva al cliente. */
+async function sendBookingConfirmationEmail(booking) {
+  const email = booking?.customer?.email
+  if (!email || (!mailerSend && !mailTransporter)) {
+    if (!email) console.warn('⚠️ Reserva sin email, no se envía confirmación:', booking?.id)
+    return
+  }
+  const name = booking.customer?.firstName || booking.customer?.name || ''
+  const className = booking.className || 'Clase'
+  const dateStr = booking.formattedDate || booking.date || ''
+  const timeStr = booking.time || ''
+  const dateTimeLine = [dateStr, timeStr].filter(Boolean).join(' · ')
+  const subject = 'Reserva confirmada - Estudio Popnest Wellness'
+  const text = `Hola ${name ? name + ',' : ''}\n\nTu reserva ha sido confirmada.\n\nClase: ${className}\nFecha y hora: ${dateTimeLine || 'Ver detalles en tu panel'}\n\nPuedes ver y gestionar tus reservas en "Mis reservas" en nuestra web.\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>Hola ${name ? `<strong>${name}</strong>,` : ''}</p><p>Tu reserva ha sido <strong>confirmada</strong>.</p><p><strong>Clase:</strong> ${className}<br><strong>Fecha y hora:</strong> ${dateTimeLine || 'Ver detalles en tu panel'}</p><p>Puedes ver y gestionar tus reservas en <strong>Mis reservas</strong> en nuestra web.</p><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
+  try {
+    await sendEmail({ to: email, toName: name, subject, text, html })
+    console.log('✅ Email de confirmación de reserva enviado a:', email)
+  } catch (err) {
+    console.error('❌ Error enviando email de confirmación de reserva:', err.message)
+  }
+}
+
 // Archivos para guardar datos (simulando base de datos)
 const BOOKINGS_FILE = join(__dirname, 'bookings.json')
 const USERS_FILE = join(__dirname, 'users.json')
@@ -441,6 +464,7 @@ app.post('/api/confirm-booking', async (req, res) => {
       }
 
       const savedBooking = saveBooking(booking)
+      sendBookingConfirmationEmail(savedBooking).catch(() => {})
       return res.json({
         success: true,
         booking: savedBooking
@@ -483,7 +507,7 @@ app.post('/api/confirm-booking', async (req, res) => {
       }
 
       const savedBooking = saveBooking(booking)
-
+      sendBookingConfirmationEmail(savedBooking).catch(() => {})
       return res.json({
         success: true,
         booking: savedBooking,
@@ -536,6 +560,7 @@ app.post('/api/confirm-booking', async (req, res) => {
     }
 
     const savedBooking = saveBooking(booking)
+    sendBookingConfirmationEmail(savedBooking).catch(() => {})
 
     res.json({
       success: true,

@@ -44,23 +44,24 @@ function Navbar() {
     <nav className="navbar fixed top-0 left-0 right-0 z-50 bg-white/98 backdrop-blur-lg shadow-sm border-b overflow-visible"
          style={{ borderColor: '#E5B3B0' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 min-h-[80px] py-2 overflow-visible">
-          {/* Logo: padding para que no se corte en el menú */}
+        <div className="flex items-center justify-between min-h-[88px] py-3 overflow-visible">
+          {/* Logo: contenedor con espacio suficiente para que no se corte */}
           <div 
-            className="flex items-center cursor-pointer group overflow-visible"
+            className="flex items-center justify-center cursor-pointer group overflow-visible"
             onClick={() => handleNavigate('/')}
-            style={{ flexShrink: 0, padding: '4px 0' }}
+            style={{ flexShrink: 0, minHeight: 56, padding: '6px 0' }}
           >
             <Logo 
-              height="48px"
+              height="44px"
               width="auto"
               variant="primary"
               className="transition-all duration-300 group-hover:scale-105"
               style={{
-                height: '48px',
+                height: '44px',
                 width: 'auto',
                 maxWidth: '200px',
                 objectFit: 'contain',
+                objectPosition: 'center',
                 display: 'block',
                 verticalAlign: 'middle'
               }}

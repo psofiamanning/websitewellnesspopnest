@@ -9,13 +9,13 @@ function Packages() {
       id: 'package-10-classes',
       name: 'Paquete de 10 Clases',
       classes: 10,
-      price: 300,
-      originalPrice: 450,
-      description: 'Ahorra $150 comprando 10 clases. Puedes usar estas clases para cualquier práctica disponible en nuestro estudio.',
+      price: 1800,
+      originalPrice: 2000,
+      description: 'Ahorra $200 comprando 10 clases. Puedes usar estas clases para cualquier práctica disponible en nuestro estudio.',
       benefits: [
         'Válido para todas las clases',
         'Válido por 2 meses desde la compra',
-        'Ahorra $15 por clase',
+        'Ahorra $20 por clase',
         'Flexibilidad total'
       ],
       popular: true

@@ -267,7 +267,7 @@ function Booking() {
       
       if (!usePackage) {
         // Precio de la clase (puedes obtenerlo de bookingInfo si lo tienes)
-        const amount = 3000 // $30.00 MXN en centavos
+        const amount = 20000 // $200.00 MXN en centavos
         
         // Crear Payment Intent con Stripe (incluyendo información del cliente)
         try {
@@ -489,7 +489,7 @@ function Booking() {
           status: 'succeeded'
         } : {
           method: 'Tarjeta de Crédito/Débito',
-          amount: 15000,
+          amount: 20000,
           currency: 'MXN',
           cardLastFour: stripeCardData?.paymentMethod?.card?.last4 || '****',
           status: paymentStatus
@@ -497,7 +497,7 @@ function Booking() {
         stripeInfo: usePackage ? null : {
           paymentIntentId: paymentIntent?.paymentIntentId,
           clientSecret: paymentIntent?.clientSecret,
-          amount: 15000,
+          amount: 20000,
           currency: 'mxn',
           error: stripeError ? stripeError.message : null
         }
@@ -1326,7 +1326,7 @@ function Booking() {
                           />
                           <label htmlFor="payment-card" className="flex items-center gap-2 cursor-pointer flex-1">
                             <span className="text-2xl">💳</span>
-                            <span className="font-body text-body">Tarjeta de Crédito/Débito - $30.00 MXN</span>
+                            <span className="font-body text-body">Tarjeta de Crédito/Débito - $200.00 MXN</span>
                           </label>
                         </div>
                       </div>
@@ -1400,7 +1400,7 @@ function Booking() {
                       ? 'Procesando...' 
                       : usePackage 
                         ? 'Reservar con Paquete' 
-                        : 'Pagar $30.00 MXN'}
+                        : 'Pagar $200.00 MXN'}
                   </button>
                   <p className="text-xs text-body font-body text-center mt-2 opacity-75">
                     Al hacer clic, procesaremos tu pago de forma segura
@@ -1463,7 +1463,7 @@ function Booking() {
                         {usePackage ? (
                           <span className="text-green-600 font-semibold">Gratis (usando paquete)</span>
                         ) : (
-                          '$30.00 MXN'
+                          '$200.00 MXN'
                         )}
                       </p>
                       {usePackage && selectedPackageId && (

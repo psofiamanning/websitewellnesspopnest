@@ -138,7 +138,7 @@ function Classes() {
                       <span className="font-medium" style={{ color: '#1F2937' }}>Duración:</span> {classType.duration} min
                     </p>
                     <p className="text-sm font-body" style={{ color: '#6B7280' }}>
-                      <span className="font-medium" style={{ color: '#B73D37' }}>Precio:</span> $30.00 MXN
+                      <span className="font-medium" style={{ color: '#B73D37' }}>Precio:</span> $200.00 MXN
                     </p>
                   </div>
                   <button

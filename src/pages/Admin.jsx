@@ -35,6 +35,12 @@ function Admin() {
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [selectedPackage, setSelectedPackage] = useState(null)
   const [activeTab, setActiveTab] = useState('bookings') // 'bookings' o 'packages'
+  const [showAddOperator, setShowAddOperator] = useState(false)
+  const [operatorEmail, setOperatorEmail] = useState('')
+  const [operatorPassword, setOperatorPassword] = useState('')
+  const [operatorName, setOperatorName] = useState('')
+  const [addOperatorError, setAddOperatorError] = useState('')
+  const [addOperatorSuccess, setAddOperatorSuccess] = useState('')
 
   useEffect(() => {
     if (isAdminAuthenticated()) {
@@ -163,6 +169,41 @@ function Admin() {
     }).format(amount / 100)
   }
 
+  const handleAddOperator = async (e) => {
+    e.preventDefault()
+    setAddOperatorError('')
+    setAddOperatorSuccess('')
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      setAddOperatorError('Sesión expirada. Vuelve a iniciar sesión.')
+      return
+    }
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/admin/add-operator`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          email: operatorEmail.trim(),
+          password: operatorPassword,
+          name: operatorName.trim() || 'Operador'
+        })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setAddOperatorError(data.error || 'Error al añadir operador')
+        return
+      }
+      setAddOperatorSuccess(data.message || 'Operador añadido.')
+      setOperatorEmail('')
+      setOperatorPassword('')
+      setOperatorName('')
+      setShowAddOperator(false)
+    } catch (err) {
+      setAddOperatorError(err.message || 'Error de conexión')
+    }
+  }
+
   // No mostrar nada del panel sin estar autenticado (evita que /admin sea público)
   if (!isAdminAuthenticated()) {
     return <Navigate to="/admin/login" replace />
@@ -191,16 +232,84 @@ function Admin() {
                   Gestión de reservas, paquetes y pagos
                 </p>
               </div>
-              <button
-                onClick={adminLogout}
-                className="flex-shrink-0 px-4 py-2 rounded-lg font-body transition-all duration-300 text-white hover:bg-opacity-90 whitespace-nowrap"
-                style={{ 
-                  backgroundColor: '#B73D37',
-                }}
-              >
-                Cerrar Sesión
-              </button>
+              <div className="flex flex-shrink-0 items-center gap-2">
+                {canViewRevenue() && (
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddOperator(!showAddOperator); setAddOperatorError(''); setAddOperatorSuccess(''); }}
+                    className="px-4 py-2 rounded-lg font-body transition-all duration-300 border-2"
+                    style={{ borderColor: '#B73D37', color: '#B73D37' }}
+                  >
+                    {showAddOperator ? 'Ocultar' : 'Añadir operador'}
+                  </button>
+                )}
+                <button
+                  onClick={adminLogout}
+                  className="px-4 py-2 rounded-lg font-body transition-all duration-300 text-white hover:bg-opacity-90 whitespace-nowrap"
+                  style={{ backgroundColor: '#B73D37' }}
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
             </div>
+
+            {/* Formulario Añadir operador (solo super_admin) */}
+            {canViewRevenue() && showAddOperator && (
+              <div className="mb-8 p-6 rounded-lg border-2 bg-quaternary/30" style={{ borderColor: '#E5B3B0' }}>
+                <h2 className="text-h3 font-heading text-body mb-4">Añadir operador</h2>
+                <p className="text-body font-body text-sm mb-4">El operador podrá ver reservas y paquetes pero no ingresos. Útil cuando el servidor está desplegado y no puedes editar archivos.</p>
+                {addOperatorError && (
+                  <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm font-body">{addOperatorError}</div>
+                )}
+                {addOperatorSuccess && (
+                  <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm font-body">{addOperatorSuccess}</div>
+                )}
+                <form onSubmit={handleAddOperator} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                  <div>
+                    <label className="block text-body font-body font-medium mb-1">Correo del operador</label>
+                    <input
+                      type="email"
+                      value={operatorEmail}
+                      onChange={(e) => setOperatorEmail(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                      placeholder="operador@estudiopopnest.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-body font-body font-medium mb-1">Contraseña (mín. 6 caracteres)</label>
+                    <input
+                      type="password"
+                      value={operatorPassword}
+                      onChange={(e) => setOperatorPassword(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                      placeholder="••••••••"
+                      minLength={6}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-body font-body font-medium mb-1">Nombre (opcional)</label>
+                    <input
+                      type="text"
+                      value={operatorName}
+                      onChange={(e) => setOperatorName(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                      placeholder="Operador"
+                    />
+                  </div>
+                  <div className="md:col-span-2 flex items-end">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-lg font-body font-medium text-white"
+                      style={{ backgroundColor: '#B73D37' }}
+                    >
+                      Crear operador
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
 
             {/* Tabs */}
             <div className="mb-6 border-b border-neutral">

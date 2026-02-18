@@ -948,8 +948,9 @@ app.post('/api/auth/admin/login', (req, res) => {
       })
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase()
     const admins = getAdmins()
-    const admin = admins.find(a => a.email === email && a.password === password)
+    const admin = admins.find(a => a.email && a.email.trim().toLowerCase() === normalizedEmail && a.password === password)
 
     if (!admin) {
       return res.status(401).json({ 
@@ -974,6 +975,55 @@ app.post('/api/auth/admin/login', (req, res) => {
       success: false,
       error: error.message || 'Error interno del servidor' 
     })
+  }
+})
+
+// Verificar token de admin y devolver payload (o null si inválido/expirado)
+const parseAdminToken = (req) => {
+  try {
+    const token = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.body?.token
+    if (!token) return null
+    const payload = JSON.parse(Buffer.from(token, 'base64').toString())
+    if (payload.exp && Date.now() > payload.exp) return null
+    return payload
+  } catch (e) {
+    return null
+  }
+}
+
+// Endpoint: Añadir operador (solo super_admin). Útil cuando el servidor está desplegado y no puedes editar admins.json
+app.post('/api/auth/admin/add-operator', (req, res) => {
+  try {
+    res.setHeader('Content-Type', 'application/json')
+    const payload = parseAdminToken(req)
+    if (!payload || payload.role !== 'super_admin') {
+      return res.status(403).json({ success: false, error: 'Solo un administrador con visibilidad completa puede añadir operadores.' })
+    }
+    const { email, password, name } = req.body
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ success: false, error: 'El correo es requerido.' })
+    }
+    if (!password || String(password).length < 6) {
+      return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres.' })
+    }
+    const normalizedEmail = email.trim().toLowerCase()
+    const admins = getAdmins()
+    if (admins.some(a => a.email && a.email.trim().toLowerCase() === normalizedEmail)) {
+      return res.status(400).json({ success: false, error: 'Ya existe un administrador u operador con ese correo.' })
+    }
+    const newId = 'admin-' + Date.now()
+    admins.push({
+      id: newId,
+      email: normalizedEmail,
+      password: String(password),
+      name: (name && String(name).trim()) || 'Operador',
+      role: 'operator'
+    })
+    fs.writeFileSync(ADMINS_FILE, JSON.stringify(admins, null, 2))
+    res.json({ success: true, message: 'Operador añadido. Ya puede iniciar sesión en /admin/login con ese correo y contraseña.' })
+  } catch (error) {
+    console.error('Error in add-operator:', error)
+    res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
   }
 })
 

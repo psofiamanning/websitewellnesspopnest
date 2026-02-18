@@ -875,7 +875,7 @@ const DEFAULT_ADMINS = [
   {
     id: 'admin-1',
     email: 'info@estudiopopnest.com',
-    password: 'admin123',
+    password: 'Wq8#nK2$pL5mR9xV',
     name: 'Administrador Principal',
     role: 'super_admin'
   }

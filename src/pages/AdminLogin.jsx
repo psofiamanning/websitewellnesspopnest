@@ -54,6 +54,10 @@ function AdminLogin() {
       // Guardar token y rol de administrador (super_admin = visibilidad completa, operator = operativo sin ingresos)
       if (data.token) {
         localStorage.setItem('admin_token', data.token)
+        try {
+          const payload = JSON.parse(atob(data.token))
+          if (payload.role) localStorage.setItem('admin_role', payload.role)
+        } catch (_) {}
       }
       if (data.admin?.role) {
         localStorage.setItem('admin_role', data.admin.role)
@@ -62,7 +66,7 @@ function AdminLogin() {
       }
 
       // Redirigir al panel de administrador
-      navigate('/admin')
+      navigate('/admin', { replace: true })
     } catch (err) {
       console.error('Error en login de administrador:', err)
       if (err.message && err.message.includes('JSON')) {

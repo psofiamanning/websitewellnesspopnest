@@ -870,6 +870,10 @@ const generateAdminToken = (admin) => {
   return Buffer.from(JSON.stringify(payload)).toString('base64')
 }
 
+// Operador wellness: se asegura que exista en cada servidor (Railway, etc.)
+const WELLNESS_OPERATOR_EMAIL = 'wellness@estudiopopnest.com'
+const WELLNESS_OPERATOR_PASSWORD = 'W3lln3ss#Popn3st2026'
+
 // Lista inicial de administradores (se copia a admins.json la primera vez)
 const DEFAULT_ADMINS = [
   {
@@ -878,6 +882,13 @@ const DEFAULT_ADMINS = [
     password: 'Wq8#nK2$pL5mR9xV',
     name: 'Administrador Principal',
     role: 'super_admin'
+  },
+  {
+    id: 'admin-wellness',
+    email: WELLNESS_OPERATOR_EMAIL,
+    password: WELLNESS_OPERATOR_PASSWORD,
+    name: 'Wellness',
+    role: 'operator'
   }
 ]
 
@@ -886,16 +897,27 @@ const getAdmins = () => {
     let list
     if (fs.existsSync(ADMINS_FILE)) {
       list = JSON.parse(fs.readFileSync(ADMINS_FILE, 'utf8'))
-      // Asegurar que cada admin tenga role (compatibilidad con datos antiguos)
       list = list.map(a => ({ ...a, role: a.role === 'operator' ? 'operator' : 'super_admin' }))
+      // Asegurar que el operador wellness exista (migración para Railway/Vercel)
+      const hasWellness = list.some(a => a.email && a.email.toLowerCase() === WELLNESS_OPERATOR_EMAIL)
+      if (!hasWellness) {
+        list.push({
+          id: 'admin-wellness',
+          email: WELLNESS_OPERATOR_EMAIL,
+          password: WELLNESS_OPERATOR_PASSWORD,
+          name: 'Wellness',
+          role: 'operator'
+        })
+        fs.writeFileSync(ADMINS_FILE, JSON.stringify(list, null, 2))
+      }
     } else {
-      list = DEFAULT_ADMINS
-      fs.writeFileSync(ADMINS_FILE, JSON.stringify(DEFAULT_ADMINS, null, 2))
+      list = [...DEFAULT_ADMINS]
+      fs.writeFileSync(ADMINS_FILE, JSON.stringify(list, null, 2))
     }
     return list
   } catch (e) {
     console.error('Error reading admins:', e)
-    return DEFAULT_ADMINS
+    return [...DEFAULT_ADMINS]
   }
 }
 
@@ -949,8 +971,9 @@ app.post('/api/auth/admin/login', (req, res) => {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase()
+    const passwordTrimmed = String(password).trim()
     const admins = getAdmins()
-    const admin = admins.find(a => a.email && a.email.trim().toLowerCase() === normalizedEmail && a.password === password)
+    const admin = admins.find(a => a.email && a.email.trim().toLowerCase() === normalizedEmail && a.password === passwordTrimmed)
 
     if (!admin) {
       return res.status(401).json({ 
@@ -960,13 +983,12 @@ app.post('/api/auth/admin/login', (req, res) => {
     }
 
     const token = generateAdminToken(admin)
-    
-    // No devolver la contraseña
+    const role = admin.role === 'operator' ? 'operator' : 'super_admin'
     const { password: _, ...adminWithoutPassword } = admin
 
     res.json({
       success: true,
-      admin: adminWithoutPassword,
+      admin: { ...adminWithoutPassword, role },
       token
     })
   } catch (error) {
@@ -1011,19 +1033,42 @@ app.post('/api/auth/admin/add-operator', (req, res) => {
     if (admins.some(a => a.email && a.email.trim().toLowerCase() === normalizedEmail)) {
       return res.status(400).json({ success: false, error: 'Ya existe un administrador u operador con ese correo.' })
     }
+    const passwordToSave = String(password).trim()
+    if (passwordToSave.length < 6) {
+      return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres (sin espacios extra).' })
+    }
     const newId = 'admin-' + Date.now()
     admins.push({
       id: newId,
       email: normalizedEmail,
-      password: String(password),
+      password: passwordToSave,
       name: (name && String(name).trim()) || 'Operador',
       role: 'operator'
     })
     fs.writeFileSync(ADMINS_FILE, JSON.stringify(admins, null, 2))
-    res.json({ success: true, message: 'Operador añadido. Ya puede iniciar sesión en /admin/login con ese correo y contraseña.' })
+    res.json({ success: true, message: 'Operador añadido. Ya puede iniciar sesión en /admin/login con ' + normalizedEmail + ' y la contraseña que ingresaste.' })
   } catch (error) {
     console.error('Error in add-operator:', error)
     res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
+  }
+})
+
+// Endpoint: Listar cuentas de admin/operador (solo super_admin, para verificar que se guardaron)
+app.get('/api/auth/admin/list', (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.query?.token
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'Token requerido' })
+    }
+    const payload = parseAdminToken({ headers: { authorization: 'Bearer ' + token }, body: {} })
+    if (!payload || payload.role !== 'super_admin') {
+      return res.status(403).json({ success: false, error: 'Solo super admin puede listar cuentas' })
+    }
+    const admins = getAdmins()
+    const list = admins.map(a => ({ email: a.email, name: a.name, role: a.role === 'operator' ? 'operator' : 'super_admin' }))
+    res.json({ success: true, admins: list })
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message })
   }
 })
 

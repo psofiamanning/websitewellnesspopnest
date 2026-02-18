@@ -41,6 +41,8 @@ function Admin() {
   const [operatorName, setOperatorName] = useState('')
   const [addOperatorError, setAddOperatorError] = useState('')
   const [addOperatorSuccess, setAddOperatorSuccess] = useState('')
+  const [adminList, setAdminList] = useState(null)
+  const [adminListError, setAdminListError] = useState('')
 
   useEffect(() => {
     if (isAdminAuthenticated()) {
@@ -169,6 +171,24 @@ function Admin() {
     }).format(amount / 100)
   }
 
+  const fetchAdminList = async () => {
+    setAdminListError('')
+    setAdminList(null)
+    const token = localStorage.getItem('admin_token')
+    if (!token) return
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/admin/list?token=${encodeURIComponent(token)}`)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setAdminListError(data.error || 'Error al cargar la lista')
+        return
+      }
+      setAdminList(data.admins || [])
+    } catch (err) {
+      setAdminListError(err.message || 'Error de conexión')
+    }
+  }
+
   const handleAddOperator = async (e) => {
     e.preventDefault()
     setAddOperatorError('')
@@ -256,8 +276,29 @@ function Admin() {
             {/* Formulario Añadir operador (solo super_admin) */}
             {canViewRevenue() && showAddOperator && (
               <div className="mb-8 p-6 rounded-lg border-2 bg-quaternary/30" style={{ borderColor: '#E5B3B0' }}>
-                <h2 className="text-h3 font-heading text-body mb-4">Añadir operador</h2>
-                <p className="text-body font-body text-sm mb-4">El operador podrá ver reservas y paquetes pero no ingresos. Útil cuando el servidor está desplegado y no puedes editar archivos.</p>
+                <h2 className="text-h3 font-heading text-body mb-2">Cuentas guardadas</h2>
+                <p className="text-body font-body text-sm mb-3">Comprueba qué correos pueden entrar al panel (administradores y operadores).</p>
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={fetchAdminList}
+                    className="px-4 py-2 rounded-lg font-body font-medium text-white"
+                    style={{ backgroundColor: '#B73D37' }}
+                  >
+                    Ver cuentas guardadas
+                  </button>
+                  {adminListError && <span className="text-sm text-red-600">{adminListError}</span>}
+                </div>
+                {adminList && adminList.length > 0 && (
+                  <ul className="text-sm font-body text-body mb-6 list-disc list-inside">
+                    {adminList.map((a, i) => (
+                      <li key={i}>{a.email} — {a.role === 'operator' ? 'operador' : 'super admin'}</li>
+                    ))}
+                  </ul>
+                )}
+
+                <h2 className="text-h3 font-heading text-body mb-2 mt-6">Añadir operador</h2>
+                <p className="text-body font-body text-sm mb-4">El operador verá reservas y paquetes pero no ingresos. Usa la misma contraseña al crear y al iniciar sesión (sin espacios extra).</p>
                 {addOperatorError && (
                   <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm font-body">{addOperatorError}</div>
                 )}

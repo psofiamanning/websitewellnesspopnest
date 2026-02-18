@@ -858,11 +858,13 @@ const generateToken = (user) => {
 }
 
 // Función helper para generar token de administrador
+// role: 'super_admin' = visibilidad completa (ingresos, todo) | 'operator' = operativo (reservas, paquetes, sin ingresos)
 const generateAdminToken = (admin) => {
+  const role = admin.role === 'operator' ? 'operator' : 'super_admin'
   const payload = {
     adminId: admin.id,
     email: admin.email,
-    role: 'admin',
+    role,
     exp: Date.now() + (24 * 60 * 60 * 1000) // 24 horas
   }
   return Buffer.from(JSON.stringify(payload)).toString('base64')
@@ -874,17 +876,23 @@ const DEFAULT_ADMINS = [
     id: 'admin-1',
     email: 'info@estudiopopnest.com',
     password: 'admin123',
-    name: 'Administrador Principal'
+    name: 'Administrador Principal',
+    role: 'super_admin'
   }
 ]
 
 const getAdmins = () => {
   try {
+    let list
     if (fs.existsSync(ADMINS_FILE)) {
-      return JSON.parse(fs.readFileSync(ADMINS_FILE, 'utf8'))
+      list = JSON.parse(fs.readFileSync(ADMINS_FILE, 'utf8'))
+      // Asegurar que cada admin tenga role (compatibilidad con datos antiguos)
+      list = list.map(a => ({ ...a, role: a.role === 'operator' ? 'operator' : 'super_admin' }))
+    } else {
+      list = DEFAULT_ADMINS
+      fs.writeFileSync(ADMINS_FILE, JSON.stringify(DEFAULT_ADMINS, null, 2))
     }
-    fs.writeFileSync(ADMINS_FILE, JSON.stringify(DEFAULT_ADMINS, null, 2))
-    return DEFAULT_ADMINS
+    return list
   } catch (e) {
     console.error('Error reading admins:', e)
     return DEFAULT_ADMINS

@@ -51,9 +51,14 @@ function AdminLogin() {
         return
       }
 
-      // Guardar token de administrador
+      // Guardar token y rol de administrador (super_admin = visibilidad completa, operator = operativo sin ingresos)
       if (data.token) {
         localStorage.setItem('admin_token', data.token)
+      }
+      if (data.admin?.role) {
+        localStorage.setItem('admin_role', data.admin.role)
+      } else {
+        localStorage.setItem('admin_role', 'super_admin')
       }
 
       // Redirigir al panel de administrador

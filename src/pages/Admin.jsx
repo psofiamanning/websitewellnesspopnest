@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { getBookings } from '../services/bookingService'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -14,8 +14,13 @@ const isAdminAuthenticated = () => {
 // Cerrar sesión de administrador
 const adminLogout = () => {
   localStorage.removeItem('admin_token')
+  localStorage.removeItem('admin_role')
   window.location.href = '/admin/login'
 }
+
+// Rol: super_admin = ve ingresos y todo; operator = solo reservas/paquetes, sin ingresos
+const getAdminRole = () => localStorage.getItem('admin_role') || 'super_admin'
+const canViewRevenue = () => getAdminRole() === 'super_admin'
 
 function Admin() {
   const navigate = useNavigate()
@@ -32,14 +37,10 @@ function Admin() {
   const [activeTab, setActiveTab] = useState('bookings') // 'bookings' o 'packages'
 
   useEffect(() => {
-    // Verificar autenticación de administrador
-    if (!isAdminAuthenticated()) {
-      navigate('/admin/login')
-      return
+    if (isAdminAuthenticated()) {
+      loadBookings()
+      loadPackages()
     }
-
-    loadBookings()
-    loadPackages()
   }, [navigate])
 
   useEffect(() => {
@@ -162,8 +163,13 @@ function Admin() {
     }).format(amount / 100)
   }
 
+  // No mostrar nada del panel sin estar autenticado (evita que /admin sea público)
+  if (!isAdminAuthenticated()) {
+    return <Navigate to="/admin/login" replace />
+  }
+
   return (
-    <div className="wellness-background min-h-screen">
+    <div className="wellness-background min-h-screen overflow-x-visible">
       <div className="wellness-shapes">
         <div className="wellness-shape shape-1"></div>
         <div className="wellness-shape shape-2"></div>
@@ -172,12 +178,12 @@ function Admin() {
         <div className="wellness-shape shape-5"></div>
       </div>
       
-      <div className="wellness-content">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pt-24">
-          <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
+      <div className="wellness-content overflow-visible">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pr-6 sm:pr-6 lg:pr-10 py-8 md:py-12 pt-28 lg:pt-36 overflow-visible">
+          <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 overflow-visible">
             {/* Header */}
-            <div className="mb-8 flex justify-between items-start">
-              <div>
+            <div className="mb-8 flex flex-wrap justify-between items-start gap-4">
+              <div className="min-w-0 flex-1">
                 <h1 className="text-h1 font-heading text-body mb-2">
                   Panel de Administración
                 </h1>
@@ -187,7 +193,7 @@ function Admin() {
               </div>
               <button
                 onClick={adminLogout}
-                className="px-4 py-2 rounded-lg font-body transition-all duration-300 text-white hover:bg-opacity-90"
+                className="flex-shrink-0 px-4 py-2 rounded-lg font-body transition-all duration-300 text-white hover:bg-opacity-90 whitespace-nowrap"
                 style={{ 
                   backgroundColor: '#B73D37',
                 }}
@@ -252,8 +258,8 @@ function Admin() {
               </div>
             </div>
 
-            {/* Estadísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {/* Estadísticas (operadores no ven ingresos) */}
+            <div className={`grid grid-cols-1 gap-4 mb-6 ${canViewRevenue() ? 'md:grid-cols-4' : 'md:grid-cols-2'}`}>
               <div className="bg-quaternary rounded-lg p-4">
                 <p className="text-body font-body text-sm mb-1">Total Reservas</p>
                 <p className="text-h2 font-heading text-primary">{bookings.length}</p>
@@ -262,18 +268,22 @@ function Admin() {
                 <p className="text-body font-body text-sm mb-1">Total Paquetes</p>
                 <p className="text-h2 font-heading text-primary">{packages.length}</p>
               </div>
-              <div className="bg-quaternary rounded-lg p-4">
-                <p className="text-body font-body text-sm mb-1">Ingresos por Clases</p>
-                <p className="text-h2 font-heading text-primary">
-                  {formatCurrency(bookings.filter(b => b.paymentMethod !== 'package').reduce((sum, b) => sum + (b.payment?.amount || 0), 0))}
-                </p>
-              </div>
-              <div className="bg-quaternary rounded-lg p-4">
-                <p className="text-body font-body text-sm mb-1">Ingresos por Paquetes</p>
-                <p className="text-h2 font-heading text-primary">
-                  {formatCurrency(packages.reduce((sum, p) => sum + (p.payment?.amount || 0), 0))}
-                </p>
-              </div>
+              {canViewRevenue() && (
+                <>
+                  <div className="bg-quaternary rounded-lg p-4">
+                    <p className="text-body font-body text-sm mb-1">Ingresos por Clases</p>
+                    <p className="text-h2 font-heading text-primary">
+                      {formatCurrency(bookings.filter(b => b.paymentMethod !== 'package').reduce((sum, b) => sum + (b.payment?.amount || 0), 0))}
+                    </p>
+                  </div>
+                  <div className="bg-quaternary rounded-lg p-4">
+                    <p className="text-body font-body text-sm mb-1">Ingresos por Paquetes</p>
+                    <p className="text-h2 font-heading text-primary">
+                      {formatCurrency(packages.reduce((sum, p) => sum + (p.payment?.amount || 0), 0))}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Contenido según tab activo */}
@@ -427,16 +437,18 @@ function Admin() {
                               <p>
                                 <span className="font-medium">Clases disponibles:</span> {pkg.classesRemaining || ((pkg.classes || 10) - (pkg.classesUsed || packageBookings.length))}
                               </p>
-                              <p>
-                                <span className="font-medium">Monto:</span> {formatCurrency(pkg.payment?.amount || 0)}
-                              </p>
+                              {canViewRevenue() && (
+                                <p>
+                                  <span className="font-medium">Monto:</span> {formatCurrency(pkg.payment?.amount || 0)}
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="text-xs text-body font-body mb-2">
                               {format(new Date(pkg.createdAt || pkg.purchaseDate), "dd/MM/yyyy HH:mm", { locale: es })}
                             </div>
-                            {pkg.stripeInfo?.paymentIntentId && (
+                            {canViewRevenue() && pkg.stripeInfo?.paymentIntentId && (
                               <div className="text-xs text-body font-body opacity-75">
                                 Stripe ID: {pkg.stripeInfo.paymentIntentId.slice(0, 20)}...
                               </div>
@@ -500,7 +512,7 @@ function Admin() {
                     </div>
                   </div>
 
-                  {/* Información de pago Stripe */}
+                  {/* Información de pago Stripe (operadores no ven montos) */}
                   <div>
                     <h3 className="text-h3 font-heading text-body mb-3">Información de Pago (Stripe)</h3>
                     <div className="bg-quaternary rounded-lg p-4 space-y-2 text-body font-body">
@@ -519,14 +531,14 @@ function Admin() {
                           <code className="ml-2 text-xs bg-white px-2 py-1 rounded">{selectedBooking.packageId}</code>
                         </p>
                       )}
-                      {selectedBooking.paymentMethod !== 'package' && (
+                      {selectedBooking.paymentMethod !== 'package' && canViewRevenue() && (
                         <>
                           <p><span className="font-medium">Monto:</span> {formatCurrency(selectedBooking.payment?.amount || 0)}</p>
                           <p><span className="font-medium">Moneda:</span> {selectedBooking.payment?.currency || 'MXN'}</p>
                           <p><span className="font-medium">Tarjeta terminada en:</span> {selectedBooking.payment?.cardLastFour || 'N/A'}</p>
                         </>
                       )}
-                      {selectedBooking.stripeInfo?.paymentIntentId && (
+                      {canViewRevenue() && selectedBooking.stripeInfo?.paymentIntentId && (
                         <>
                           <p><span className="font-medium">Payment Intent ID:</span> 
                             <code className="ml-2 text-xs bg-white px-2 py-1 rounded">{selectedBooking.stripeInfo.paymentIntentId}</code>
@@ -600,20 +612,24 @@ function Admin() {
                     </div>
                   </div>
 
-                  {/* Información de pago */}
+                  {/* Información de pago (solo super_admin ve montos) */}
                   <div>
                     <h3 className="text-h3 font-heading text-body mb-3">Información de Pago</h3>
                     <div className="bg-quaternary rounded-lg p-4 space-y-2 text-body font-body">
                       <p><span className="font-medium">Método de pago:</span> {selectedPackage.payment?.method || 'Tarjeta de Crédito/Débito'}</p>
-                      <p><span className="font-medium">Monto:</span> {formatCurrency(selectedPackage.payment?.amount || 0)}</p>
-                      <p><span className="font-medium">Moneda:</span> {selectedPackage.payment?.currency || 'MXN'}</p>
-                      {selectedPackage.payment?.cardLastFour && (
-                        <p><span className="font-medium">Tarjeta terminada en:</span> {selectedPackage.payment.cardLastFour}</p>
-                      )}
-                      {selectedPackage.stripeInfo?.paymentIntentId && (
-                        <p><span className="font-medium">Payment Intent ID:</span> 
-                          <code className="ml-2 text-xs bg-white px-2 py-1 rounded">{selectedPackage.stripeInfo.paymentIntentId}</code>
-                        </p>
+                      {canViewRevenue() && (
+                        <>
+                          <p><span className="font-medium">Monto:</span> {formatCurrency(selectedPackage.payment?.amount || 0)}</p>
+                          <p><span className="font-medium">Moneda:</span> {selectedPackage.payment?.currency || 'MXN'}</p>
+                          {selectedPackage.payment?.cardLastFour && (
+                            <p><span className="font-medium">Tarjeta terminada en:</span> {selectedPackage.payment.cardLastFour}</p>
+                          )}
+                          {selectedPackage.stripeInfo?.paymentIntentId && (
+                            <p><span className="font-medium">Payment Intent ID:</span> 
+                              <code className="ml-2 text-xs bg-white px-2 py-1 rounded">{selectedPackage.stripeInfo.paymentIntentId}</code>
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

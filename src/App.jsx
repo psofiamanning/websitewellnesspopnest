@@ -1,6 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import { initMetaPixel, trackMetaPageView } from './utils/metaPixel'
 import Home from './pages/Home'
 import Classes from './pages/Classes'
 import Teachers from './pages/Teachers'
@@ -20,9 +22,21 @@ import TermsAndConditions from './pages/TermsAndConditions'
 import MyBookings from './pages/MyBookings'
 import './App.css'
 
+function MetaPixelRouter() {
+  const location = useLocation()
+  useEffect(() => {
+    initMetaPixel()
+  }, [])
+  useEffect(() => {
+    trackMetaPageView()
+  }, [location.pathname])
+  return null
+}
+
 function App() {
   return (
     <Router>
+      <MetaPixelRouter />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />

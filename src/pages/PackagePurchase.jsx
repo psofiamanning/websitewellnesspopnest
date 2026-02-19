@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { createPaymentIntent } from '../services/bookingService'
 import { getCurrentUser, isAuthenticated } from '../services/authService'
+import { trackMetaLead } from '../utils/metaPixel'
 import StripeCardElement from '../components/StripeCardElement'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'
@@ -282,6 +283,7 @@ function PackagePurchase() {
       if (stripeError) {
         alert(`⚠️ Compra guardada pero el pago requiere atención.\n\nPaquete: ${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\n\nError: ${stripeError.message}`)
       } else if (paymentStatus === 'succeeded') {
+        trackMetaLead({ content_name: 'compra_paquete', value: packageInfo?.price || 0, currency: 'MXN' })
         alert(`✅ ¡Paquete comprado exitosamente!\n\n${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\nEmail: ${customerInfo.email}\n\nAhora puedes usar tus ${packageInfo.classes} clases cuando quieras.`)
         navigate('/packages')
       } else {

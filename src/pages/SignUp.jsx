@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { signup, getCurrentUser } from '../services/authService'
+import { trackMetaLead } from '../utils/metaPixel'
 
 function SignUp() {
   const navigate = useNavigate()
@@ -57,12 +58,11 @@ function SignUp() {
       })
       
       if (result.success) {
-        // Verificar que el token se guardó correctamente
+        trackMetaLead({ content_name: 'registro', value: 0, currency: 'MXN' })
         const currentUser = getCurrentUser()
         console.log('✅ Usuario después del registro:', currentUser)
         console.log('✅ Teléfono en token después del registro:', currentUser?.phone)
         
-        // Mostrar mensaje de éxito
         setShowSuccess(true)
         
         // Redirigir después de 2 segundos para que el usuario vea el mensaje

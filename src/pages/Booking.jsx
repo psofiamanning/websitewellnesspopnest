@@ -7,6 +7,7 @@ import { format, addDays, startOfWeek, eachDayOfInterval, isSameDay } from 'date
 import { es } from 'date-fns/locale'
 import { saveBooking, createPaymentIntent, confirmBooking, confirmPayment, checkAvailability, getUserPackages } from '../services/bookingService'
 import { getCurrentUser, isAuthenticated } from '../services/authService'
+import { trackMetaLead } from '../utils/metaPixel'
 import StripeCardElement from '../components/StripeCardElement'
 
 // Función para cargar Stripe dinámicamente (solo si está instalado)
@@ -523,7 +524,6 @@ function Booking() {
           setUserPackages(updatedPackages)
         }
       } catch (saveError) {
-        // Si el error es de disponibilidad o de paquete, mostrar mensaje específico
         if (saveError.message && (
           saveError.message.includes('reservaciones') || 
           saveError.message.includes('disponible') ||
@@ -536,6 +536,8 @@ function Booking() {
         }
         throw saveError
       }
+
+      trackMetaLead({ content_name: 'reserva_clase', value: bookingData.payment?.amount ? bookingData.payment.amount / 100 : 0, currency: 'MXN' })
 
       const panelMessage = '\n\nPuedes ver tus reservaciones en tu panel de usuario (Mis reservas).'
       if (usePackage) {

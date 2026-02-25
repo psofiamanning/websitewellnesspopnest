@@ -6,6 +6,7 @@ import { initMetaPixel, trackMetaPageView } from './utils/metaPixel'
 import Home from './pages/Home'
 import Classes from './pages/Classes'
 import Teachers from './pages/Teachers'
+import Schedule from './pages/Schedule'
 import Booking from './pages/Booking'
 import Admin from './pages/Admin'
 import AdminLogin from './pages/AdminLogin'
@@ -44,6 +45,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<Classes />} />
         <Route path="/teachers" element={<Teachers />} />
+        <Route path="/horario" element={<Schedule />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/booking/package/:id" element={<PackagePurchase />} />
         <Route path="/booking/:type/:id" element={<Booking />} />

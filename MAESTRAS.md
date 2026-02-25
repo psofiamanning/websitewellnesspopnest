@@ -17,7 +17,7 @@ Si no existe el archivo `server/teachers.json`, el servidor lo crea con estas cu
 |--------------------------|-----------------------------|-------------------------|
 | Blanca Bear              | blanca@estudiopopnest.com   | Blanca2026              |
 | Brenda Granados Segovia  | brenda@estudiopopnest.com   | Brenda2026              |
-| Madeline Rojas Givaudan  | madeline@estudiopopnest.com | Madeline2026            |
+| Madeline Rojas Givaudan  | maderogiv@gmail.com         | Madeline2026            |
 
 El **nombre** en cada cuenta debe coincidir exactamente con el que aparece en las reservas (según `src/data/classes.js`). Si cambias el nombre de un profesor en la web, actualiza también su entrada en `server/teachers.json`.
 

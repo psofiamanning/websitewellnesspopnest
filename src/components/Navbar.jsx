@@ -32,6 +32,7 @@ function Navbar() {
     { path: '/', label: 'Inicio' },
     { path: '/classes', label: 'Clases' },
     { path: '/teachers', label: 'Profesores' },
+    { path: '/horario', label: 'Horario' },
     { path: '/packages', label: 'Paquetes' },
   ]
 

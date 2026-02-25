@@ -91,6 +91,14 @@ function Footer() {
               </li>
               <li>
                 <Link 
+                  to="/horario" 
+                  className="text-white/90 font-body text-sm hover:text-white transition-colors duration-200"
+                >
+                  Horario
+                </Link>
+              </li>
+              <li>
+                <Link 
                   to="/classes" 
                   className="text-white/90 font-body text-sm hover:text-white transition-colors duration-200"
                 >

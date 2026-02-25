@@ -682,7 +682,7 @@ app.get('/api/bookings/user/:email', (req, res) => {
 const DEFAULT_TEACHERS = [
   { id: 'teacher-1', email: 'blanca@estudiopopnest.com', password: 'Blanca2026', name: 'Blanca Bear', teacherId: 1 },
   { id: 'teacher-2', email: 'brenda@estudiopopnest.com', password: 'Brenda2026', name: 'Brenda Granados Segovia', teacherId: 2 },
-  { id: 'teacher-3', email: 'madeline@estudiopopnest.com', password: 'Madeline2026', name: 'Madeline Rojas Givaudan', teacherId: 3 }
+  { id: 'teacher-3', email: 'maderogiv@gmail.com', password: 'Madeline2026', name: 'Madeline Rojas Givaudan', teacherId: 3 }
 ]
 const getTeachers = () => {
   try {

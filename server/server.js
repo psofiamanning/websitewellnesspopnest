@@ -687,7 +687,17 @@ const DEFAULT_TEACHERS = [
 const getTeachers = () => {
   try {
     if (fs.existsSync(TEACHERS_FILE)) {
-      return JSON.parse(fs.readFileSync(TEACHERS_FILE, 'utf8'))
+      let list = JSON.parse(fs.readFileSync(TEACHERS_FILE, 'utf8'))
+      // Migración: actualizar correo de Madeline si sigue el antiguo
+      const madelineOld = 'madeline@estudiopopnest.com'
+      const madelineNew = 'maderogiv@gmail.com'
+      const idx = list.findIndex(t => t.id === 'teacher-3' && (t.email || '').toLowerCase() === madelineOld)
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], email: madelineNew }
+        fs.writeFileSync(TEACHERS_FILE, JSON.stringify(list, null, 2))
+        console.log('✅ Correo de Madeline actualizado a', madelineNew, 'en teachers.json')
+      }
+      return list
     }
     fs.writeFileSync(TEACHERS_FILE, JSON.stringify(DEFAULT_TEACHERS, null, 2))
     return [...DEFAULT_TEACHERS]
@@ -1082,10 +1092,22 @@ app.post('/api/auth/teacher/login', (req, res) => {
     }
     const normalizedEmail = String(email).trim().toLowerCase()
     const passwordTrimmed = String(password).trim()
-    const teachers = getTeachers()
-    const teacher = teachers.find(
+    let teachers = getTeachers()
+    let teacher = teachers.find(
       t => t.email && t.email.trim().toLowerCase() === normalizedEmail && t.password === passwordTrimmed
     )
+    // Respaldo: si Madeline entra con maderogiv@gmail.com pero en el archivo sigue el correo antiguo, actualizar y permitir login
+    if (!teacher && normalizedEmail === 'maderogiv@gmail.com') {
+      const idx = teachers.findIndex(t => t.id === 'teacher-3' && (t.email || '').toLowerCase() === 'madeline@estudiopopnest.com' && t.password === passwordTrimmed)
+      if (idx !== -1) {
+        teachers[idx] = { ...teachers[idx], email: 'maderogiv@gmail.com' }
+        try {
+          fs.writeFileSync(TEACHERS_FILE, JSON.stringify(teachers, null, 2))
+          console.log('✅ Correo de Madeline actualizado a maderogiv@gmail.com en login')
+        } catch (e) { console.error('Error guardando teachers.json:', e.message) }
+        teacher = teachers[idx]
+      }
+    }
     if (!teacher) {
       return res.status(401).json({ success: false, error: 'Credenciales inválidas' })
     }

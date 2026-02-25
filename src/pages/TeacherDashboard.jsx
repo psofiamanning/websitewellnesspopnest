@@ -52,7 +52,7 @@ function TeacherDashboard() {
   if (!isTeacherAuthenticated()) return null
 
   return (
-    <div className="wellness-background min-h-screen py-12 px-4">
+    <div className="wellness-background min-h-screen pt-28 pb-12 px-4">
       <div className="wellness-shapes">
         <div className="wellness-shape shape-1"></div>
         <div className="wellness-shape shape-2"></div>

@@ -8,7 +8,7 @@ export const teacherLogout = () => {
   localStorage.removeItem('teacher_token')
   localStorage.removeItem('teacher_name')
   localStorage.removeItem('teacher_id')
-  window.location.href = '/maestras/login'
+  window.location.href = '/profesores/login'
 }
 
 /** Obtiene las reservas confirmadas de las próximas clases de la maestra logueada */

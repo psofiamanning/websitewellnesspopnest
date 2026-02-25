@@ -12,7 +12,7 @@ function TeacherDashboard() {
 
   useEffect(() => {
     if (!isTeacherAuthenticated()) {
-      navigate('/maestras/login', { replace: true })
+      navigate('/profesores/login', { replace: true })
       return
     }
     let cancelled = false

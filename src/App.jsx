@@ -55,8 +55,8 @@ function App() {
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
         <Route path="/admin/reset-password" element={<AdminResetPassword />} />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/maestras/login" element={<TeacherLogin />} />
-        <Route path="/maestras" element={<TeacherDashboard />} />
+        <Route path="/profesores/login" element={<TeacherLogin />} />
+        <Route path="/profesores" element={<TeacherDashboard />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />
         <Route path="/mis-reservas" element={<MyBookings />} />

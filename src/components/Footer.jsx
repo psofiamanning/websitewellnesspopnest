@@ -203,6 +203,12 @@ function Footer() {
                 Admin
               </Link>
               <Link 
+                to="/profesores/login" 
+                className="text-white/80 font-body text-xs hover:text-white transition-colors duration-200"
+              >
+                Acceso profesores
+              </Link>
+              <Link 
                 to="/privacidad" 
                 className="text-white/80 font-body text-xs hover:text-white transition-colors duration-200"
               >

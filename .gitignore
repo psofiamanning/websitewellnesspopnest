@@ -22,6 +22,7 @@ server/.env
 server/bookings.json
 server/users.json
 server/admins.json
+server/teachers.json
 server/password-reset-tokens.json
 server/admin-password-reset-tokens.json
 server/node_modules/

@@ -17,6 +17,8 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import AdminForgotPassword from './pages/AdminForgotPassword'
 import AdminResetPassword from './pages/AdminResetPassword'
+import TeacherLogin from './pages/TeacherLogin'
+import TeacherDashboard from './pages/TeacherDashboard'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import MyBookings from './pages/MyBookings'
@@ -53,6 +55,8 @@ function App() {
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
         <Route path="/admin/reset-password" element={<AdminResetPassword />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/maestras/login" element={<TeacherLogin />} />
+        <Route path="/maestras" element={<TeacherDashboard />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />
         <Route path="/mis-reservas" element={<MyBookings />} />

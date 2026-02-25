@@ -192,7 +192,11 @@ async function sendPasswordResetEmail(email, resetToken) {
 }
 
 async function sendAdminPasswordResetEmail(email, resetToken) {
-  if (!email || (!mailerSend && !mailTransporter)) return
+  if (!email) return
+  if (!mailerSend && !mailTransporter) {
+    console.warn('⚠️ Correo no configurado: no se envía enlace de restablecimiento de administrador a', email, '- Configura MAILERSEND_API_KEY o SMTP_MAIL_USER + SMTP_MAIL_APP_PASSWORD en server/.env')
+    return
+  }
   const resetLink = `${FRONTEND_URL}/admin/reset-password?token=${encodeURIComponent(resetToken)}`
   const subject = 'Restablecer contraseña de administrador - Estudio Popnest Wellness'
   const text = `Hola,\n\nRecibimos una solicitud para restablecer la contraseña del panel de administración. Haz clic en el siguiente enlace (válido 1 hora):\n\n${resetLink}\n\nSi no solicitaste esto, ignora este correo.\n\nSaludos,\nEstudio Popnest Wellness`
@@ -234,6 +238,7 @@ const USERS_FILE = join(__dirname, 'users.json')
 const RESET_TOKENS_FILE = join(__dirname, 'password-reset-tokens.json')
 const ADMINS_FILE = join(__dirname, 'admins.json')
 const ADMIN_RESET_TOKENS_FILE = join(__dirname, 'admin-password-reset-tokens.json')
+const TEACHERS_FILE = join(__dirname, 'teachers.json')
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000 // 1 hora
 
@@ -673,6 +678,73 @@ app.get('/api/bookings/user/:email', (req, res) => {
   }
 })
 
+// --- Maestras: cuentas y token ---
+const DEFAULT_TEACHERS = [
+  { id: 'teacher-1', email: 'blanca@estudiopopnest.com', password: 'Blanca2026', name: 'Blanca Bear', teacherId: 1 },
+  { id: 'teacher-2', email: 'brenda@estudiopopnest.com', password: 'Brenda2026', name: 'Brenda Granados Segovia', teacherId: 2 },
+  { id: 'teacher-3', email: 'madeline@estudiopopnest.com', password: 'Madeline2026', name: 'Madeline Rojas Givaudan', teacherId: 3 }
+]
+const getTeachers = () => {
+  try {
+    if (fs.existsSync(TEACHERS_FILE)) {
+      return JSON.parse(fs.readFileSync(TEACHERS_FILE, 'utf8'))
+    }
+    fs.writeFileSync(TEACHERS_FILE, JSON.stringify(DEFAULT_TEACHERS, null, 2))
+    return [...DEFAULT_TEACHERS]
+  } catch (e) {
+    console.error('Error reading teachers:', e)
+    return [...DEFAULT_TEACHERS]
+  }
+}
+const generateTeacherToken = (teacher) => {
+  const payload = {
+    teacherId: teacher.teacherId,
+    id: teacher.id,
+    email: teacher.email,
+    name: teacher.name,
+    exp: Date.now() + (7 * 24 * 60 * 60 * 1000)
+  }
+  return Buffer.from(JSON.stringify(payload)).toString('base64')
+}
+const parseTeacherToken = (req) => {
+  try {
+    const token = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.body?.token
+    if (!token) return null
+    const payload = JSON.parse(Buffer.from(token, 'base64').toString())
+    if (payload.exp && Date.now() > payload.exp) return null
+    return payload
+  } catch (e) {
+    return null
+  }
+}
+
+// Endpoint: Reservas próximas para la maestra (solo las clases que imparte ella)
+app.get('/api/bookings/teacher/upcoming', (req, res) => {
+  try {
+    const payload = parseTeacherToken(req)
+    if (!payload || !payload.name) {
+      return res.status(401).json({ error: 'Debes iniciar sesión como maestra' })
+    }
+    const teacherName = payload.name.trim()
+    const bookings = getBookings()
+    const today = format(new Date(), 'yyyy-MM-dd')
+    const upcoming = bookings.filter(b => {
+      if (b.status !== 'confirmed') return false
+      if ((b.teacherName || '').trim() !== teacherName) return false
+      return b.date >= today
+    })
+    upcoming.sort((a, b) => {
+      const da = new Date(`${a.date}T${a.time}`)
+      const db = new Date(`${b.date}T${b.time}`)
+      return da - db
+    })
+    res.json(upcoming)
+  } catch (error) {
+    console.error('Error getting teacher upcoming bookings:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
 // Endpoint: Obtener reserva por ID
 app.get('/api/bookings/:id', (req, res) => {
   try {
@@ -993,10 +1065,40 @@ app.post('/api/auth/admin/login', (req, res) => {
     })
   } catch (error) {
     console.error('Error in admin login:', error)
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: error.message || 'Error interno del servidor' 
+      error: error.message || 'Error interno del servidor'
     })
+  }
+})
+
+// Endpoint: Login de maestra (para ver sus próximas clases reservadas)
+app.post('/api/auth/teacher/login', (req, res) => {
+  try {
+    res.setHeader('Content-Type', 'application/json')
+    const { email, password } = req.body
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email y contraseña son requeridos' })
+    }
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const passwordTrimmed = String(password).trim()
+    const teachers = getTeachers()
+    const teacher = teachers.find(
+      t => t.email && t.email.trim().toLowerCase() === normalizedEmail && t.password === passwordTrimmed
+    )
+    if (!teacher) {
+      return res.status(401).json({ success: false, error: 'Credenciales inválidas' })
+    }
+    const token = generateTeacherToken(teacher)
+    const { password: _, ...teacherWithoutPassword } = teacher
+    res.json({
+      success: true,
+      teacher: teacherWithoutPassword,
+      token
+    })
+  } catch (error) {
+    console.error('Error in teacher login:', error)
+    res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
   }
 })
 
@@ -1117,6 +1219,34 @@ app.post('/api/auth/admin/reset-password', (req, res) => {
     res.json({ success: true, message: 'Contraseña actualizada. Ya puedes iniciar sesión en el panel de administración.' })
   } catch (error) {
     console.error('Error in admin reset-password:', error)
+    res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
+  }
+})
+
+// Endpoint: Restablecer contraseña de administrador SIN correo (solo si ADMIN_RESET_SECRET está configurado)
+// Uso: POST /api/auth/admin/force-reset-password { "email": "info@estudiopopnest.com", "newPassword": "tuNuevaContraseña", "secret": "el valor de ADMIN_RESET_SECRET" }
+app.post('/api/auth/admin/force-reset-password', (req, res) => {
+  try {
+    res.setHeader('Content-Type', 'application/json')
+    const expectedSecret = (process.env.ADMIN_RESET_SECRET || '').trim()
+    if (!expectedSecret) {
+      return res.status(503).json({ success: false, error: 'Recuperación sin correo no está configurada. Añade ADMIN_RESET_SECRET en server/.env' })
+    }
+    const { email, newPassword, secret } = req.body
+    if (!email || !newPassword || secret !== expectedSecret) {
+      return res.status(400).json({ success: false, error: 'Email, nueva contraseña y secret correctos son requeridos' })
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres' })
+    }
+    const updated = updateAdminPassword(email.trim(), newPassword)
+    if (!updated) {
+      return res.status(404).json({ success: false, error: 'No existe un administrador con ese correo' })
+    }
+    console.log('✅ Contraseña de administrador actualizada (force-reset) para:', email.trim())
+    res.json({ success: true, message: 'Contraseña actualizada. Ya puedes iniciar sesión en el panel de administración.' })
+  } catch (error) {
+    console.error('Error in admin force-reset-password:', error)
     res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
   }
 })

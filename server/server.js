@@ -1209,6 +1209,50 @@ app.post('/api/auth/admin/add-operator', (req, res) => {
   }
 })
 
+// Endpoint: Crear reserva manual (admin/operador). Para ver reservas en producción sin depender de bookings.json en repo.
+app.post('/api/admin/bookings', (req, res) => {
+  try {
+    res.setHeader('Content-Type', 'application/json')
+    const payload = parseAdminToken(req)
+    if (!payload) {
+      return res.status(401).json({ success: false, error: 'Debes iniciar sesión como administrador.' })
+    }
+    const { date, time, className, teacherName, customer } = req.body
+    const fullName = (customer && customer.fullName) || (customer && [customer.firstName, customer.lastName].filter(Boolean).join(' ')) || ''
+    const email = (customer && customer.email) || ''
+    const phone = (customer && customer.phone) || ''
+    if (!date || !time || !className || !fullName.trim()) {
+      return res.status(400).json({ success: false, error: 'Faltan datos: fecha, hora, clase y nombre del cliente son obligatorios.' })
+    }
+    const booking = {
+      id: 'booking-' + Date.now(),
+      date: String(date).trim(),
+      time: String(time).trim(),
+      className: String(className).trim(),
+      teacherName: (teacherName && String(teacherName).trim()) || '',
+      type: 'class',
+      status: 'confirmed',
+      customer: {
+        fullName: fullName.trim(),
+        firstName: (fullName.trim().split(/\s+/)[0] || '').trim(),
+        lastName: (fullName.trim().split(/\s+/).slice(1).join(' ') || '').trim(),
+        email: String(email).trim(),
+        phone: String(phone).trim()
+      },
+      paymentMethod: 'manual',
+      payment: { status: 'succeeded', amount: 0, currency: 'mxn', method: 'manual' },
+      createdAt: new Date().toISOString(),
+      formattedDate: new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    }
+    const saved = saveBooking(booking)
+    console.log('✅ Reserva manual creada por admin:', saved.id, saved.className, saved.customer?.fullName)
+    res.json({ success: true, booking: saved })
+  } catch (error) {
+    console.error('Error creating admin booking:', error)
+    res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
+  }
+})
+
 // Endpoint: Listar cuentas de admin/operador (solo super_admin, para verificar que se guardaron)
 app.get('/api/auth/admin/list', (req, res) => {
   try {

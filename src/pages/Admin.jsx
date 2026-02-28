@@ -43,6 +43,16 @@ function Admin() {
   const [addOperatorSuccess, setAddOperatorSuccess] = useState('')
   const [adminList, setAdminList] = useState(null)
   const [adminListError, setAdminListError] = useState('')
+  const [showAddBooking, setShowAddBooking] = useState(false)
+  const [addBookingDate, setAddBookingDate] = useState('')
+  const [addBookingTime, setAddBookingTime] = useState('')
+  const [addBookingClassName, setAddBookingClassName] = useState('')
+  const [addBookingTeacherName, setAddBookingTeacherName] = useState('')
+  const [addBookingCustomerName, setAddBookingCustomerName] = useState('')
+  const [addBookingCustomerEmail, setAddBookingCustomerEmail] = useState('')
+  const [addBookingCustomerPhone, setAddBookingCustomerPhone] = useState('')
+  const [addBookingError, setAddBookingError] = useState('')
+  const [addBookingSuccess, setAddBookingSuccess] = useState('')
 
   useEffect(() => {
     if (isAdminAuthenticated()) {
@@ -240,6 +250,51 @@ function Admin() {
     }
   }
 
+  const handleAddBooking = async (e) => {
+    e.preventDefault()
+    setAddBookingError('')
+    setAddBookingSuccess('')
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      setAddBookingError('Sesión expirada. Vuelve a iniciar sesión.')
+      return
+    }
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          date: addBookingDate.trim(),
+          time: addBookingTime.trim(),
+          className: addBookingClassName.trim(),
+          teacherName: addBookingTeacherName.trim(),
+          customer: {
+            fullName: addBookingCustomerName.trim(),
+            email: addBookingCustomerEmail.trim(),
+            phone: addBookingCustomerPhone.trim()
+          }
+        })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setAddBookingError(data.error || 'Error al crear la reserva')
+        return
+      }
+      setAddBookingSuccess('Reserva creada correctamente.')
+      setAddBookingDate('')
+      setAddBookingTime('')
+      setAddBookingClassName('')
+      setAddBookingTeacherName('')
+      setAddBookingCustomerName('')
+      setAddBookingCustomerEmail('')
+      setAddBookingCustomerPhone('')
+      loadBookings()
+    } catch (err) {
+      setAddBookingError(err.message || 'Error de conexión')
+    }
+  }
+
   // No mostrar nada del panel sin estar autenticado (evita que /admin sea público)
   if (!isAdminAuthenticated()) {
     return <Navigate to="/admin/login" replace />
@@ -268,7 +323,15 @@ function Admin() {
                   Gestión de reservas, paquetes y pagos
                 </p>
               </div>
-              <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="flex flex-shrink-0 items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => { setShowAddBooking(!showAddBooking); setAddBookingError(''); setAddBookingSuccess(''); setActiveTab('bookings'); }}
+                  className="px-4 py-2 rounded-lg font-body transition-all duration-300 border-2 whitespace-nowrap"
+                  style={{ borderColor: '#B73D37', color: '#B73D37' }}
+                >
+                  {showAddBooking ? 'Ocultar añadir reserva' : 'Añadir reserva manual'}
+                </button>
                 {canViewRevenue() && (
                   <button
                     type="button"
@@ -423,6 +486,57 @@ function Admin() {
                 />
               </div>
             </div>
+
+            {/* Formulario Añadir reserva manual (se muestra al hacer clic en el botón del header) */}
+            {activeTab === 'bookings' && showAddBooking && (
+              <div className="mb-6">
+                <div className="mt-4 p-6 rounded-lg border-2 bg-quaternary/30" style={{ borderColor: '#E5B3B0' }}>
+                    <h2 className="text-h3 font-heading text-body mb-2">Añadir reserva manual</h2>
+                    <p className="text-body font-body text-sm mb-4">Crea una reserva para que aparezca en la lista (útil cuando el servidor no tiene aún el archivo de reservas).</p>
+                    {addBookingError && (
+                      <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm font-body">{addBookingError}</div>
+                    )}
+                    {addBookingSuccess && (
+                      <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm font-body">{addBookingSuccess}</div>
+                    )}
+                    <form onSubmit={handleAddBooking} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
+                      <div>
+                        <label className="block text-body font-body font-medium mb-1">Fecha *</label>
+                        <input type="date" value={addBookingDate} onChange={(e) => setAddBookingDate(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
+                      </div>
+                      <div>
+                        <label className="block text-body font-body font-medium mb-1">Hora *</label>
+                        <input type="text" placeholder="Ej. 11:30" value={addBookingTime} onChange={(e) => setAddBookingTime(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
+                      </div>
+                      <div>
+                        <label className="block text-body font-body font-medium mb-1">Clase *</label>
+                        <input type="text" placeholder="Ej. Tai Chi" value={addBookingClassName} onChange={(e) => setAddBookingClassName(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
+                      </div>
+                      <div>
+                        <label className="block text-body font-body font-medium mb-1">Profesor</label>
+                        <input type="text" placeholder="Ej. Blanca Bear" value={addBookingTeacherName} onChange={(e) => setAddBookingTeacherName(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-body font-body font-medium mb-1">Nombre del cliente *</label>
+                        <input type="text" placeholder="Ej. Perla Ruiz" value={addBookingCustomerName} onChange={(e) => setAddBookingCustomerName(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
+                      </div>
+                      <div>
+                        <label className="block text-body font-body font-medium mb-1">Email del cliente</label>
+                        <input type="email" placeholder="ejemplo@email.com" value={addBookingCustomerEmail} onChange={(e) => setAddBookingCustomerEmail(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" />
+                      </div>
+                      <div>
+                        <label className="block text-body font-body font-medium mb-1">Teléfono</label>
+                        <input type="text" placeholder="Opcional" value={addBookingCustomerPhone} onChange={(e) => setAddBookingCustomerPhone(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <button type="submit" className="px-4 py-2 rounded-lg font-body font-medium text-white" style={{ backgroundColor: '#B73D37' }}>
+                          Crear reserva
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+              </div>
+            )}
 
             {/* Estadísticas (operadores no ven ingresos) */}
             <div className={`grid grid-cols-1 gap-4 mb-6 ${canViewRevenue() ? 'md:grid-cols-4' : 'md:grid-cols-2'}`}>

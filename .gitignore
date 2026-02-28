@@ -23,6 +23,13 @@ server/bookings.json
 server/users.json
 server/admins.json
 server/teachers.json
+server/marketing-assets/*
+!server/marketing-assets/README.md
+!server/marketing-assets/*.jpg
+!server/marketing-assets/*.jpeg
+!server/marketing-assets/*.png
+!server/marketing-assets/*.webp
+!server/marketing-assets/*.gif
 server/password-reset-tokens.json
 server/admin-password-reset-tokens.json
 server/node_modules/

@@ -239,6 +239,7 @@ const RESET_TOKENS_FILE = join(__dirname, 'password-reset-tokens.json')
 const ADMINS_FILE = join(__dirname, 'admins.json')
 const ADMIN_RESET_TOKENS_FILE = join(__dirname, 'admin-password-reset-tokens.json')
 const TEACHERS_FILE = join(__dirname, 'teachers.json')
+const MARKETING_ASSETS_DIR = join(__dirname, 'marketing-assets')
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000 // 1 hora
 
@@ -1121,6 +1122,37 @@ app.post('/api/auth/teacher/login', (req, res) => {
   } catch (error) {
     console.error('Error in teacher login:', error)
     res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
+  }
+})
+
+// Endpoint protegido: servir imágenes de marketing desde server/marketing-assets
+// Uso recomendado: /api/marketing/image/banner-news.png?key=EL_MISMO_VALOR_DE_MARKETING_ASSETS_KEY
+app.get('/api/marketing/image/:name', (req, res) => {
+  try {
+    const secret = (process.env.MARKETING_ASSETS_KEY || '').trim()
+    if (!secret) {
+      return res.status(503).json({ error: 'Assets de marketing no configurados. Falta MARKETING_ASSETS_KEY.' })
+    }
+    const provided = String(req.query.key || '').trim()
+    if (provided !== secret) {
+      return res.status(403).json({ error: 'Acceso no autorizado.' })
+    }
+
+    // Evitar directory traversal: permitir solo nombres simples o subcarpetas seguras
+    const rawName = String(req.params.name || '')
+    if (!rawName || rawName.includes('..')) {
+      return res.status(400).json({ error: 'Nombre de archivo inválido.' })
+    }
+
+    const filePath = join(MARKETING_ASSETS_DIR, rawName)
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Archivo no encontrado.' })
+    }
+
+    res.sendFile(filePath)
+  } catch (error) {
+    console.error('Error serving marketing asset:', error)
+    res.status(500).json({ error: error.message || 'Error interno del servidor' })
   }
 })
 

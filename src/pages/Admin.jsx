@@ -142,6 +142,22 @@ function Admin() {
     ? (selectedGroup.type === 'class' ? byClass[selectedGroup.name] : byTeacher[selectedGroup.name]) || []
     : []
 
+  // Lista de todas las reservas para la vista inicial (sin filtro de fecha): orden por fecha y hora (más recientes / próximas primero)
+  const allBookingsForList = searchTerm.trim()
+    ? bookings.filter(b =>
+        (b.customer?.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (b.customer?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (b.customer?.phone || '').includes(searchTerm) ||
+        (b.className || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (b.teacherName || '').toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [...bookings]
+  const allBookingsSortedByDate = [...allBookingsForList].sort((a, b) => {
+    const da = new Date(`${a.date}T${a.time || '00:00'}`)
+    const db = new Date(`${b.date}T${b.time || '00:00'}`)
+    return db - da
+  })
+
   const filterPackages = () => {
     let filtered = [...packages]
 
@@ -441,8 +457,62 @@ function Admin() {
               /* Reservas: filtrar por fecha → por clase o por profesor → detalle */
               <div className="space-y-6">
                 {!filterDate ? (
-                  <div className="text-center py-12 bg-quaternary rounded-lg">
-                    <p className="text-body font-body">Selecciona una fecha para ver las reservas.</p>
+                  /* Vista inicial: todas las reservas ordenadas por fecha (más recientes primero) */
+                  <div className="space-y-4">
+                    <h3 className="text-h3 font-heading text-body">
+                      Todas las reservas ({allBookingsSortedByDate.length})
+                    </h3>
+                    {allBookingsSortedByDate.length === 0 ? (
+                      <div className="text-center py-12 bg-quaternary rounded-lg">
+                        <p className="text-body font-body">
+                          {searchTerm ? 'No hay reservas que coincidan con la búsqueda.' : 'Aún no hay reservas.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr className="border-b-2 border-neutral">
+                              <th className="text-left py-3 px-2 font-body font-medium text-body">Fecha</th>
+                              <th className="text-left py-3 px-2 font-body font-medium text-body">Hora</th>
+                              <th className="text-left py-3 px-2 font-body font-medium text-body">Clase</th>
+                              <th className="text-left py-3 px-2 font-body font-medium text-body">Cliente</th>
+                              <th className="text-left py-3 px-2 font-body font-medium text-body hidden sm:table-cell">Estado</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {allBookingsSortedByDate.map((booking) => (
+                              <tr
+                                key={booking.id}
+                                onClick={() => setSelectedBooking(booking)}
+                                className="border-b border-neutral hover:bg-quaternary/50 cursor-pointer transition-colors"
+                              >
+                                <td className="py-3 px-2 font-body text-body whitespace-nowrap">
+                                  {booking.date ? format(new Date(booking.date + 'T12:00:00'), 'EEE d MMM yyyy', { locale: es }) : '—'}
+                                </td>
+                                <td className="py-3 px-2 font-body text-body">{booking.time || '—'}</td>
+                                <td className="py-3 px-2 font-body text-body">{booking.className || '—'}</td>
+                                <td className="py-3 px-2 font-body text-body">
+                                  {booking.customer?.fullName || [booking.customer?.firstName, booking.customer?.lastName].filter(Boolean).join(' ') || '—'}
+                                </td>
+                                <td className="py-3 px-2 font-body text-sm hidden sm:table-cell">
+                                  <span className={`px-2 py-0.5 rounded-full ${
+                                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                    booking.status === 'cancelled' ? 'bg-gray-200 text-gray-700' :
+                                    'bg-amber-100 text-amber-800'
+                                  }`}>
+                                    {booking.status === 'confirmed' ? 'Confirmada' : booking.status === 'cancelled' ? 'Cancelada' : (booking.status || 'Pendiente')}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                    <p className="text-body font-body text-sm text-neutral-600">
+                      Usa el filtro por fecha para ver las reservas agrupadas por clase o profesor. Haz clic en una fila para ver el detalle.
+                    </p>
                   </div>
                 ) : (
                   <>

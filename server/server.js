@@ -10,6 +10,7 @@ import fs from 'fs'
 import crypto from 'node:crypto'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { getBookings, saveBooking, updateBooking, isUsingSupabase } from './db/bookings.js'
 
 dotenv.config()
 
@@ -23,7 +24,7 @@ const PORT = process.env.PORT || 3000
 app.use(cors())
 // Webhook de Stripe debe recibir el body RAW (sin parsear) para verificar la firma.
 // Por eso se declara ANTES de express.json().
-app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature']
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
   let event
@@ -37,31 +38,37 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) =
     console.error('Webhook signature verification failed:', err.message)
     return res.status(400).send(`Webhook Error: ${err.message}`)
   }
-  switch (event.type) {
-    case 'payment_intent.succeeded': {
-      const paymentIntent = event.data.object
-      console.log('PaymentIntent succeeded:', paymentIntent.id)
-      const bookings = getBookings()
-      const booking = bookings.find(b => b.paymentIntentId === paymentIntent.id)
-      if (booking) {
-        updateBooking(booking.id, { paymentStatus: 'succeeded', status: 'confirmed' })
-        const updated = getBookings().find(b => b.id === booking.id)
-        if (updated?.customer?.email) sendBookingConfirmationEmail(updated).catch(() => {})
+  try {
+    switch (event.type) {
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object
+        console.log('PaymentIntent succeeded:', paymentIntent.id)
+        const bookings = await getBookings()
+        const booking = bookings.find(b => b.paymentIntentId === paymentIntent.id || b.stripeInfo?.paymentIntentId === paymentIntent.id)
+        if (booking) {
+          await updateBooking(booking.id, { paymentStatus: 'succeeded', status: 'confirmed' })
+          const all = await getBookings()
+          const updated = all.find(b => b.id === booking.id)
+          if (updated?.customer?.email) sendBookingConfirmationEmail(updated).catch(() => {})
+        }
+        break
       }
-      break
+      case 'payment_intent.payment_failed': {
+        const failedPayment = event.data.object
+        console.log('PaymentIntent failed:', failedPayment.id)
+        const failedBookings = await getBookings()
+        const failedBooking = failedBookings.find(b => b.paymentIntentId === failedPayment.id || b.stripeInfo?.paymentIntentId === failedPayment.id)
+        if (failedBooking) await updateBooking(failedBooking.id, { paymentStatus: 'failed', status: 'pending' })
+        break
+      }
+      default:
+        console.log(`Unhandled event type ${event.type}`)
     }
-    case 'payment_intent.payment_failed': {
-      const failedPayment = event.data.object
-      console.log('PaymentIntent failed:', failedPayment.id)
-      const failedBookings = getBookings()
-      const failedBooking = failedBookings.find(b => b.paymentIntentId === failedPayment.id)
-      if (failedBooking) updateBooking(failedBooking.id, { paymentStatus: 'failed', status: 'pending' })
-      break
-    }
-    default:
-      console.log(`Unhandled event type ${event.type}`)
+    res.json({ received: true })
+  } catch (err) {
+    console.error('Webhook handler error:', err)
+    res.status(500).json({ error: err.message })
   }
-  res.json({ received: true })
 })
 app.use(express.json())
 
@@ -232,8 +239,7 @@ async function sendBookingConfirmationEmail(booking) {
   }
 }
 
-// Archivos para guardar datos (simulando base de datos)
-const BOOKINGS_FILE = join(__dirname, 'bookings.json')
+// Archivos para guardar datos (reservas usan Supabase o db/bookings.js; el resto sigue en JSON)
 const USERS_FILE = join(__dirname, 'users.json')
 const RESET_TOKENS_FILE = join(__dirname, 'password-reset-tokens.json')
 const ADMINS_FILE = join(__dirname, 'admins.json')
@@ -243,62 +249,13 @@ const MARKETING_ASSETS_DIR = join(__dirname, 'marketing-assets')
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000 // 1 hora
 
-// Función helper para leer reservas
-const getBookings = () => {
+// Helper: contar reservas por clase, fecha y hora (usa getBookings async)
+async function countBookingsForClass(className, date, time) {
   try {
-    if (fs.existsSync(BOOKINGS_FILE)) {
-      const data = fs.readFileSync(BOOKINGS_FILE, 'utf8')
-      return JSON.parse(data)
-    }
-    return []
-  } catch (error) {
-    console.error('Error reading bookings:', error)
-    return []
-  }
-}
-
-// Función helper para guardar reservas
-const saveBooking = (booking) => {
-  try {
-    const bookings = getBookings()
-    bookings.push(booking)
-    fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2))
-    return booking
-  } catch (error) {
-    console.error('Error saving booking:', error)
-    throw error
-  }
-}
-
-// Función helper para actualizar reserva
-const updateBooking = (bookingId, updates) => {
-  try {
-    const bookings = getBookings()
-    const index = bookings.findIndex(b => b.id === bookingId)
-    if (index !== -1) {
-      bookings[index] = { ...bookings[index], ...updates }
-      fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2))
-      return bookings[index]
-    }
-    return null
-  } catch (error) {
-    console.error('Error updating booking:', error)
-    throw error
-  }
-}
-
-// Función helper para contar reservas por clase, fecha y hora
-const countBookingsForClass = (className, date, time) => {
-  try {
-    const bookings = getBookings()
-    return bookings.filter(booking => {
-      return booking.className === className &&
-             booking.date === date &&
-             booking.time === time &&
-             booking.status === 'confirmed'
-    }).length
-  } catch (error) {
-    console.error('Error counting bookings:', error)
+    const bookings = await getBookings()
+    return bookings.filter(b => b.className === className && b.date === date && b.time === time && b.status === 'confirmed').length
+  } catch (e) {
+    console.error('Error counting bookings:', e)
     return 0
   }
 }
@@ -444,9 +401,9 @@ app.post('/api/confirm-booking', async (req, res) => {
 
     // Verificar disponibilidad antes de procesar el pago
     if (bookingData.className && bookingData.date && bookingData.time) {
-      const currentCount = countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
+      const currentCount = await countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
       if (currentCount >= MAX_BOOKINGS_PER_CLASS) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: `Lo sentimos, esta clase ya tiene ${MAX_BOOKINGS_PER_CLASS} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.`,
           code: 'CLASS_FULL'
         })
@@ -457,18 +414,18 @@ app.post('/api/confirm-booking', async (req, res) => {
     if (bookingData.paymentMethod === 'package' && bookingData.packageId && bookingData.customer?.email) {
       const updatedPackage = usePackageClass(bookingData.packageId, bookingData.customer.email)
       if (!updatedPackage) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'No tienes clases disponibles en este paquete o el paquete no existe.',
           code: 'NO_CLASSES_AVAILABLE'
         })
       }
-      
+
       bookingData.packageInfo = {
         packageId: updatedPackage.id,
         packageName: updatedPackage.packageName,
         classesRemaining: updatedPackage.classesRemaining
       }
-      
+
       const booking = {
         id: Date.now().toString(),
         ...bookingData,
@@ -477,7 +434,7 @@ app.post('/api/confirm-booking', async (req, res) => {
         paymentStatus: 'succeeded'
       }
 
-      const savedBooking = saveBooking(booking)
+      const savedBooking = await saveBooking(booking)
       sendBookingConfirmationEmail(savedBooking).catch(() => {})
       return res.json({
         success: true,
@@ -500,27 +457,27 @@ app.post('/api/confirm-booking', async (req, res) => {
       
       // Verificar disponibilidad nuevamente antes de guardar
       if (bookingData.className && bookingData.date && bookingData.time) {
-        const currentCount = countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
+        const currentCount = await countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
         if (currentCount >= MAX_BOOKINGS_PER_CLASS) {
-          return res.status(400).json({ 
+          return res.status(400).json({
             error: `Lo sentimos, esta clase ya tiene ${MAX_BOOKINGS_PER_CLASS} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.`,
             code: 'CLASS_FULL'
           })
         }
       }
-      
+
       // Guardar la reserva sin verificar el PaymentIntent
       const booking = {
         id: Date.now().toString(),
         ...bookingData,
         paymentIntentId: paymentIntentId,
-        paymentStatus: 'succeeded', // Asumir succeeded si el frontend lo confirma
+        paymentStatus: 'succeeded',
         createdAt: new Date().toISOString(),
         status: 'confirmed',
         note: 'PaymentIntent no encontrado en Stripe, pero pago confirmado en frontend'
       }
 
-      const savedBooking = saveBooking(booking)
+      const savedBooking = await saveBooking(booking)
       sendBookingConfirmationEmail(savedBooking).catch(() => {})
       return res.json({
         success: true,
@@ -536,11 +493,11 @@ app.post('/api/confirm-booking', async (req, res) => {
       })
     }
 
-    // Verificar disponibilidad una vez más antes de guardar (por si acaso cambió entre la primera verificación y ahora)
+    // Verificar disponibilidad una vez más antes de guardar
     if (bookingData.className && bookingData.date && bookingData.time) {
-      const currentCount = countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
+      const currentCount = await countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
       if (currentCount >= MAX_BOOKINGS_PER_CLASS) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: `Lo sentimos, esta clase ya tiene ${MAX_BOOKINGS_PER_CLASS} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.`,
           code: 'CLASS_FULL'
         })
@@ -551,7 +508,7 @@ app.post('/api/confirm-booking', async (req, res) => {
     if (bookingData.paymentMethod === 'package' && bookingData.packageId && bookingData.customer?.email) {
       const updatedPackage = usePackageClass(bookingData.packageId, bookingData.customer.email)
       if (!updatedPackage) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'No tienes clases disponibles en este paquete o el paquete no existe.',
           code: 'NO_CLASSES_AVAILABLE'
         })
@@ -573,7 +530,7 @@ app.post('/api/confirm-booking', async (req, res) => {
       status: 'confirmed',
     }
 
-    const savedBooking = saveBooking(booking)
+    const savedBooking = await saveBooking(booking)
     sendBookingConfirmationEmail(savedBooking).catch(() => {})
 
     res.json({
@@ -587,26 +544,24 @@ app.post('/api/confirm-booking', async (req, res) => {
 })
 
 // Endpoint: Guardar reserva directamente (sin confirmar PaymentIntent)
-app.post('/api/bookings', (req, res) => {
+app.post('/api/bookings', async (req, res) => {
   try {
     const bookingData = req.body
-    
-    // Verificar disponibilidad antes de guardar
+
     if (bookingData.className && bookingData.date && bookingData.time) {
-      const currentCount = countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
+      const currentCount = await countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
       if (currentCount >= MAX_BOOKINGS_PER_CLASS) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: `Lo sentimos, esta clase ya tiene ${MAX_BOOKINGS_PER_CLASS} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.`,
           code: 'CLASS_FULL'
         })
       }
     }
-    
-    // Si es reserva con paquete, verificar y usar una clase del paquete
+
     if (bookingData.paymentMethod === 'package' && bookingData.packageId && bookingData.customer?.email) {
       const updatedPackage = usePackageClass(bookingData.packageId, bookingData.customer.email)
       if (!updatedPackage) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'No tienes clases disponibles en este paquete o el paquete no existe.',
           code: 'NO_CLASSES_AVAILABLE'
         })
@@ -617,7 +572,7 @@ app.post('/api/bookings', (req, res) => {
         classesRemaining: updatedPackage.classesRemaining
       }
     }
-    
+
     const booking = {
       id: Date.now().toString(),
       ...bookingData,
@@ -625,7 +580,7 @@ app.post('/api/bookings', (req, res) => {
       status: bookingData.payment?.status === 'succeeded' || bookingData.paymentMethod === 'package' ? 'confirmed' : 'pending'
     }
 
-    const savedBooking = saveBooking(booking)
+    const savedBooking = await saveBooking(booking)
     if (savedBooking.status === 'confirmed') {
       sendBookingConfirmationEmail(savedBooking).catch(() => {})
     }
@@ -648,9 +603,9 @@ app.post('/api/bookings', (req, res) => {
 })
 
 // Endpoint: Obtener todas las reservas
-app.get('/api/bookings', (req, res) => {
+app.get('/api/bookings', async (req, res) => {
   try {
-    const bookings = getBookings()
+    const bookings = await getBookings()
     res.json(bookings)
   } catch (error) {
     console.error('Error getting bookings:', error)
@@ -659,14 +614,13 @@ app.get('/api/bookings', (req, res) => {
 })
 
 // Endpoint: Obtener reservas de un usuario por email (debe ir antes de /:id)
-app.get('/api/bookings/user/:email', (req, res) => {
+app.get('/api/bookings/user/:email', async (req, res) => {
   try {
     const email = decodeURIComponent(req.params.email)
-    const bookings = getBookings()
+    const bookings = await getBookings()
     const userBookings = bookings.filter(
       b => b.customer?.email?.toLowerCase() === email.toLowerCase() && b.status === 'confirmed'
     )
-    // Ordenar por fecha y hora (más próximas primero)
     userBookings.sort((a, b) => {
       const da = new Date(`${a.date}T${a.time}`)
       const db = new Date(`${b.date}T${b.time}`)
@@ -730,14 +684,14 @@ const parseTeacherToken = (req) => {
 }
 
 // Endpoint: Reservas próximas para la maestra (solo las clases que imparte ella)
-app.get('/api/bookings/teacher/upcoming', (req, res) => {
+app.get('/api/bookings/teacher/upcoming', async (req, res) => {
   try {
     const payload = parseTeacherToken(req)
     if (!payload || !payload.name) {
       return res.status(401).json({ error: 'Debes iniciar sesión como maestra' })
     }
     const teacherName = payload.name.trim()
-    const bookings = getBookings()
+    const bookings = await getBookings()
     const today = format(new Date(), 'yyyy-MM-dd')
     const upcoming = bookings.filter(b => {
       if (b.status !== 'confirmed') return false
@@ -757,15 +711,13 @@ app.get('/api/bookings/teacher/upcoming', (req, res) => {
 })
 
 // Endpoint: Obtener reserva por ID
-app.get('/api/bookings/:id', (req, res) => {
+app.get('/api/bookings/:id', async (req, res) => {
   try {
-    const bookings = getBookings()
+    const bookings = await getBookings()
     const booking = bookings.find(b => b.id === req.params.id)
-    
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' })
     }
-    
     res.json(booking)
   } catch (error) {
     console.error('Error getting booking:', error)
@@ -777,7 +729,7 @@ app.get('/api/bookings/:id', (req, res) => {
 const RESCHEDULE_MIN_HOURS = 48
 
 // Endpoint: Reagendar una reserva (solo si queda al menos 48 h para la clase)
-app.patch('/api/bookings/:id/reschedule', (req, res) => {
+app.patch('/api/bookings/:id/reschedule', async (req, res) => {
   try {
     const { id } = req.params
     const { newDate, newTime, userEmail } = req.body
@@ -786,7 +738,7 @@ app.patch('/api/bookings/:id/reschedule', (req, res) => {
       return res.status(400).json({ error: 'Debes indicar la nueva fecha y hora (newDate, newTime).' })
     }
 
-    const bookings = getBookings()
+    const bookings = await getBookings()
     const booking = bookings.find(b => b.id === id)
     if (!booking) {
       return res.status(404).json({ error: 'Reserva no encontrada.' })
@@ -810,7 +762,7 @@ app.patch('/api/bookings/:id/reschedule', (req, res) => {
       return res.status(400).json({ error: 'La nueva fecha y hora son iguales a la actual. Elige otra opción.' })
     }
 
-    const newCount = countBookingsForClass(booking.className, newDate, newTime)
+    const newCount = await countBookingsForClass(booking.className, newDate, newTime)
     if (newCount >= MAX_BOOKINGS_PER_CLASS) {
       return res.status(400).json({
         error: 'No hay lugares disponibles en esa fecha y hora. Elige otra opción.'
@@ -818,7 +770,7 @@ app.patch('/api/bookings/:id/reschedule', (req, res) => {
     }
 
     const newFormattedDate = format(new Date(newDate), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })
-    const updated = updateBooking(id, {
+    const updated = await updateBooking(id, {
       date: newDate,
       time: newTime,
       formattedDate: newFormattedDate
@@ -831,13 +783,12 @@ app.patch('/api/bookings/:id/reschedule', (req, res) => {
 })
 
 // Endpoint: Verificar disponibilidad de una clase
-app.get('/api/bookings/availability/:className/:date/:time', (req, res) => {
+app.get('/api/bookings/availability/:className/:date/:time', async (req, res) => {
   try {
     const { className, date, time } = req.params
-    const currentCount = countBookingsForClass(className, date, time)
+    const currentCount = await countBookingsForClass(className, date, time)
     const isAvailable = currentCount < MAX_BOOKINGS_PER_CLASS
     const remainingSpots = Math.max(0, MAX_BOOKINGS_PER_CLASS - currentCount)
-    
     res.json({
       available: isAvailable,
       currentCount,
@@ -1210,7 +1161,7 @@ app.post('/api/auth/admin/add-operator', (req, res) => {
 })
 
 // Endpoint: Crear reserva manual (admin/operador). Para ver reservas en producción sin depender de bookings.json en repo.
-app.post('/api/admin/bookings', (req, res) => {
+app.post('/api/admin/bookings', async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
     const payload = parseAdminToken(req)
@@ -1244,7 +1195,7 @@ app.post('/api/admin/bookings', (req, res) => {
       createdAt: new Date().toISOString(),
       formattedDate: new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
     }
-    const saved = saveBooking(booking)
+    const saved = await saveBooking(booking)
     console.log('✅ Reserva manual creada por admin:', saved.id, saved.className, saved.customer?.fullName)
     res.json({ success: true, booking: saved })
   } catch (error) {
@@ -1864,7 +1815,7 @@ app.use((req, res) => {
 const HOST = process.env.HOST || '0.0.0.0'
 app.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on http://${HOST}:${PORT}`)
-  console.log(`📝 Bookings file: ${BOOKINGS_FILE}`)
+  console.log(`📝 Bookings: ${isUsingSupabase() ? 'Supabase' : 'JSON file (server/bookings.json)'}`)
   console.log(`👥 Users file: ${USERS_FILE}`)
   if (!process.env.STRIPE_SECRET_KEY) {
     console.warn('⚠️  STRIPE_SECRET_KEY not set. Stripe features will not work.')

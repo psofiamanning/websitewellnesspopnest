@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
+import { COOKIE_CONSENT_SHOW_EVENT } from '../utils/cookieConsent'
 
 function Footer() {
   return (
@@ -228,6 +229,13 @@ function Footer() {
               >
                 Términos y Condiciones
               </Link>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_SHOW_EVENT))}
+                className="text-white/80 font-body text-xs hover:text-white transition-colors duration-200 bg-transparent border-none cursor-pointer p-0"
+              >
+                Preferencias de cookies
+              </button>
             </div>
           </div>
         </div>

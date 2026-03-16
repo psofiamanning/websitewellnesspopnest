@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import { initMetaPixel, trackMetaPageView } from './utils/metaPixel'
+import { canUseMarketingCookies } from './utils/cookieConsent'
+import CookieConsent from './components/CookieConsent'
 import Home from './pages/Home'
 import Classes from './pages/Classes'
 import Teachers from './pages/Teachers'
@@ -25,13 +27,18 @@ import TermsAndConditions from './pages/TermsAndConditions'
 import MyBookings from './pages/MyBookings'
 import './App.css'
 
+/** Solo inicializa y hace tracking con Meta Pixel si el usuario aceptó cookies de marketing. */
 function MetaPixelRouter() {
   const location = useLocation()
   useEffect(() => {
-    initMetaPixel()
+    if (canUseMarketingCookies()) {
+      initMetaPixel()
+    }
   }, [])
   useEffect(() => {
-    trackMetaPageView()
+    if (canUseMarketingCookies() && location.pathname) {
+      trackMetaPageView()
+    }
   }, [location.pathname])
   return null
 }
@@ -75,6 +82,7 @@ function App() {
         <Route path="/mis-reservas" element={<MyBookings />} />
       </Routes>
       <Footer />
+      <CookieConsent />
     </Router>
   )
 }

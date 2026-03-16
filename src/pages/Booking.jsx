@@ -72,6 +72,7 @@ function Booking() {
   const [selectedPackageId, setSelectedPackageId] = useState(null)
   const [usePackage, setUsePackage] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [formValidationMessage, setFormValidationMessage] = useState('')
 
   // Obtener información según el tipo (profesor o clase)
   const teacherInfo = type === 'teacher' ? teachers.find(t => t.id === parseInt(id)) : null
@@ -166,6 +167,11 @@ function Booking() {
     setCurrentImageIndex(0)
   }, [selectedClassId, type, id])
 
+  // Limpiar mensaje de validación cuando el usuario corrige datos de pago o contacto
+  useEffect(() => {
+    setFormValidationMessage('')
+  }, [customerInfo.firstName, customerInfo.lastName, customerInfo.email, customerInfo.phone, cardholderName, usePackage, selectedPackageId, stripeCardData?.isComplete])
+
   const handleClassSelect = (classId) => {
     setSelectedClassId(classId)
     setSelectedDate(null)
@@ -187,44 +193,66 @@ function Booking() {
   }
   
   const handleCustomerInfoChange = (field, value) => {
+    setFormValidationMessage('')
     setCustomerInfo(prev => ({
       ...prev,
       [field]: value
     }))
   }
 
+  // Formulario listo para enviar (todos los campos obligatorios completos)
+  const isFormValid = selectedTime &&
+    customerInfo.firstName?.trim() &&
+    customerInfo.lastName?.trim() &&
+    customerInfo.email?.trim() &&
+    customerInfo.phone?.trim() &&
+    (usePackage ? !!selectedPackageId : (!!stripeCardData?.isComplete && !!cardholderName?.trim()))
+
   const handleBooking = async () => {
+    setFormValidationMessage('')
+
     // Validar que haya clase seleccionada si es profesor
     if (type === 'teacher' && !selectedClassId) {
-      alert('Por favor selecciona una clase primero')
+      setFormValidationMessage('Por favor selecciona una clase primero.')
       return
     }
-    
+
     if (!selectedDate || !selectedTime) {
-      alert('Por favor selecciona una fecha y hora')
+      setFormValidationMessage('Por favor selecciona una fecha y hora.')
       return
     }
-    
+
     if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || !customerInfo.phone) {
-      alert('Por favor completa toda la información de contacto')
+      const missing = []
+      if (!customerInfo.firstName) missing.push('Nombre')
+      if (!customerInfo.lastName) missing.push('Apellido')
+      if (!customerInfo.email) missing.push('Correo electrónico')
+      if (!customerInfo.phone) missing.push('Teléfono')
+      setFormValidationMessage(`Completa los campos obligatorios: ${missing.join(', ')}.`)
       return
     }
-    
+
     // Si está usando paquete, no requiere tarjeta
     if (!usePackage) {
       if (!stripeCardData || !stripeCardData.isComplete || !cardholderName) {
-        alert('Por favor completa la información de la tarjeta o selecciona usar un paquete')
+        const missing = []
+        if (!cardholderName) missing.push('Nombre del titular de la tarjeta')
+        if (!stripeCardData?.isComplete) missing.push('Información de la tarjeta')
+        setFormValidationMessage(
+          missing.length > 0
+            ? `Completa los campos de pago: ${missing.join(', ')}.`
+            : 'Por favor completa la información de la tarjeta o selecciona usar un paquete.'
+        )
         return
       }
-      
+
       if (stripeCardData.error) {
-        alert(`Error en la tarjeta: ${stripeCardData.error.message}`)
+        setFormValidationMessage(`Error en la tarjeta: ${stripeCardData.error.message}`)
         return
       }
     } else {
-      // Validar que tenga un paquete seleccionado
       if (!selectedPackageId) {
-        alert('Por favor selecciona un paquete para usar')
+        setFormValidationMessage('Por favor selecciona un paquete para usar.')
         return
       }
     }
@@ -629,10 +657,10 @@ function Booking() {
                 borderColor: '#E5B3B0',
                 boxShadow: '0 2px 8px rgba(183, 61, 55, 0.05)'
               }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-5">
           <button
             onClick={() => navigate(type === 'teacher' ? '/teachers' : '/classes')}
-            className="text-primary hover:text-secondary mb-6 flex items-center font-body transition-colors duration-300"
+            className="text-primary hover:text-secondary mb-3 lg:mb-4 flex items-center font-body transition-colors duration-300"
             style={{ color: '#B73D37' }}
             onMouseEnter={(e) => e.target.style.color = '#C76661'}
             onMouseLeave={(e) => e.target.style.color = '#B73D37'}
@@ -640,14 +668,14 @@ function Booking() {
             ← Volver
           </button>
           <div className="flex flex-col">
-            <div className="inline-block mb-4">
-              <div className="w-16 h-1 rounded-full" style={{ backgroundColor: '#D48D88' }}></div>
+            <div className="inline-block mb-2 lg:mb-3">
+              <div className="w-12 lg:w-16 h-0.5 lg:h-1 rounded-full" style={{ backgroundColor: '#D48D88' }}></div>
             </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-body">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl font-heading font-bold text-body">
               Reservar {type === 'teacher' ? 'con' : ''} {type === 'teacher' ? teacherInfo?.name : bookingInfo.name}
             </h1>
             {type === 'teacher' && teacherInfo?.specialty && (
-              <div className="mt-4">
+              <div className="mt-2 lg:mt-3">
                 <span className="inline-block px-4 py-1.5 rounded-full"
                       style={{ 
                         backgroundColor: '#FEE2E2',
@@ -669,14 +697,18 @@ function Booking() {
                borderColor: '#E5B3B0',
                boxShadow: '0 8px 32px rgba(183, 61, 55, 0.1)'
              }}>
-          {/* Layout de dos columnas en desktop */}
+          {/* Layout de dos columnas en desktop: calendario a la izquierda, información a la derecha */}
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:items-start lg:overflow-visible">
-            {/* Columna izquierda - Información y selección */}
-            <div className="flex-1 w-full order-2 lg:order-1">
+            {/* Columna derecha en desktop - Información de la clase y formulario */}
+            <div className="flex-1 w-full order-2 lg:order-2 min-w-0 lg:pl-8 lg:border-l-2"
+                 style={{ borderColor: '#E5B3B0' }}>
               {/* Información de la reserva - Solo cuando es tipo class y NO hay fecha seleccionada */}
               {type === 'class' && !selectedDate && (
                 <div className="pb-6 border-b mb-6"
                      style={{ borderColor: '#E5B3B0' }}>
+                  <p className="text-xs font-body font-semibold uppercase tracking-wide mb-3" style={{ color: '#B73D37' }}>
+                    Información de la clase
+                  </p>
                   <h2 className="text-h2 font-heading text-body mb-4 text-center md:text-left">
                     Clase: {bookingInfo.name}
                   </h2>
@@ -1367,34 +1399,44 @@ function Booking() {
                 </div>
               )}
 
-              {/* Botón de pagar/reservar - Siempre visible cuando se completa la información */}
-              {selectedTime && 
-               customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone &&
-               ((usePackage && selectedPackageId) || (stripeCardData && stripeCardData.isComplete && cardholderName)) && (
+              {/* Botón Reservar siempre visible desde que hay horario elegido; opaco si faltan datos, vivo si todo está completo */}
+              {selectedTime && (
                 <div className="mb-4">
+                  {formValidationMessage && (
+                    <div className="mb-4 p-4 rounded-lg border-2 font-body text-sm"
+                         style={{ backgroundColor: '#FEF3F2', borderColor: '#B73D37', color: '#B73D37' }}
+                         role="alert">
+                      {formValidationMessage}
+                    </div>
+                  )}
                   <button
+                    type="button"
                     onClick={handleBooking}
                     disabled={isProcessing}
-                    className="w-full py-4 rounded-lg text-lg font-semibold transition-all shadow-xl font-body disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                    className="w-full py-4 rounded-lg text-lg font-semibold transition-all shadow-xl font-body disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
                     style={{ 
-                      background: 'linear-gradient(135deg, #B73D37 0%, #8B2E29 100%)',
+                      background: isFormValid && !isProcessing
+                        ? 'linear-gradient(135deg, #B73D37 0%, #8B2E29 100%)'
+                        : 'linear-gradient(135deg, #D48D88 0%, #C4A5A2 100%)',
                       color: '#FFFFFF',
                       border: 'none',
                       cursor: isProcessing ? 'not-allowed' : 'pointer',
-                      boxShadow: '0 10px 25px rgba(183, 61, 55, 0.3)'
+                      boxShadow: isFormValid && !isProcessing ? '0 10px 25px rgba(183, 61, 55, 0.3)' : '0 4px 12px rgba(0,0,0,0.1)',
+                      opacity: isFormValid && !isProcessing ? 1 : 0.9
                     }}
                     onMouseEnter={(e) => {
-                      if (!isProcessing) {
-                        e.target.style.background = 'linear-gradient(135deg, #C76661 0%, #B73D37 100%)'
-                        e.target.style.boxShadow = '0 12px 30px rgba(183, 61, 55, 0.4)'
-                        e.target.style.color = '#FFFFFF'
+                      if (!isProcessing && isFormValid) {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #C76661 0%, #B73D37 100%)'
+                        e.currentTarget.style.boxShadow = '0 12px 30px rgba(183, 61, 55, 0.4)'
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!isProcessing) {
-                        e.target.style.background = 'linear-gradient(135deg, #B73D37 0%, #8B2E29 100%)'
-                        e.target.style.boxShadow = '0 10px 25px rgba(183, 61, 55, 0.3)'
-                        e.target.style.color = '#FFFFFF'
+                      if (isFormValid) {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #B73D37 0%, #8B2E29 100%)'
+                        e.currentTarget.style.boxShadow = '0 10px 25px rgba(183, 61, 55, 0.3)'
+                      } else {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #D48D88 0%, #C4A5A2 100%)'
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'
                       }
                     }}
                   >
@@ -1405,7 +1447,7 @@ function Booking() {
                         : 'Pagar $200.00 MXN'}
                   </button>
                   <p className="text-xs text-body font-body text-center mt-2 opacity-75">
-                    Al hacer clic, procesaremos tu pago de forma segura
+                    {isFormValid ? 'Al hacer clic, procesaremos tu pago de forma segura' : 'Completa todos los campos obligatorios para continuar'}
                   </p>
                 </div>
               )}
@@ -1569,10 +1611,21 @@ function Booking() {
               </div>
             )}
 
-            {/* Columna derecha - Calendario (solo cuando hay clase seleccionada) */}
+            {/* Columna izquierda en desktop - Proceso de reservación: calendario e instrucción */}
             {((type === 'teacher' && selectedClassId) || type === 'class') && (
-              <div className="w-full lg:w-[400px] xl:w-[420px] lg:flex-shrink-0 order-1 lg:order-2">
-                <div className="lg:sticky lg:top-24">
+              <div className="w-full lg:w-[400px] xl:w-[420px] lg:flex-shrink-0 order-1 lg:order-1">
+                <div className="lg:sticky lg:top-24 lg:pr-6">
+                  {type === 'class' && !selectedDate && (
+                    <div className="mb-4 p-4 rounded-xl border-2"
+                         style={{ backgroundColor: '#FEF3F2', borderColor: '#D48D88', boxShadow: '0 2px 8px rgba(183, 61, 55, 0.08)' }}>
+                      <p className="text-sm font-body font-semibold mb-1" style={{ color: '#B73D37' }}>
+                        Aquí empieza el proceso de reservación
+                      </p>
+                      <p className="text-sm font-body" style={{ color: '#4B5563' }}>
+                        Lo primero que tienes que hacer es seleccionar una fecha en el calendario.
+                      </p>
+                    </div>
+                  )}
                   {type === 'teacher' && selectedClassId && !selectedDate && (
                     <div className="mb-4 p-4 rounded-lg"
                          style={{ backgroundColor: '#FEE2E2', border: '1px solid #D48D88' }}>

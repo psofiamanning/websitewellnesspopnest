@@ -36,10 +36,21 @@ function MetaPixelRouter() {
   return null
 }
 
+/** En cada cambio de ruta, lleva el scroll al inicio (arriba). Evita que en móvil
+ * al pasar de /classes (scrolleado) a /booking/class/... se mantenga el scroll. */
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
+
 function App() {
   return (
     <Router>
       <MetaPixelRouter />
+      <ScrollToTop />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />

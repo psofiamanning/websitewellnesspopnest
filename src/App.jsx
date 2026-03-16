@@ -5,6 +5,7 @@ import Footer from './components/Footer'
 import { initMetaPixel, trackMetaPageView } from './utils/metaPixel'
 import { canUseMarketingCookies } from './utils/cookieConsent'
 import CookieConsent from './components/CookieConsent'
+import PageSEO from './components/PageSEO'
 import Home from './pages/Home'
 import Classes from './pages/Classes'
 import Teachers from './pages/Teachers'
@@ -58,6 +59,7 @@ function App() {
     <Router>
       <MetaPixelRouter />
       <ScrollToTop />
+      <PageSEO />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />

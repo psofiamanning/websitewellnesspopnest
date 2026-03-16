@@ -42,14 +42,18 @@ function Home() {
                   Estudio de yoga y bienestar
                 </p>
               </div>
-              {/* Título Principal */}
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-light leading-tight mb-6"
+              {/* Título principal (SEO: yoga y bienestar en Coyoacán) */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-light leading-tight mb-3"
                   style={{ color: '#1F2937', letterSpacing: '-0.02em' }}>
+                Yoga y bienestar en Coyoacán
+              </h1>
+              <p className="text-2xl md:text-3xl font-heading font-light leading-tight mb-6"
+                 style={{ color: '#6B7280', letterSpacing: '-0.01em' }}>
                 Un espacio para{' '}
                 <span className="font-normal italic" style={{ color: '#B73D37' }}>respirar</span>,{' '}
                 <span className="font-normal italic" style={{ color: '#B73D37' }}>moverte</span> y{' '}
                 <span className="font-normal italic" style={{ color: '#B73D37' }}>reconectar</span>
-              </h1>
+              </p>
               
               {/* Descripción Elegante */}
               <div className="space-y-4 max-w-xl">
@@ -98,7 +102,7 @@ function Home() {
             
             {/* Columna Derecha - Imagen + CTA en móvil (order-first = arriba) */}
             <div className="order-1 lg:order-none flex flex-col gap-6">
-              {/* En móvil: nombre de marca boutique arriba de la imagen */}
+              {/* En móvil: nombre de marca arriba de la imagen (solo un H1 en página, en la columna de texto) */}
               <div className="lg:hidden text-center">
                 <div className="w-10 h-px rounded-full mx-auto mb-4" style={{ backgroundColor: '#E5D7D6' }} />
                 <h2 className="text-3xl sm:text-4xl font-heading font-light tracking-[0.18em] uppercase"
@@ -106,7 +110,7 @@ function Home() {
                   Popnest Wellness
                 </h2>
                 <p className="mt-1.5 text-xs font-body tracking-[0.2em] uppercase" style={{ color: '#9CA3AF', letterSpacing: '0.2em' }}>
-                  Estudio de yoga y bienestar
+                  Yoga y bienestar en Coyoacán
                 </p>
               </div>
               <div className="relative w-full aspect-[4/3] max-h-[50vh] lg:max-h-[70vh] rounded-lg overflow-hidden">

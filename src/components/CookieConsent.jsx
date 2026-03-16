@@ -52,7 +52,7 @@ function CookieConsent() {
             Uso de cookies
           </h2>
           <p id="cookie-consent-desc" className="font-body text-sm sm:text-base leading-relaxed" style={{ color: '#4B5563' }}>
-            Utilizamos cookies propias y de terceros para el funcionamiento del sitio, la sesión de usuario y, si lo aceptas, para análisis y publicidad (Meta/Facebook). Puedes aceptar todas, o solo las necesarias. Más información en nuestra{' '}
+            Utilizamos cookies propias y de terceros para el funcionamiento del sitio, la sesión de usuario y, si lo aceptas, para análisis y publicidad. Puedes aceptar todas, o solo las necesarias. Más información en nuestra{' '}
             <Link to="/privacidad" className="underline font-medium hover:no-underline" style={{ color: '#B73D37' }}>
               política de privacidad
             </Link>.

@@ -28,6 +28,10 @@ export const ROUTE_SEO = {
     title: 'Paquetes de Clases | Yoga en Coyoacán | Estudio Popnest Wellness',
     description: 'Paquetes de clases de yoga y bienestar en Coyoacán. Ahorra reservando varias clases en Estudio Popnest Wellness.'
   },
+  '/ubicacion': {
+    title: 'Ubicación - Estudio de yoga en Coyoacán | Estudio Popnest Wellness',
+    description: 'Estudio Popnest Wellness en Del Carmen, Coyoacán, CDMX. Dirección, cómo llegar y clases de yoga, meditación y sound healing en Coyoacán.'
+  },
   '/privacidad': {
     title: 'Política de Privacidad | Estudio Popnest Wellness',
     description: 'Política de privacidad y protección de datos personales de Estudio Popnest Wellness. Ley aplicable: México (LFPDPPP).'
@@ -48,6 +52,63 @@ export const ROUTE_SEO = {
     title: 'Mis Reservas | Estudio Popnest Wellness',
     description: 'Consulta y gestiona tus reservas de clases en Estudio Popnest Wellness, Coyoacán.'
   }
+}
+
+/** Nombre legible por slug de clase (para breadcrumb Reservar X). */
+const CLASS_SLUG_TO_NAME = {
+  'yoga-restaurativo': 'Yoga Restaurativo',
+  'hatha': 'Hatha Yoga',
+  'tai-chi': 'Tai Chi',
+  'sound-healing': 'Sound Healing',
+  'meditacion': 'Meditación'
+}
+
+/**
+ * Devuelve los ítems de breadcrumb para la ruta (para Schema BreadcrumbList).
+ * @returns {Array<{ name: string, url: string }>}
+ */
+export function getBreadcrumbItems(pathname) {
+  const home = { name: 'Inicio', url: '/' }
+  if (!pathname || pathname === '/') return [home]
+
+  const segments = pathname.split('/').filter(Boolean)
+  const items = [home]
+
+  if (segments[0] === 'classes') {
+    items.push({ name: 'Clases', url: '/classes' })
+    return items
+  }
+
+  if (segments[0] === 'teachers') {
+    items.push({ name: 'Profesores', url: '/teachers' })
+    if (segments.length > 1) items.push({ name: 'Reservar', url: pathname })
+    return items
+  }
+
+  if (segments[0] === 'booking') {
+    items.push({ name: 'Clases', url: '/classes' })
+    if (segments[1] === 'class' && segments[2]) {
+      const className = CLASS_SLUG_TO_NAME[segments[2]] || segments[2]
+      items.push({ name: `Reservar ${className}`, url: pathname })
+    } else {
+      items.push({ name: 'Reservar', url: pathname })
+    }
+    return items
+  }
+
+  const labels = {
+    horario: 'Horario',
+    packages: 'Paquetes',
+    ubicacion: 'Ubicación',
+    privacidad: 'Política de privacidad',
+    terminos: 'Términos y condiciones',
+    login: 'Iniciar sesión',
+    signup: 'Registro',
+    'mis-reservas': 'Mis reservas'
+  }
+  const label = labels[segments[0]] || segments[0]
+  items.push({ name: label, url: pathname })
+  return items
 }
 
 /** Obtiene SEO para una ruta; si es /booking/* usa el de clases. */

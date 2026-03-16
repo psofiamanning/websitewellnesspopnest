@@ -39,7 +39,7 @@ function Home() {
                   Popnest Wellness
                 </h2>
                 <p className="mt-2 text-sm font-body tracking-[0.25em] uppercase" style={{ color: '#9CA3AF', letterSpacing: '0.25em' }}>
-                  Estudio de yoga y bienestar
+                  Estudio de yoga y bienestar en Coyoacán
                 </p>
               </div>
               {/* Título principal (SEO: yoga y bienestar en Coyoacán) */}
@@ -64,7 +64,7 @@ function Home() {
                   Y al fondo...
                 </p>
                 <p className="text-lg md:text-xl font-body leading-relaxed" style={{ color: '#4B5563', letterSpacing: '0.01em' }}>
-                  Te espera nuestro salón de yoga y meditación: <span className="font-medium" style={{ color: '#1F2937' }}>lleno de luz, espejos, diseño y silencio</span>.
+                  Te espera nuestro salón de yoga y meditación en Coyoacán: <span className="font-medium" style={{ color: '#1F2937' }}>lleno de luz, espejos, diseño y silencio</span>.
                 </p>
               </div>
               
@@ -110,7 +110,7 @@ function Home() {
                   Popnest Wellness
                 </h2>
                 <p className="mt-1.5 text-xs font-body tracking-[0.2em] uppercase" style={{ color: '#9CA3AF', letterSpacing: '0.2em' }}>
-                  Yoga y bienestar en Coyoacán
+                  Estudio de yoga y bienestar en Coyoacán
                 </p>
               </div>
               <div className="relative w-full aspect-[4/3] max-h-[50vh] lg:max-h-[70vh] rounded-lg overflow-hidden">
@@ -269,6 +269,9 @@ function Home() {
               <h2 className="text-3xl md:text-4xl font-heading font-light mb-4" style={{ color: '#1F2937', letterSpacing: '-0.02em' }}>
                 Nuestros Valores
               </h2>
+              <p className="text-lg font-body max-w-2xl" style={{ color: '#6B7280' }}>
+                En el corazón de Coyoacán, nuestro estudio de yoga y bienestar te recibe en un espacio pensado para la práctica y la calma.
+              </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
@@ -322,8 +325,8 @@ function Home() {
                     En el Corazón del Espacio
                   </h3>
                   <p className="text-base font-body leading-relaxed" style={{ color: '#6B7280' }}>
-                    Ubicado al fondo de un espacio único que combina galería de arte, 
-                    cafetería y coworking, nuestro salón es un refugio de tranquilidad.
+                    Ubicado en Coyoacán, al fondo de un espacio único que combina galería de arte, 
+                    cafetería y coworking, nuestro salón es un refugio de tranquilidad en Del Carmen.
                   </p>
                 </div>
               </div>
@@ -347,8 +350,9 @@ function Home() {
               <div className="aspect-[16/9] rounded-lg overflow-hidden mb-4">
                 <img src={studioPhoto2} alt="Ubicación del estudio" className="w-full h-full object-cover" />
               </div>
-              <h3 className="text-lg font-heading font-medium mb-2" style={{ color: '#1F2937' }}>Ubicación</h3>
-              <p className="text-sm font-body leading-relaxed" style={{ color: '#6B7280' }}>
+              <h3 className="text-lg font-heading font-medium mb-2" style={{ color: '#1F2937' }}>Ubicación en Coyoacán</h3>
+              <p className="text-sm font-body leading-relaxed mb-2" style={{ color: '#6B7280' }}>
+                Nuestro estudio está en <strong>Del Carmen, Coyoacán</strong>. Dirección:{' '}
                 <a 
                   href="https://www.google.com/maps/search/?api=1&query=Londres+105,+Del+Carmen,+Coyoacán,+04100+Ciudad+de+México,+CDMX" 
                   target="_blank" 
@@ -356,19 +360,33 @@ function Home() {
                   className="underline" 
                   style={{ color: '#B73D37' }}
                 >
-                  Londres 105, Del Carmen, Coyoacán, 04100 Ciudad de México, CDMX
+                  Londres 105, Del Carmen, Coyoacán, 04100 CDMX
                 </a>
-                . Te recomendamos hacer tu reservación en línea después de registrarte y pagar.
+                .
+              </p>
+              <p className="text-sm font-body leading-relaxed" style={{ color: '#6B7280' }}>
+                Reserva tu clase en línea desde la página de <button type="button" onClick={() => navigate('/classes')} className="underline" style={{ color: '#B73D37' }}>Clases</button> o conoce más en nuestra <button type="button" onClick={() => navigate('/ubicacion')} className="underline" style={{ color: '#B73D37' }}>página de ubicación</button>.
               </p>
             </div>
             <div id="preguntas-frecuentes" className="scroll-mt-24 p-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="aspect-[16/9] rounded-lg overflow-hidden mb-4">
-                <img src={studioPhoto3} alt="Estudio Popnest Wellness" className="w-full h-full object-cover" />
+                <img src={studioPhoto3} alt="Estudio Popnest Wellness en Coyoacán" className="w-full h-full object-cover" />
               </div>
-              <h3 className="text-lg font-heading font-medium mb-2" style={{ color: '#1F2937' }}>Preguntas Frecuentes</h3>
-              <p className="text-sm font-body leading-relaxed" style={{ color: '#6B7280' }}>
-                ¿Dudas sobre reservas, paquetes o pagos? Contáctanos por <a href="mailto:info@estudiopopnest.com" className="underline" style={{ color: '#B73D37' }}>correo</a> o <a href="https://wa.me/525554379644" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>WhatsApp</a> y te respondemos a la brevedad.
-              </p>
+              <h3 className="text-lg font-heading font-medium mb-3" style={{ color: '#1F2937' }}>Preguntas Frecuentes</h3>
+              <dl className="space-y-3 text-sm font-body" style={{ color: '#6B7280' }}>
+                <div>
+                  <dt className="font-semibold mb-0.5" style={{ color: '#1F2937' }}>¿Dónde está el estudio?</dt>
+                  <dd>Estamos en <strong>Coyoacán, CDMX</strong> — Colonia Del Carmen, en Londres 105. Es un espacio que comparte entrada con galería, cafetería y coworking. <button type="button" onClick={() => navigate('/ubicacion')} className="underline" style={{ color: '#B73D37' }}>Ver cómo llegar</button>.</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold mb-0.5" style={{ color: '#1F2937' }}>¿Cómo reservo una clase de yoga en Coyoacán?</dt>
+                  <dd>Elige tu clase en la página <button type="button" onClick={() => navigate('/classes')} className="underline" style={{ color: '#B73D37' }}>Clases</button>, selecciona fecha y hora, completa tus datos y pago. Recibirás confirmación por correo.</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold mb-0.5" style={{ color: '#1F2937' }}>¿Dudas sobre reservas, paquetes o pagos?</dt>
+                  <dd>Contáctanos por <a href="mailto:info@estudiopopnest.com" className="underline" style={{ color: '#B73D37' }}>correo</a> o <a href="https://wa.me/525554379644" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>WhatsApp</a> y te respondemos a la brevedad.</dd>
+                </div>
+              </dl>
             </div>
           </div>
         </section>
@@ -381,7 +399,7 @@ function Home() {
               ¿Listo para comenzar tu viaje?
             </h2>
             <p className="text-base md:text-lg font-body mb-8 leading-relaxed" style={{ color: '#6B7280' }}>
-              Descubre nuestras clases y profesores. Encuentra la práctica perfecta para ti y reserva tu primera sesión hoy mismo.
+              Descubre nuestras clases de yoga y bienestar en Coyoacán. Encuentra la práctica perfecta para ti y reserva tu primera sesión hoy mismo.
             </p>
             <button 
               onClick={() => navigate('/classes')}

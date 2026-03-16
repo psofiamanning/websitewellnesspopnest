@@ -26,6 +26,7 @@ import TeacherDashboard from './pages/TeacherDashboard'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import MyBookings from './pages/MyBookings'
+import Ubicacion from './pages/Ubicacion'
 import './App.css'
 
 /** Solo inicializa y hace tracking con Meta Pixel si el usuario aceptó cookies de marketing. */
@@ -79,6 +80,7 @@ function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/profesores/login" element={<TeacherLogin />} />
         <Route path="/profesores" element={<TeacherDashboard />} />
+        <Route path="/ubicacion" element={<Ubicacion />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />
         <Route path="/mis-reservas" element={<MyBookings />} />

@@ -133,7 +133,7 @@ function Footer() {
               </li>
               <li>
                 <Link 
-                  to="/#ubicacion" 
+                  to="/ubicacion" 
                   className="text-white/90 font-body text-sm hover:text-white transition-colors duration-200"
                 >
                   Ubicación

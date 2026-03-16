@@ -131,8 +131,21 @@ function Navbar() {
                 >
                   Mis reservas
                 </button>
-                <div className="px-4 py-2 text-sm font-body" style={{ color: '#6B7280' }}>
-                  {currentUser?.firstName}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ borderColor: '#E5B3B0', backgroundColor: '#fef7f7' }}>
+                  <span
+                    className="flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-full font-body font-semibold text-white text-sm"
+                    style={{ backgroundColor: '#B73D37' }}
+                    aria-hidden
+                  >
+                    {currentUser?.firstName && currentUser?.lastName
+                      ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.lastName[0] || '').toUpperCase()}`
+                      : currentUser?.firstName
+                        ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.firstName[1] || '').toUpperCase()}`
+                        : '?'}
+                  </span>
+                  <span className="text-sm font-body font-medium" style={{ color: '#1F2937' }}>
+                    Bienvenido, {currentUser?.firstName || 'Usuario'}
+                  </span>
                 </div>
                 <button
                   onClick={handleLogout}
@@ -227,8 +240,22 @@ function Navbar() {
                   >
                     Mis reservas
                   </button>
-                  <div className="px-4 py-3 text-sm font-body" style={{ color: '#6B7280' }}>
-                    {currentUser?.firstName}
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-lg" style={{ backgroundColor: '#fef7f7', borderLeft: '3px solid #B73D37' }}>
+                    <span
+                      className="flex items-center justify-center flex-shrink-0 w-9 h-9 rounded-full font-body font-semibold text-white text-sm"
+                      style={{ backgroundColor: '#B73D37' }}
+                      aria-hidden
+                    >
+                      {currentUser?.firstName && currentUser?.lastName
+                        ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.lastName[0] || '').toUpperCase()}`
+                        : currentUser?.firstName
+                          ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.firstName[1] || '').toUpperCase()}`
+                          : '?'}
+                    </span>
+                    <div>
+                      <p className="text-xs font-body" style={{ color: '#6B7280' }}>Sesión iniciada</p>
+                      <p className="font-body font-medium" style={{ color: '#1F2937' }}>Bienvenido, {currentUser?.firstName || 'Usuario'}</p>
+                    </div>
                   </div>
                   <button
                     onClick={handleLogout}

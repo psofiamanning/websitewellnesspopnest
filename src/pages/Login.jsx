@@ -14,6 +14,7 @@ function Login() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [userNeedingPassword, setUserNeedingPassword] = useState(null)
+  const [welcomeMessage, setWelcomeMessage] = useState(null)
 
   const handleChange = (e) => {
     setFormData({
@@ -37,9 +38,12 @@ function Login() {
         setUserNeedingPassword(result.user)
         setError('')
       } else if (result.success) {
-        // Redirigir según la ruta previa o a home
-        const from = new URLSearchParams(window.location.search).get('from') || '/'
-        navigate(from)
+        const firstName = result.user?.firstName || result.user?.email?.split('@')[0] || 'Usuario'
+        setWelcomeMessage(firstName)
+        setTimeout(() => {
+          const from = new URLSearchParams(window.location.search).get('from') || '/'
+          navigate(from)
+        }, 2000)
       } else {
         setError(result.error || 'Error al iniciar sesión')
       }
@@ -96,6 +100,17 @@ function Login() {
           <h1 className="text-3xl font-heading font-bold mb-2 text-center" style={{ color: '#1F2937' }}>
             Iniciar Sesión
           </h1>
+          {welcomeMessage ? (
+            <div className="mb-6 p-4 rounded-lg border-2 text-center animate-fade-in" style={{ backgroundColor: '#f0fdf4', borderColor: '#86efac' }}>
+              <p className="font-body font-semibold" style={{ color: '#166534' }}>
+                ¡Bienvenido de regreso, {welcomeMessage}!
+              </p>
+              <p className="text-sm font-body mt-1" style={{ color: '#15803d' }}>
+                Redirigiendo...
+              </p>
+            </div>
+          ) : (
+            <>
           <p className="text-body font-body text-center mb-8" style={{ color: '#6B7280' }}>
             Ingresa a tu cuenta para continuar
           </p>
@@ -298,6 +313,8 @@ function Login() {
               </Link>
             </p>
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>

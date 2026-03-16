@@ -1,0 +1,6 @@
+# Estudio Popnest Wellness - popnest.app
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://popnest.app/sitemap.xml

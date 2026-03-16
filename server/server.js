@@ -11,11 +11,31 @@ import crypto from 'node:crypto'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { getBookings, saveBooking, updateBooking, isUsingSupabase } from './db/bookings.js'
-
-dotenv.config()
+import { getUsers, saveUser, updateUser, isUsingSupabaseForUsers } from './db/users.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+// Cargar .env desde la carpeta server/ (no depende del directorio de trabajo)
+const envPath = join(__dirname, '.env')
+const envExists = fs.existsSync(envPath)
+const dotenvResult = dotenv.config({ path: envPath })
+if (!envExists) {
+  console.error('❌ server/.env no encontrado en:', envPath)
+} else if (dotenvResult.error) {
+  console.error('❌ Error leyendo server/.env:', dotenvResult.error.message)
+} else {
+  const keys = dotenvResult.parsed ? Object.keys(dotenvResult.parsed) : []
+  const hasSupabase = keys.some(k => k.startsWith('SUPABASE_'))
+  if (!hasSupabase) {
+    console.warn('⚠️ server/.env cargado pero no hay variables SUPABASE_* (nombres:', keys.join(', ') || 'ninguno', ')')
+  }
+  // Verificar que process.env las tenga (por si hay caracteres raros en los nombres)
+  const urlRightAfter = process.env.SUPABASE_URL
+  const keyRightAfter = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!urlRightAfter || !keyRightAfter) {
+    console.warn('⚠️ Justo después de cargar .env: SUPABASE_URL=', urlRightAfter ? 'ok' : 'undefined', 'SUPABASE_SERVICE_ROLE_KEY=', keyRightAfter ? 'ok' : 'undefined')
+  }
+}
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -239,8 +259,7 @@ async function sendBookingConfirmationEmail(booking) {
   }
 }
 
-// Archivos para guardar datos (reservas usan Supabase o db/bookings.js; el resto sigue en JSON)
-const USERS_FILE = join(__dirname, 'users.json')
+// Archivos para guardar datos (reservas y usuarios usan Supabase o db/*.js; el resto sigue en JSON)
 const RESET_TOKENS_FILE = join(__dirname, 'password-reset-tokens.json')
 const ADMINS_FILE = join(__dirname, 'admins.json')
 const ADMIN_RESET_TOKENS_FILE = join(__dirname, 'admin-password-reset-tokens.json')
@@ -801,25 +820,11 @@ app.get('/api/bookings/availability/:className/:date/:time', async (req, res) =>
   }
 })
 
-// Función helper para leer usuarios
-const getUsers = () => {
-  try {
-    if (fs.existsSync(USERS_FILE)) {
-      const data = fs.readFileSync(USERS_FILE, 'utf8')
-      return JSON.parse(data)
-    }
-    return []
-  } catch (error) {
-    console.error('Error reading users:', error)
-    return []
-  }
-}
-
 // Endpoint: Obtener usuario por email
-app.get('/api/users/email/:email', (req, res) => {
+app.get('/api/users/email/:email', async (req, res) => {
   try {
     const { email } = req.params
-    const users = getUsers()
+    const users = await getUsers()
     const user = users.find(u => u.email === email)
     
     if (!user) {
@@ -835,19 +840,6 @@ app.get('/api/users/email/:email', (req, res) => {
     res.status(500).json({ error: error.message })
   }
 })
-
-// Función helper para guardar usuarios
-const saveUser = (user) => {
-  try {
-    const users = getUsers()
-    users.push(user)
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2))
-    return user
-  } catch (error) {
-    console.error('Error saving user:', error)
-    throw error
-  }
-}
 
 // Función helper para generar token simple (en producción usar JWT real)
 const generateToken = (user) => {
@@ -1301,7 +1293,7 @@ app.post('/api/auth/admin/force-reset-password', (req, res) => {
 })
 
 // Endpoint: Registro de usuario
-app.post('/api/auth/signup', (req, res) => {
+app.post('/api/auth/signup', async (req, res) => {
   try {
     // Asegurar que siempre devolvamos JSON
     res.setHeader('Content-Type', 'application/json')
@@ -1323,7 +1315,7 @@ app.post('/api/auth/signup', (req, res) => {
       })
     }
 
-    const users = getUsers()
+    const users = await getUsers()
     
     // Verificar si el email ya existe
     const existingUser = users.find(u => u.email === email)
@@ -1331,13 +1323,16 @@ app.post('/api/auth/signup', (req, res) => {
       // Si el usuario existe pero fue creado automáticamente (sin contraseña), permitir actualizar
       if (!existingUser.password || existingUser.password.trim() === '') {
         // Actualizar el usuario existente con los nuevos datos
-        const updatedUser = updateUser(existingUser.id, {
+        const updatedUser = await updateUser(existingUser.id, {
           firstName,
           lastName,
           phone,
           password,
           autoCreated: false
         })
+        if (!updatedUser) {
+          return res.status(500).json({ success: false, error: 'Error al actualizar el usuario' })
+        }
         const token = generateToken(updatedUser)
         const { password: _, ...userWithoutPassword } = updatedUser
         
@@ -1369,7 +1364,7 @@ app.post('/api/auth/signup', (req, res) => {
       autoCreated: false
     }
 
-    const savedUser = saveUser(newUser)
+    const savedUser = await saveUser(newUser)
     console.log('✅ Usuario guardado:', {
       id: savedUser.id,
       email: savedUser.email,
@@ -1416,25 +1411,8 @@ app.post('/api/auth/signup', (req, res) => {
   }
 })
 
-// Función helper para actualizar usuario
-const updateUser = (userId, updates) => {
-  try {
-    const users = getUsers()
-    const userIndex = users.findIndex(u => u.id === userId)
-    if (userIndex === -1) {
-      throw new Error('Usuario no encontrado')
-    }
-    users[userIndex] = { ...users[userIndex], ...updates }
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2))
-    return users[userIndex]
-  } catch (error) {
-    console.error('Error updating user:', error)
-    throw error
-  }
-}
-
 // Endpoint: Establecer contraseña para usuarios auto-creados
-app.post('/api/auth/set-password', (req, res) => {
+app.post('/api/auth/set-password', async (req, res) => {
   try {
     const { email, password } = req.body
 
@@ -1446,7 +1424,7 @@ app.post('/api/auth/set-password', (req, res) => {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' })
     }
 
-    const users = getUsers()
+    const users = await getUsers()
     const user = users.find(u => u.email === email)
 
     if (!user) {
@@ -1459,7 +1437,10 @@ app.post('/api/auth/set-password', (req, res) => {
     }
 
     // Actualizar la contraseña
-    const updatedUser = updateUser(user.id, { password })
+    const updatedUser = await updateUser(user.id, { password })
+    if (!updatedUser) {
+      return res.status(500).json({ error: 'Error al actualizar la contraseña' })
+    }
     const token = generateToken(updatedUser)
     
     // No devolver la contraseña
@@ -1489,7 +1470,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       return res.status(400).json({ success: false, error: 'El correo es requerido' })
     }
     const normalizedEmail = email.trim().toLowerCase()
-    const users = getUsers()
+    const users = await getUsers()
     const user = users.find(u => u.email && u.email.toLowerCase() === normalizedEmail)
     // Siempre respondemos igual para no revelar si el correo existe
     if (user) {
@@ -1517,7 +1498,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 })
 
 // Endpoint: Restablecer contraseña con token del correo
-app.post('/api/auth/reset-password', (req, res) => {
+app.post('/api/auth/reset-password', async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
     const { token, newPassword } = req.body
@@ -1531,12 +1512,15 @@ app.post('/api/auth/reset-password', (req, res) => {
     if (!email) {
       return res.status(400).json({ success: false, error: 'Enlace inválido o expirado. Solicita uno nuevo.' })
     }
-    const users = getUsers()
+    const users = await getUsers()
     const user = users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase())
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' })
     }
-    updateUser(user.id, { password: newPassword })
+    const updated = await updateUser(user.id, { password: newPassword })
+    if (!updated) {
+      return res.status(500).json({ success: false, error: 'Error al actualizar la contraseña' })
+    }
     res.json({ success: true, message: 'Contraseña actualizada. Ya puedes iniciar sesión.' })
   } catch (error) {
     console.error('Error in reset-password:', error)
@@ -1545,7 +1529,7 @@ app.post('/api/auth/reset-password', (req, res) => {
 })
 
 // Endpoint: Inicio de sesión
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body
 
@@ -1553,7 +1537,7 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(400).json({ error: 'Email es requerido' })
     }
 
-    const users = getUsers()
+    const users = await getUsers()
     const user = users.find(u => u.email === email)
 
     if (!user) {
@@ -1631,7 +1615,7 @@ const savePackagePurchase = (purchase) => {
 }
 
 // Endpoint: Comprar paquete
-app.post('/api/packages/purchase', (req, res) => {
+app.post('/api/packages/purchase', async (req, res) => {
   try {
     const purchaseData = req.body
     
@@ -1643,7 +1627,7 @@ app.post('/api/packages/purchase', (req, res) => {
       })
     }
 
-    const users = getUsers()
+    const users = await getUsers()
     const existingUser = users.find(u => u.email === purchaseData.customer.email)
     
     if (!existingUser) {
@@ -1815,8 +1799,13 @@ app.use((req, res) => {
 const HOST = process.env.HOST || '0.0.0.0'
 app.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on http://${HOST}:${PORT}`)
+  const hasSupabaseUrl = !!(process.env.SUPABASE_URL || '').trim()
+  const hasSupabaseKey = !!(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
+  if (!hasSupabaseUrl || !hasSupabaseKey) {
+    console.log(`⚠️  Supabase: URL=${hasSupabaseUrl ? 'ok' : 'missing'}, KEY=${hasSupabaseKey ? 'ok' : 'missing'} (check server/.env)`)
+  }
   console.log(`📝 Bookings: ${isUsingSupabase() ? 'Supabase' : 'JSON file (server/bookings.json)'}`)
-  console.log(`👥 Users file: ${USERS_FILE}`)
+  console.log(`👥 Users: ${isUsingSupabaseForUsers() ? 'Supabase' : 'JSON file (server/users.json)'}`)
   if (!process.env.STRIPE_SECRET_KEY) {
     console.warn('⚠️  STRIPE_SECRET_KEY not set. Stripe features will not work.')
   }

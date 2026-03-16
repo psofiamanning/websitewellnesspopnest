@@ -1,6 +1,9 @@
-# Reservas con Supabase (persistentes en producción)
+# Reservas y usuarios con Supabase (persistentes en producción)
 
-Las reservas se guardan en **Supabase** cuando configuras `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en el backend. Así los datos no se pierden en cada deploy (Railway, etc.).
+Las reservas y los usuarios se guardan en **Supabase** cuando configuras `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en el backend. Con **solo esas dos variables** es suficiente; no hace falta ninguna otra de Supabase.
+
+**Proyecto actual:** Wellness Database · Project ID: `cgtiuulyregyxdpaudtf`  
+→ URL: `https://cgtiuulyregyxdpaudtf.supabase.co`
 
 ## 1. Crear proyecto en Supabase
 
@@ -11,7 +14,7 @@ Las reservas se guardan en **Supabase** cuando configuras `SUPABASE_URL` y `SUPA
    - **Project URL** → `SUPABASE_URL`
    - **service_role** key (en "Project API keys", la que dice "secret") → `SUPABASE_SERVICE_ROLE_KEY`
 
-## 2. Crear la tabla de reservas
+## 2. Crear las tablas (reservas y usuarios)
 
 En el dashboard de Supabase: **SQL Editor** → New query → pega y ejecuta:
 
@@ -25,6 +28,15 @@ create table if not exists public.bookings (
 
 -- Índice para listar por fecha de creación
 create index if not exists bookings_created_at_idx on public.bookings (created_at);
+
+-- Tabla para usuarios (registro, login, compra de paquetes)
+create table if not exists public.users (
+  id text primary key,
+  data jsonb not null,
+  created_at timestamptz default now()
+);
+
+create index if not exists users_created_at_idx on public.users (created_at);
 
 -- El backend usa service_role, así que no hace falta RLS para desarrollo.
 -- Si quieres restringir acceso después, puedes añadir políticas (RLS).
@@ -48,13 +60,13 @@ Reinicia el servidor. Al arrancar deberías ver en consola:
 
 ```
 📝 Bookings: Supabase
+👥 Users: Supabase
 ```
 
-Si no configuras estas variables, el backend sigue usando `server/bookings.json` (comportamiento anterior; los datos se pierden en cada deploy en producción).
+Si no configuras estas variables, el backend sigue usando `server/bookings.json` y `server/users.json` (los datos se pierden en cada deploy en producción).
 
-## 4. Migrar reservas existentes (opcional)
+## 4. Migrar datos existentes (opcional)
 
-Si tienes reservas en `bookings.json` y quieres pasarlas a Supabase:
+**Reservas:** Si tienes reservas en `bookings.json`, configura Supabase y la tabla como arriba; luego ejecuta un script que lea `bookings.json` e inserte cada objeto en la tabla `bookings` (columnas `id`, `data`, `created_at`).
 
-1. Configura Supabase y la tabla como arriba.
-2. Ejecuta un script una vez que lea `bookings.json` e inserte cada objeto en la tabla `bookings` (columnas `id`, `data`, `created_at`). Puedes hacerlo desde el SQL Editor de Supabase insertando manualmente o con un script Node que use `getBookings()` del archivo y luego inserte vía Supabase.
+**Usuarios:** Si tienes usuarios en `users.json`, después de crear la tabla `users` puedes ejecutar un script que lea `users.json` e inserte cada usuario en la tabla `users` (columnas `id`, `data`, `created_at`). El backend usa las mismas variables `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` para reservas y usuarios.

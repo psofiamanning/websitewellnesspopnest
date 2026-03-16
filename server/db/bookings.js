@@ -1,6 +1,12 @@
 /**
  * Bookings storage: Supabase (persistent) or JSON file (fallback).
  * Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to use Supabase and keep data across deploys.
+ *
+ * IMPORTANTE: Este módulo NUNCA borra datos en Supabase. Solo hace:
+ * - getBookings: lectura (SELECT)
+ * - saveBooking: insertar nueva fila (INSERT)
+ * - updateBooking: actualizar una fila por id fusionando campos (UPDATE). No se sobrescribe todo el JSON, se hace merge.
+ * La información existente en la base de datos se conserva siempre.
  */
 
 import { createClient } from '@supabase/supabase-js'
@@ -12,19 +18,29 @@ import { fileURLToPath } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const BOOKINGS_FILE = join(__dirname, '..', 'bookings.json')
 
-const supabaseUrl = (process.env.SUPABASE_URL || '').trim()
-const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
-const useSupabase = supabaseUrl && supabaseKey
-
+// Inicializar Supabase de forma diferida (después de dotenv.config() en server.js)
+let supabaseUrl = ''
+let supabaseKey = ''
+let useSupabase = false
 let supabase = null
-if (useSupabase) {
-  supabase = createClient(supabaseUrl, supabaseKey)
+let supabaseInited = false
+
+function initSupabase() {
+  if (supabaseInited) return
+  supabaseInited = true
+  supabaseUrl = (process.env.SUPABASE_URL || '').trim()
+  supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
+  useSupabase = !!(supabaseUrl && supabaseKey)
+  if (useSupabase) {
+    supabase = createClient(supabaseUrl, supabaseKey)
+  }
 }
 
 /**
  * @returns {Promise<Array>} All bookings
  */
 export async function getBookings() {
+  initSupabase()
   if (useSupabase && supabase) {
     try {
       const { data, error } = await supabase.from('bookings').select('data').order('created_at', { ascending: true })
@@ -55,6 +71,7 @@ export async function getBookings() {
  * @returns {Promise<object>} The saved booking
  */
 export async function saveBooking(booking) {
+  initSupabase()
   if (useSupabase && supabase) {
     try {
       const { error } = await supabase.from('bookings').insert({
@@ -84,6 +101,7 @@ export async function saveBooking(booking) {
  * @returns {Promise<object|null>} Updated booking or null
  */
 export async function updateBooking(bookingId, updates) {
+  initSupabase()
   if (useSupabase && supabase) {
     try {
       const { data: rows, error: fetchErr } = await supabase.from('bookings').select('data').eq('id', bookingId).limit(1)
@@ -110,5 +128,6 @@ export async function updateBooking(bookingId, updates) {
 }
 
 export function isUsingSupabase() {
+  initSupabase()
   return useSupabase
 }

@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "id": "1773291240512",
+    "type": "package",
+    "packageId": "package-10-classes",
+    "packageName": "Paquete de 10 Clases",
+    "classes": 10,
+    "customer": {
+      "firstName": "EMMA",
+      "lastName": "GARCÍA ZAMBRANO",
+      "email": "mitorecagz@hotmail.com",
+      "phone": "5554048423",
+      "fullName": "EMMA GARCÍA ZAMBRANO"
+    },
+    "payment": {
+      "status": "succeeded",
+      "amount": 180000,
+      "currency": "MXN",
+      "method": "Tarjeta de Crédito/Débito",
+      "cardLastFour": "****"
+    },
+    "status": "confirmed",
+    "createdAt": "2026-03-12T04:54:00.511Z",
+    "expiresAt": "2026-05-12T04:54:00.511Z",
+    "classesRemaining": 10,
+    "classesUsed": 0,
+    "userId": "1773291140656"
+  }
+]

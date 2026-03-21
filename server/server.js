@@ -10,8 +10,30 @@ import fs from 'fs'
 import crypto from 'node:crypto'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { getBookings, saveBooking, updateBooking, isUsingSupabase } from './db/bookings.js'
-import { getUsers, saveUser, updateUser, isUsingSupabaseForUsers } from './db/users.js'
+import {
+  getBookings,
+  getBookingById,
+  saveBooking,
+  updateBooking,
+  isUsingSupabase,
+  findBookingByStripePaymentIntentId,
+  getAvailabilityForSlot,
+} from './db/bookings.js'
+import {
+  isUsingSupabaseForUsers,
+  getProfileByEmail,
+  profileToApiUser,
+  verifyAuthJwt,
+  getProfileForAuthUser,
+  upsertProfileForAuthUser,
+} from './db/users.js'
+import {
+  listAllPackagePurchases,
+  getUserActivePackagesByEmail,
+  insertCustomerPackageAfterPayment,
+  resolveProfileIdForPackagePurchase,
+} from './db/packages.js'
+import { getSupabaseAnon } from './db/supabaseClient.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -63,12 +85,10 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object
         console.log('PaymentIntent succeeded:', paymentIntent.id)
-        const bookings = await getBookings()
-        const booking = bookings.find(b => b.paymentIntentId === paymentIntent.id || b.stripeInfo?.paymentIntentId === paymentIntent.id)
+        const booking = await findBookingByStripePaymentIntentId(paymentIntent.id)
         if (booking) {
           await updateBooking(booking.id, { paymentStatus: 'succeeded', status: 'confirmed' })
-          const all = await getBookings()
-          const updated = all.find(b => b.id === booking.id)
+          const updated = await getBookingById(booking.id)
           if (updated?.customer?.email) sendBookingConfirmationEmail(updated).catch(() => {})
         }
         break
@@ -76,8 +96,7 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
       case 'payment_intent.payment_failed': {
         const failedPayment = event.data.object
         console.log('PaymentIntent failed:', failedPayment.id)
-        const failedBookings = await getBookings()
-        const failedBooking = failedBookings.find(b => b.paymentIntentId === failedPayment.id || b.stripeInfo?.paymentIntentId === failedPayment.id)
+        const failedBooking = await findBookingByStripePaymentIntentId(failedPayment.id)
         if (failedBooking) await updateBooking(failedBooking.id, { paymentStatus: 'failed', status: 'pending' })
         break
       }
@@ -174,50 +193,6 @@ async function sendWelcomeEmail(user) {
   }
 }
 
-// Tokens de restablecimiento de contraseña
-const getResetTokens = () => {
-  try {
-    if (fs.existsSync(RESET_TOKENS_FILE)) {
-      return JSON.parse(fs.readFileSync(RESET_TOKENS_FILE, 'utf8'))
-    }
-    return []
-  } catch (e) {
-    return []
-  }
-}
-const saveResetToken = (token, email) => {
-  const tokens = getResetTokens().filter(t => t.email !== email)
-  tokens.push({ token, email, expiresAt: Date.now() + RESET_TOKEN_EXPIRY_MS })
-  fs.writeFileSync(RESET_TOKENS_FILE, JSON.stringify(tokens, null, 2))
-}
-const consumeResetToken = (token) => {
-  const tokens = getResetTokens()
-  const now = Date.now()
-  const valid = tokens.find(t => t.token === token && t.expiresAt > now)
-  if (!valid) return null
-  const rest = tokens.filter(t => t.token !== token)
-  fs.writeFileSync(RESET_TOKENS_FILE, JSON.stringify(rest, null, 2))
-  return valid.email
-}
-
-async function sendPasswordResetEmail(email, resetToken) {
-  if (!email || (!mailerSend && !mailTransporter)) {
-    if (!mailerSend && !mailTransporter) console.warn('⚠️ Correo no configurado: no se envía restablecimiento a', email)
-    return
-  }
-  const resetLink = `${FRONTEND_URL}/reset-password?token=${encodeURIComponent(resetToken)}`
-  const subject = 'Restablecer tu contraseña - Estudio Popnest Wellness'
-  const text = `Hola,\n\nRecibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el siguiente enlace (válido 1 hora):\n\n${resetLink}\n\nSi no solicitaste esto, ignora este correo.\n\nSaludos,\nEstudio Popnest Wellness`
-  const html = `<p>Hola,</p><p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p><p><a href="${resetLink}" style="color:#B73D37;font-weight:bold;">Restablecer contraseña</a></p><p>Este enlace es válido por 1 hora. Si no solicitaste esto, ignora este correo.</p><p>Saludos,<br>Estudio Popnest Wellness</p>`
-  try {
-    await sendEmail({ to: email, subject, text, html })
-    console.log('✅ Email de restablecimiento enviado a:', email)
-  } catch (err) {
-    console.error('❌ Error enviando email de restablecimiento a', email, ':', err.message)
-    throw err
-  }
-}
-
 async function sendAdminPasswordResetEmail(email, resetToken) {
   if (!email) return
   if (!mailerSend && !mailTransporter) {
@@ -259,28 +234,30 @@ async function sendBookingConfirmationEmail(booking) {
   }
 }
 
-// Archivos para guardar datos (reservas y usuarios usan Supabase o db/*.js; el resto sigue en JSON)
-const RESET_TOKENS_FILE = join(__dirname, 'password-reset-tokens.json')
+// Archivos para guardar datos (admins, maestras, etc.)
 const ADMINS_FILE = join(__dirname, 'admins.json')
 const ADMIN_RESET_TOKENS_FILE = join(__dirname, 'admin-password-reset-tokens.json')
 const TEACHERS_FILE = join(__dirname, 'teachers.json')
 const MARKETING_ASSETS_DIR = join(__dirname, 'marketing-assets')
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
-const RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000 // 1 hora
+const ADMIN_RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000 // 1 hora
 
-// Helper: contar reservas por clase, fecha y hora (usa getBookings async)
-async function countBookingsForClass(className, date, time) {
-  try {
-    const bookings = await getBookings()
-    return bookings.filter(b => b.className === className && b.date === date && b.time === time && b.status === 'confirmed').length
-  } catch (e) {
-    console.error('Error counting bookings:', e)
-    return 0
+async function assertSlotAvailable(className, date, time) {
+  const slot = await getAvailabilityForSlot(className, date, time)
+  if (!slot.schedule) {
+    return {
+      ok: false,
+      message: 'No hay un horario activo para esa clase, fecha y hora.',
+    }
   }
+  if (!slot.available) {
+    return {
+      ok: false,
+      message: `Lo sentimos, esta clase ya no tiene lugares disponibles para esta fecha y hora. Por favor selecciona otra fecha u hora.`,
+    }
+  }
+  return { ok: true, slot }
 }
-
-// Constante para el límite de reservas por clase
-const MAX_BOOKINGS_PER_CLASS = 9
 
 // Endpoint: Crear Payment Intent
 app.post('/api/create-payment-intent', async (req, res) => {
@@ -418,46 +395,26 @@ app.post('/api/confirm-booking', async (req, res) => {
       return res.status(400).json({ error: 'Payment Intent ID is required' })
     }
 
-    // Verificar disponibilidad antes de procesar el pago
     if (bookingData.className && bookingData.date && bookingData.time) {
-      const currentCount = await countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
-      if (currentCount >= MAX_BOOKINGS_PER_CLASS) {
-        return res.status(400).json({
-          error: `Lo sentimos, esta clase ya tiene ${MAX_BOOKINGS_PER_CLASS} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.`,
-          code: 'CLASS_FULL'
-        })
+      const cap = await assertSlotAvailable(bookingData.className, bookingData.date, bookingData.time)
+      if (!cap.ok) {
+        return res.status(400).json({ error: cap.message, code: 'CLASS_FULL' })
       }
     }
 
-    // Si es reserva con paquete, manejar directamente
+    // Si es reserva con paquete, manejar directamente (cupos y paquete en saveBooking)
     if (bookingData.paymentMethod === 'package' && bookingData.packageId && bookingData.customer?.email) {
-      const updatedPackage = usePackageClass(bookingData.packageId, bookingData.customer.email)
-      if (!updatedPackage) {
-        return res.status(400).json({
-          error: 'No tienes clases disponibles en este paquete o el paquete no existe.',
-          code: 'NO_CLASSES_AVAILABLE'
-        })
-      }
-
-      bookingData.packageInfo = {
-        packageId: updatedPackage.id,
-        packageName: updatedPackage.packageName,
-        classesRemaining: updatedPackage.classesRemaining
-      }
-
       const booking = {
-        id: Date.now().toString(),
         ...bookingData,
         createdAt: new Date().toISOString(),
         status: 'confirmed',
-        paymentStatus: 'succeeded'
+        paymentStatus: 'succeeded',
       }
-
       const savedBooking = await saveBooking(booking)
       sendBookingConfirmationEmail(savedBooking).catch(() => {})
       return res.json({
         success: true,
-        booking: savedBooking
+        booking: savedBooking,
       })
     }
 
@@ -471,29 +428,22 @@ app.post('/api/confirm-booking', async (req, res) => {
     try {
       paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
     } catch (stripeError) {
-      // Si el PaymentIntent no existe, pero tenemos bookingData, verificar disponibilidad antes de guardar
       console.warn(`⚠️ PaymentIntent ${paymentIntentId} no encontrado, pero guardando reserva de todas formas`)
-      
-      // Verificar disponibilidad nuevamente antes de guardar
+
       if (bookingData.className && bookingData.date && bookingData.time) {
-        const currentCount = await countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
-        if (currentCount >= MAX_BOOKINGS_PER_CLASS) {
-          return res.status(400).json({
-            error: `Lo sentimos, esta clase ya tiene ${MAX_BOOKINGS_PER_CLASS} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.`,
-            code: 'CLASS_FULL'
-          })
+        const cap = await assertSlotAvailable(bookingData.className, bookingData.date, bookingData.time)
+        if (!cap.ok) {
+          return res.status(400).json({ error: cap.message, code: 'CLASS_FULL' })
         }
       }
 
-      // Guardar la reserva sin verificar el PaymentIntent
       const booking = {
-        id: Date.now().toString(),
         ...bookingData,
         paymentIntentId: paymentIntentId,
         paymentStatus: 'succeeded',
         createdAt: new Date().toISOString(),
         status: 'confirmed',
-        note: 'PaymentIntent no encontrado en Stripe, pero pago confirmado en frontend'
+        note: 'PaymentIntent no encontrado en Stripe, pero pago confirmado en frontend',
       }
 
       const savedBooking = await saveBooking(booking)
@@ -501,47 +451,25 @@ app.post('/api/confirm-booking', async (req, res) => {
       return res.json({
         success: true,
         booking: savedBooking,
-        warning: 'PaymentIntent no encontrado en Stripe, pero reserva guardada'
+        warning: 'PaymentIntent no encontrado en Stripe, pero reserva guardada',
       })
     }
 
     if (paymentIntent.status !== 'succeeded') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Payment not completed',
-        status: paymentIntent.status 
+        status: paymentIntent.status,
       })
     }
 
-    // Verificar disponibilidad una vez más antes de guardar
     if (bookingData.className && bookingData.date && bookingData.time) {
-      const currentCount = await countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
-      if (currentCount >= MAX_BOOKINGS_PER_CLASS) {
-        return res.status(400).json({
-          error: `Lo sentimos, esta clase ya tiene ${MAX_BOOKINGS_PER_CLASS} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.`,
-          code: 'CLASS_FULL'
-        })
+      const cap = await assertSlotAvailable(bookingData.className, bookingData.date, bookingData.time)
+      if (!cap.ok) {
+        return res.status(400).json({ error: cap.message, code: 'CLASS_FULL' })
       }
     }
 
-    // Si es reserva con paquete, verificar y usar una clase del paquete
-    if (bookingData.paymentMethod === 'package' && bookingData.packageId && bookingData.customer?.email) {
-      const updatedPackage = usePackageClass(bookingData.packageId, bookingData.customer.email)
-      if (!updatedPackage) {
-        return res.status(400).json({
-          error: 'No tienes clases disponibles en este paquete o el paquete no existe.',
-          code: 'NO_CLASSES_AVAILABLE'
-        })
-      }
-      bookingData.packageInfo = {
-        packageId: updatedPackage.id,
-        packageName: updatedPackage.packageName,
-        classesRemaining: updatedPackage.classesRemaining
-      }
-    }
-
-    // Guardar la reserva
     const booking = {
-      id: Date.now().toString(),
       ...bookingData,
       paymentIntentId: paymentIntentId,
       paymentStatus: paymentIntent.status,
@@ -568,35 +496,22 @@ app.post('/api/bookings', async (req, res) => {
     const bookingData = req.body
 
     if (bookingData.className && bookingData.date && bookingData.time) {
-      const currentCount = await countBookingsForClass(bookingData.className, bookingData.date, bookingData.time)
-      if (currentCount >= MAX_BOOKINGS_PER_CLASS) {
+      const cap = await assertSlotAvailable(bookingData.className, bookingData.date, bookingData.time)
+      if (!cap.ok) {
         return res.status(400).json({
-          error: `Lo sentimos, esta clase ya tiene ${MAX_BOOKINGS_PER_CLASS} reservaciones para esta fecha y hora. Por favor selecciona otra fecha u hora.`,
-          code: 'CLASS_FULL'
+          error: cap.message,
+          code: 'CLASS_FULL',
         })
-      }
-    }
-
-    if (bookingData.paymentMethod === 'package' && bookingData.packageId && bookingData.customer?.email) {
-      const updatedPackage = usePackageClass(bookingData.packageId, bookingData.customer.email)
-      if (!updatedPackage) {
-        return res.status(400).json({
-          error: 'No tienes clases disponibles en este paquete o el paquete no existe.',
-          code: 'NO_CLASSES_AVAILABLE'
-        })
-      }
-      bookingData.packageInfo = {
-        packageId: updatedPackage.id,
-        packageName: updatedPackage.packageName,
-        classesRemaining: updatedPackage.classesRemaining
       }
     }
 
     const booking = {
-      id: Date.now().toString(),
       ...bookingData,
       createdAt: new Date().toISOString(),
-      status: bookingData.payment?.status === 'succeeded' || bookingData.paymentMethod === 'package' ? 'confirmed' : 'pending'
+      status:
+        bookingData.payment?.status === 'succeeded' || bookingData.paymentMethod === 'package'
+          ? 'confirmed'
+          : 'pending',
     }
 
     const savedBooking = await saveBooking(booking)
@@ -781,10 +696,10 @@ app.patch('/api/bookings/:id/reschedule', async (req, res) => {
       return res.status(400).json({ error: 'La nueva fecha y hora son iguales a la actual. Elige otra opción.' })
     }
 
-    const newCount = await countBookingsForClass(booking.className, newDate, newTime)
-    if (newCount >= MAX_BOOKINGS_PER_CLASS) {
+    const cap = await assertSlotAvailable(booking.className, newDate, newTime)
+    if (!cap.ok) {
       return res.status(400).json({
-        error: 'No hay lugares disponibles en esa fecha y hora. Elige otra opción.'
+        error: 'No hay lugares disponibles en esa fecha y hora. Elige otra opción.',
       })
     }
 
@@ -792,8 +707,13 @@ app.patch('/api/bookings/:id/reschedule', async (req, res) => {
     const updated = await updateBooking(id, {
       date: newDate,
       time: newTime,
-      formattedDate: newFormattedDate
+      formattedDate: newFormattedDate,
     })
+    if (!updated) {
+      return res.status(400).json({
+        error: 'No se pudo reagendar. Verifica que el horario exista y tenga cupo.',
+      })
+    }
     res.json({ success: true, booking: updated })
   } catch (error) {
     console.error('Error rescheduling booking:', error)
@@ -805,14 +725,16 @@ app.patch('/api/bookings/:id/reschedule', async (req, res) => {
 app.get('/api/bookings/availability/:className/:date/:time', async (req, res) => {
   try {
     const { className, date, time } = req.params
-    const currentCount = await countBookingsForClass(className, date, time)
-    const isAvailable = currentCount < MAX_BOOKINGS_PER_CLASS
-    const remainingSpots = Math.max(0, MAX_BOOKINGS_PER_CLASS - currentCount)
+    const slot = await getAvailabilityForSlot(
+      decodeURIComponent(className),
+      decodeURIComponent(date),
+      decodeURIComponent(time)
+    )
     res.json({
-      available: isAvailable,
-      currentCount,
-      maxBookings: MAX_BOOKINGS_PER_CLASS,
-      remainingSpots
+      available: slot.available,
+      currentCount: slot.currentCount,
+      maxBookings: slot.maxBookings,
+      remainingSpots: slot.remainingSpots,
     })
   } catch (error) {
     console.error('Error checking availability:', error)
@@ -824,64 +746,16 @@ app.get('/api/bookings/availability/:className/:date/:time', async (req, res) =>
 app.get('/api/users/email/:email', async (req, res) => {
   try {
     const { email } = req.params
-    const users = await getUsers()
-    const user = users.find(u => u.email === email)
-    
-    if (!user) {
+    const profile = await getProfileByEmail(decodeURIComponent(email))
+    if (!profile) {
       return res.status(404).json({ error: 'Usuario no encontrado' })
     }
-    
-    // No devolver la contraseña
-    const { password: _, ...userWithoutPassword } = user
-    
-    res.json(userWithoutPassword)
+    res.json(profileToApiUser(profile))
   } catch (error) {
     console.error('Error getting user by email:', error)
     res.status(500).json({ error: error.message })
   }
 })
-
-// Función helper para generar token simple (en producción usar JWT real)
-const generateToken = (user) => {
-  // Asegurar que el teléfono esté presente (puede ser string vacío pero debe existir)
-  const userPhone = user.phone !== undefined && user.phone !== null ? String(user.phone) : ''
-  
-  const payload = {
-    userId: user.id,
-    email: user.email,
-    user: {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      phone: userPhone // Incluir teléfono en el token (siempre como string)
-    },
-    exp: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 días
-  }
-  
-  console.log('🔑 Generando token con payload:', {
-    email: payload.email,
-    firstName: payload.user.firstName,
-    lastName: payload.user.lastName,
-    phone: payload.user.phone,
-    phoneType: typeof payload.user.phone,
-    phoneLength: payload.user.phone?.length || 0
-  })
-  
-  const token = Buffer.from(JSON.stringify(payload)).toString('base64')
-  
-  // Verificar que el token se puede decodificar correctamente
-  try {
-    const decoded = JSON.parse(Buffer.from(token, 'base64').toString())
-    if (!decoded.user.phone && user.phone) {
-      console.error('❌ ERROR: El teléfono no se incluyó en el token aunque estaba presente en el usuario')
-    }
-  } catch (e) {
-    console.error('❌ Error verificando token generado:', e)
-  }
-  
-  return token
-}
 
 // Función helper para generar token de administrador
 // role: 'super_admin' = visibilidad completa (ingresos, todo) | 'operator' = operativo (reservas, paquetes, sin ingresos)
@@ -969,7 +843,7 @@ const getAdminResetTokens = () => {
 }
 const saveAdminResetToken = (token, email) => {
   const tokens = getAdminResetTokens().filter(t => t.email !== email)
-  tokens.push({ token, email, expiresAt: Date.now() + RESET_TOKEN_EXPIRY_MS })
+  tokens.push({ token, email, expiresAt: Date.now() + ADMIN_RESET_TOKEN_EXPIRY_MS })
   fs.writeFileSync(ADMIN_RESET_TOKENS_FILE, JSON.stringify(tokens, null, 2))
 }
 const consumeAdminResetToken = (token) => {
@@ -1292,176 +1166,95 @@ app.post('/api/auth/admin/force-reset-password', (req, res) => {
   }
 })
 
-// Endpoint: Registro de usuario
+// Endpoint: Registro de usuario (Supabase Auth + profiles)
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    // Asegurar que siempre devolvamos JSON
     res.setHeader('Content-Type', 'application/json')
-    
+
     const { firstName, lastName, email, phone, password } = req.body
 
-    // Validar que todos los campos estén presentes
     if (!firstName || !lastName || !email || !phone || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Todos los campos son requeridos' 
+        error: 'Todos los campos son requeridos',
       })
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'La contraseña debe tener al menos 6 caracteres' 
+        error: 'La contraseña debe tener al menos 6 caracteres',
       })
     }
 
-    const users = await getUsers()
-    
-    // Verificar si el email ya existe
-    const existingUser = users.find(u => u.email === email)
-    if (existingUser) {
-      // Si el usuario existe pero fue creado automáticamente (sin contraseña), permitir actualizar
-      if (!existingUser.password || existingUser.password.trim() === '') {
-        // Actualizar el usuario existente con los nuevos datos
-        const updatedUser = await updateUser(existingUser.id, {
-          firstName,
-          lastName,
-          phone,
-          password,
-          autoCreated: false
+    const anon = getSupabaseAnon()
+    const { data, error } = await anon.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: { first_name: firstName, last_name: lastName, phone: phone.trim() },
+      },
+    })
+
+    if (error) {
+      return res.status(400).json({ success: false, error: error.message })
+    }
+
+    if (data.user) {
+      try {
+        await upsertProfileForAuthUser(data.user, {
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone.trim(),
         })
-        if (!updatedUser) {
-          return res.status(500).json({ success: false, error: 'Error al actualizar el usuario' })
-        }
-        const token = generateToken(updatedUser)
-        const { password: _, ...userWithoutPassword } = updatedUser
-        
-        return res.json({
-          success: true,
-          user: userWithoutPassword,
-          token,
-          message: 'Tu cuenta ha sido actualizada exitosamente'
-        })
+      } catch (e) {
+        console.error('Profile upsert after signup:', e.message)
       }
-      
-      return res.status(400).json({ 
-        success: false,
-        error: 'Este correo electrónico ya está registrado' 
+    }
+
+    const profile = data.user ? await getProfileForAuthUser(data.user) : null
+    const userOut =
+      profileToApiUser(profile) ||
+      ({
+        id: data.user?.id,
+        email: data.user?.email || email.trim(),
+        firstName,
+        lastName,
+        phone: phone.trim(),
+      })
+
+    sendWelcomeEmail(userOut).catch(() => {})
+
+    const token = data.session?.access_token || null
+    if (!token) {
+      return res.json({
+        success: true,
+        user: userOut,
+        token: null,
+        message:
+          'Si tu proyecto requiere confirmar el correo, revisa tu bandeja; después podrás iniciar sesión.',
       })
     }
 
-    // Normalizar el teléfono (eliminar espacios extra, pero mantener el formato)
-    const normalizedPhone = phone ? phone.trim() : ''
-    
-    const newUser = {
-      id: Date.now().toString(),
-      firstName,
-      lastName,
-      email,
-      phone: normalizedPhone,
-      password, // En producción, hashear la contraseña con bcrypt
-      createdAt: new Date().toISOString(),
-      autoCreated: false
-    }
-
-    const savedUser = await saveUser(newUser)
-    console.log('✅ Usuario guardado:', {
-      id: savedUser.id,
-      email: savedUser.email,
-      firstName: savedUser.firstName,
-      lastName: savedUser.lastName,
-      phone: savedUser.phone,
-      phoneLength: savedUser.phone?.length || 0
-    })
-
-    // Enviar email de bienvenida (no bloquea la respuesta)
-    sendWelcomeEmail(savedUser).catch(() => {})
-
-    // Verificar que el teléfono esté presente antes de generar el token
-    if (!savedUser.phone || savedUser.phone.trim() === '') {
-      console.warn('⚠️ ADVERTENCIA: Usuario guardado sin teléfono')
-    }
-    
-    const token = generateToken(savedUser)
-    console.log('✅ Token generado para usuario:', savedUser.email)
-    
-    // Verificar que el token incluya el teléfono
-    try {
-      const tokenPayload = JSON.parse(Buffer.from(token, 'base64').toString())
-      console.log('✅ Verificación del token - teléfono incluido:', tokenPayload.user?.phone || 'NO INCLUIDO')
-    } catch (e) {
-      console.error('❌ Error verificando token:', e)
-    }
-
-    // No devolver la contraseña
-    const { password: _, ...userWithoutPassword } = savedUser
-
-    res.json({
-      success: true,
-      user: userWithoutPassword,
-      token
-    })
+    res.json({ success: true, user: userOut, token })
   } catch (error) {
     console.error('Error in signup:', error)
-    // Asegurar que siempre devolvamos JSON incluso en errores
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: error.message || 'Error interno del servidor' 
+      error: error.message || 'Error interno del servidor',
     })
   }
 })
 
-// Endpoint: Establecer contraseña para usuarios auto-creados
+// Endpoint: Establecer contraseña (legacy; las cuentas usan Supabase Auth)
 app.post('/api/auth/set-password', async (req, res) => {
-  try {
-    const { email, password } = req.body
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email y contraseña son requeridos' })
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' })
-    }
-
-    const users = await getUsers()
-    const user = users.find(u => u.email === email)
-
-    if (!user) {
-      return res.status(404).json({ error: 'Usuario no encontrado' })
-    }
-
-    // Solo permitir establecer contraseña si no tiene una o está vacía
-    if (user.password && user.password.trim() !== '') {
-      return res.status(400).json({ error: 'Este usuario ya tiene una contraseña establecida' })
-    }
-
-    // Actualizar la contraseña
-    const updatedUser = await updateUser(user.id, { password })
-    if (!updatedUser) {
-      return res.status(500).json({ error: 'Error al actualizar la contraseña' })
-    }
-    const token = generateToken(updatedUser)
-    
-    // No devolver la contraseña
-    const { password: _, ...userWithoutPassword } = updatedUser
-
-    res.json({
-      success: true,
-      user: userWithoutPassword,
-      token,
-      message: 'Contraseña establecida exitosamente'
-    })
-  } catch (error) {
-    console.error('Error setting password:', error)
-    res.status(500).json({ error: error.message })
-  }
+  res.status(400).json({
+    error:
+      'Usa «Olvidé mi contraseña» para recibir un enlace de Supabase o regístrate de nuevo con el flujo actual.',
+  })
 })
 
-// Cooldown para no enviar varios correos de reset al mismo email en poco tiempo (evita rate limit del proveedor)
-const RESET_EMAIL_COOLDOWN_MS = 2 * 60 * 1000 // 2 minutos
-
-// Endpoint: Olvidé mi contraseña - envía correo con enlace
+// Endpoint: Olvidé mi contraseña (Supabase envía el correo)
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
@@ -1469,66 +1262,32 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     if (!email || typeof email !== 'string' || !email.trim()) {
       return res.status(400).json({ success: false, error: 'El correo es requerido' })
     }
-    const normalizedEmail = email.trim().toLowerCase()
-    const users = await getUsers()
-    const user = users.find(u => u.email && u.email.toLowerCase() === normalizedEmail)
-    // Siempre respondemos igual para no revelar si el correo existe
-    if (user) {
-      const tokens = getResetTokens()
-      const existingForEmail = tokens.find(t => t.email === normalizedEmail)
-      const now = Date.now()
-      // Si ya enviamos un correo hace menos de 2 min, no reenviar (evita bloqueos del proveedor)
-      const tokenCreatedAt = existingForEmail ? existingForEmail.expiresAt - RESET_TOKEN_EXPIRY_MS : 0
-      if (existingForEmail && (now - tokenCreatedAt) < RESET_EMAIL_COOLDOWN_MS) {
-        console.log('⏳ Restablecimiento: cooldown activo para', normalizedEmail)
-        return res.json({
-          success: true,
-          message: 'Ya enviamos un correo a esta dirección hace poco. Revisa tu bandeja y carpeta de spam. Si no llegó, espera unos minutos y solicita el enlace de nuevo.'
-        })
-      }
-      const resetToken = crypto.randomBytes(32).toString('hex')
-      saveResetToken(resetToken, normalizedEmail)
-      await sendPasswordResetEmail(user.email, resetToken)
+    const anon = getSupabaseAnon()
+    const { error } = await anon.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: `${FRONTEND_URL}/reset-password`,
+    })
+    if (error) {
+      console.warn('Supabase resetPasswordForEmail:', error.message)
     }
-    res.json({ success: true, message: 'Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña.' })
+    res.json({
+      success: true,
+      message: 'Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña.',
+    })
   } catch (error) {
     console.error('Error in forgot-password:', error)
     res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
   }
 })
 
-// Endpoint: Restablecer contraseña con token del correo
+// Endpoint: Restablecer contraseña (token legacy; el SPA debe usar el hash de sesión de Supabase)
 app.post('/api/auth/reset-password', async (req, res) => {
-  try {
-    res.setHeader('Content-Type', 'application/json')
-    const { token, newPassword } = req.body
-    if (!token || !newPassword) {
-      return res.status(400).json({ success: false, error: 'Token y nueva contraseña son requeridos' })
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres' })
-    }
-    const email = consumeResetToken(token)
-    if (!email) {
-      return res.status(400).json({ success: false, error: 'Enlace inválido o expirado. Solicita uno nuevo.' })
-    }
-    const users = await getUsers()
-    const user = users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase())
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'Usuario no encontrado' })
-    }
-    const updated = await updateUser(user.id, { password: newPassword })
-    if (!updated) {
-      return res.status(500).json({ success: false, error: 'Error al actualizar la contraseña' })
-    }
-    res.json({ success: true, message: 'Contraseña actualizada. Ya puedes iniciar sesión.' })
-  } catch (error) {
-    console.error('Error in reset-password:', error)
-    res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
-  }
+  res.status(400).json({
+    success: false,
+    error: 'Enlace inválido o expirado. Solicita uno nuevo desde «Olvidé mi contraseña».',
+  })
 })
 
-// Endpoint: Inicio de sesión
+// Endpoint: Inicio de sesión (Supabase Auth)
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body
@@ -1536,47 +1295,45 @@ app.post('/api/auth/login', async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: 'Email es requerido' })
     }
-
-    const users = await getUsers()
-    const user = users.find(u => u.email === email)
-
-    if (!user) {
-      return res.status(401).json({ error: 'Credenciales inválidas' })
-    }
-
-    // Si el usuario no tiene contraseña o tiene contraseña vacía, indicar que necesita establecerla
-    if (!user.password || user.password.trim() === '') {
-      return res.status(200).json({
-        success: false,
-        needsPassword: true,
-        message: 'Este usuario fue creado automáticamente. Por favor establece una contraseña para continuar.',
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName
-        }
-      })
-    }
-
-    // Si se proporcionó contraseña, validarla
     if (!password) {
       return res.status(400).json({ error: 'Contraseña es requerida' })
     }
 
-    if (user.password !== password) {
+    const anon = getSupabaseAnon()
+    const { data, error } = await anon.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    })
+
+    if (error || !data.session || !data.user) {
       return res.status(401).json({ error: 'Credenciales inválidas' })
     }
 
-    const token = generateToken(user)
-    
-    // No devolver la contraseña
-    const { password: _, ...userWithoutPassword } = user
+    try {
+      await upsertProfileForAuthUser(data.user, {
+        first_name: data.user.user_metadata?.first_name,
+        last_name: data.user.user_metadata?.last_name,
+        phone: data.user.user_metadata?.phone,
+      })
+    } catch (e) {
+      console.error('Profile upsert on login:', e.message)
+    }
+
+    const profile = await getProfileForAuthUser(data.user)
+    const userOut =
+      profileToApiUser(profile) ||
+      ({
+        id: data.user.id,
+        email: data.user.email,
+        firstName: data.user.user_metadata?.first_name || '',
+        lastName: data.user.user_metadata?.last_name || '',
+        phone: data.user.user_metadata?.phone || '',
+      })
 
     res.json({
       success: true,
-      user: userWithoutPassword,
-      token
+      user: userOut,
+      token: data.session.access_token,
     })
   } catch (error) {
     console.error('Error in login:', error)
@@ -1584,153 +1341,77 @@ app.post('/api/auth/login', async (req, res) => {
   }
 })
 
-// Archivo para guardar compras de paquetes
-const PACKAGES_FILE = join(__dirname, 'packages.json')
-
-// Función helper para leer compras de paquetes
-const getPackages = () => {
-  try {
-    if (fs.existsSync(PACKAGES_FILE)) {
-      const data = fs.readFileSync(PACKAGES_FILE, 'utf8')
-      return JSON.parse(data)
-    }
-    return []
-  } catch (error) {
-    console.error('Error reading packages:', error)
-    return []
-  }
-}
-
-// Función helper para guardar compra de paquete
-const savePackagePurchase = (purchase) => {
-  try {
-    const purchases = getPackages()
-    purchases.push(purchase)
-    fs.writeFileSync(PACKAGES_FILE, JSON.stringify(purchases, null, 2))
-    return purchase
-  } catch (error) {
-    console.error('Error saving package purchase:', error)
-    throw error
-  }
-}
-
 // Endpoint: Comprar paquete
 app.post('/api/packages/purchase', async (req, res) => {
   try {
     const purchaseData = req.body
-    
-    // Verificar que el usuario esté autenticado (el email debe existir en la base de datos)
+
     if (!purchaseData.customer?.email) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Se requiere información del cliente' 
+        error: 'Se requiere información del cliente',
       })
     }
 
-    const users = await getUsers()
-    const existingUser = users.find(u => u.email === purchaseData.customer.email)
-    
-    if (!existingUser) {
-      return res.status(401).json({ 
+    const authHeader = req.headers.authorization
+    const authUser = await verifyAuthJwt(authHeader?.replace(/^Bearer\s+/i, ''))
+    if (!authUser) {
+      return res.status(401).json({
         success: false,
-        error: 'Debes estar registrado e iniciar sesión para comprar un paquete' 
+        error: 'Debes estar registrado e iniciar sesión para comprar un paquete',
       })
     }
 
-    // Verificar que el usuario tenga una contraseña establecida (no fue creado automáticamente)
-    if (!existingUser.password || existingUser.password.trim() === '') {
-      return res.status(401).json({ 
+    const customerEmail = purchaseData.customer.email.trim().toLowerCase()
+    if (authUser.email && authUser.email.trim().toLowerCase() !== customerEmail) {
+      return res.status(403).json({
         success: false,
-        error: 'Debes completar tu registro estableciendo una contraseña antes de comprar un paquete' 
+        error: 'El correo del cliente debe coincidir con tu sesión.',
       })
     }
-    
-    const now = new Date()
-    const expiresAt = new Date(now)
-    expiresAt.setMonth(expiresAt.getMonth() + 2) // Expira en 2 meses
 
-    const purchase = {
-      id: Date.now().toString(),
-      ...purchaseData,
-      createdAt: now.toISOString(),
-      expiresAt: expiresAt.toISOString(),
-      classesRemaining: purchaseData.classes || 10,
-      classesUsed: 0,
-      userId: existingUser.id
+    const profileId = await resolveProfileIdForPackagePurchase(purchaseData, authUser)
+    if (!profileId) {
+      return res.status(401).json({
+        success: false,
+        error: 'No se pudo vincular tu cuenta. Vuelve a iniciar sesión.',
+      })
     }
 
-    const savedPurchase = savePackagePurchase(purchase)
+    const savedPurchase = await insertCustomerPackageAfterPayment({
+      profileId,
+      packageName: purchaseData.packageName,
+      amountPaid: purchaseData.payment?.amount ?? 0,
+      stripePaymentIntentId: purchaseData.stripeInfo?.paymentIntentId ?? null,
+      paymentStatus: purchaseData.payment?.status === 'succeeded' ? 'succeeded' : 'pending',
+    })
+
     console.log('✅ Compra de paquete guardada:', {
       id: savedPurchase.id,
       packageName: savedPurchase.packageName,
       customer: savedPurchase.customer?.fullName,
       userId: savedPurchase.userId,
       paymentStatus: savedPurchase.payment?.status,
-      classesRemaining: savedPurchase.classesRemaining
+      classesRemaining: savedPurchase.classesRemaining,
     })
 
     res.json({
       success: true,
-      purchase: savedPurchase
+      purchase: savedPurchase,
     })
   } catch (error) {
     console.error('Error saving package purchase:', error)
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: error.message 
+      error: error.message,
     })
   }
 })
 
-// Función helper para obtener paquetes activos de un usuario (no expirados)
-const getUserActivePackages = (email) => {
-  try {
-    const purchases = getPackages()
-    const now = new Date()
-    return purchases.filter(p => 
-      p.customer?.email === email && 
-      p.status === 'confirmed' && 
-      (p.classesRemaining || 0) > 0 &&
-      (!p.expiresAt || new Date(p.expiresAt) > now)
-    )
-  } catch (error) {
-    console.error('Error getting user packages:', error)
-    return []
-  }
-}
-
-// Función helper para usar una clase de un paquete (solo si no ha expirado)
-const usePackageClass = (packageId, email) => {
-  try {
-    const purchases = getPackages()
-    const now = new Date()
-    const purchase = purchases.find(p => 
-      p.id === packageId && 
-      p.customer?.email === email &&
-      (p.classesRemaining || 0) > 0 &&
-      (!p.expiresAt || new Date(p.expiresAt) > now)
-    )
-    
-    if (!purchase) {
-      return null
-    }
-    
-    purchase.classesRemaining = (purchase.classesRemaining || purchase.classes) - 1
-    purchase.classesUsed = (purchase.classesUsed || 0) + 1
-    purchase.lastUsed = new Date().toISOString()
-    
-    fs.writeFileSync(PACKAGES_FILE, JSON.stringify(purchases, null, 2))
-    return purchase
-  } catch (error) {
-    console.error('Error using package class:', error)
-    return null
-  }
-}
-
 // Endpoint: Obtener todas las compras de paquetes
-app.get('/api/packages', (req, res) => {
+app.get('/api/packages', async (req, res) => {
   try {
-    const purchases = getPackages()
+    const purchases = await listAllPackagePurchases()
     res.json(purchases)
   } catch (error) {
     console.error('Error getting packages:', error)
@@ -1739,16 +1420,16 @@ app.get('/api/packages', (req, res) => {
 })
 
 // Endpoint: Obtener paquetes activos de un usuario
-app.get('/api/packages/user/:email', (req, res) => {
+app.get('/api/packages/user/:email', async (req, res) => {
   try {
     const { email } = req.params
-    const activePackages = getUserActivePackages(email)
+    const activePackages = await getUserActivePackagesByEmail(decodeURIComponent(email))
     const totalClassesRemaining = activePackages.reduce((sum, pkg) => sum + (pkg.classesRemaining || 0), 0)
-    
+
     res.json({
       packages: activePackages,
       totalClassesRemaining,
-      hasActivePackages: activePackages.length > 0
+      hasActivePackages: activePackages.length > 0,
     })
   } catch (error) {
     console.error('Error getting user packages:', error)
@@ -1804,8 +1485,8 @@ app.listen(PORT, HOST, () => {
   if (!hasSupabaseUrl || !hasSupabaseKey) {
     console.log(`⚠️  Supabase: URL=${hasSupabaseUrl ? 'ok' : 'missing'}, KEY=${hasSupabaseKey ? 'ok' : 'missing'} (check server/.env)`)
   }
-  console.log(`📝 Bookings: ${isUsingSupabase() ? 'Supabase' : 'JSON file (server/bookings.json)'}`)
-  console.log(`👥 Users: ${isUsingSupabaseForUsers() ? 'Supabase' : 'JSON file (server/users.json)'}`)
+  console.log(`📝 Bookings: ${isUsingSupabase() ? 'Supabase (bookings_new)' : 'missing Supabase env'}`)
+  console.log(`👥 Profiles: ${isUsingSupabaseForUsers() ? 'Supabase' : 'missing Supabase env'}`)
   if (!process.env.STRIPE_SECRET_KEY) {
     console.warn('⚠️  STRIPE_SECRET_KEY not set. Stripe features will not work.')
   }

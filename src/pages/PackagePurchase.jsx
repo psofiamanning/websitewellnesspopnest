@@ -263,10 +263,12 @@ function PackagePurchase() {
 
       // Guardar en el backend
       try {
+        const token = localStorage.getItem('auth_token')
         const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'}/api/packages/purchase`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify(packagePurchase)
         })

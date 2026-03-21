@@ -1,133 +1,133 @@
 /**
- * Users storage: Supabase (persistent) or JSON file (fallback).
- * Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to use Supabase.
- *
- * IMPORTANTE: Este módulo NUNCA borra datos en Supabase. Solo hace:
- * - getUsers: lectura (SELECT)
- * - saveUser: insertar nueva fila (INSERT)
- * - updateUser: actualizar una fila por id fusionando campos (UPDATE). No se sobrescribe todo el JSON, se hace merge.
- * La información existente en la base de datos se conserva siempre.
+ * Customer profiles (Supabase) + JWT verification via Supabase Auth.
+ * Passwords are never stored in app tables.
  */
 
-import { createClient } from '@supabase/supabase-js'
-import { readFile, writeFile } from 'fs/promises'
-import { existsSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { getSupabaseAdmin } from './supabaseClient.js'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const USERS_FILE = join(__dirname, '..', 'users.json')
+export async function upsertProfileFromCustomer(customer) {
+  const supabase = getSupabaseAdmin()
+  const email = (customer.email || '').trim().toLowerCase()
+  if (!email) throw new Error('Customer email is required')
 
-// Inicializar Supabase de forma diferida (después de dotenv.config() en server.js)
-let supabaseUrl = ''
-let supabaseKey = ''
-let useSupabase = false
-let supabase = null
-let supabaseInited = false
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert(
+      {
+        email,
+        first_name: customer.firstName || '',
+        last_name: customer.lastName || '',
+        phone: customer.phone != null ? String(customer.phone) : '',
+      },
+      { onConflict: 'email' }
+    )
+    .select('id, email, first_name, last_name, phone, auth_id')
+    .single()
 
-function initSupabase() {
-  if (supabaseInited) return
-  supabaseInited = true
-  supabaseUrl = (process.env.SUPABASE_URL || '').trim()
-  supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
-  useSupabase = !!(supabaseUrl && supabaseKey)
-  if (useSupabase) {
-    supabase = createClient(supabaseUrl, supabaseKey)
+  if (error) throw error
+  return data
+}
+
+export async function getProfileByEmail(email) {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, first_name, last_name, phone, auth_id')
+    .eq('email', email.trim().toLowerCase())
+    .maybeSingle()
+  if (error) return null
+  return data
+}
+
+export function profileToApiUser(p) {
+  if (!p) return null
+  return {
+    id: p.id,
+    email: p.email,
+    firstName: p.first_name || '',
+    lastName: p.last_name || '',
+    phone: p.phone != null ? String(p.phone) : '',
   }
 }
 
-/**
- * @returns {Promise<Array>} All users
- */
-export async function getUsers() {
-  initSupabase()
-  if (useSupabase && supabase) {
-    try {
-      const { data, error } = await supabase.from('users').select('data').order('created_at', { ascending: true })
-      if (error) {
-        console.error('Supabase getUsers error:', error.message)
-        return []
-      }
-      return (data || []).map((row) => row.data).filter(Boolean)
-    } catch (e) {
-      console.error('Supabase getUsers exception:', e.message)
-      return []
-    }
-  }
-  try {
-    if (existsSync(USERS_FILE)) {
-      const raw = await readFile(USERS_FILE, 'utf8')
-      return JSON.parse(raw)
-    }
-    return []
-  } catch (e) {
-    console.error('File getUsers error:', e.message)
-    return []
-  }
-}
-
-/**
- * @param {object} user User object (must have .id)
- * @returns {Promise<object>} The saved user
- */
-export async function saveUser(user) {
-  initSupabase()
-  if (useSupabase && supabase) {
-    try {
-      const { error } = await supabase.from('users').insert({
-        id: user.id,
-        data: user,
-        created_at: user.createdAt || new Date().toISOString()
-      })
-      if (error) {
-        console.error('Supabase saveUser error:', error.message)
-        throw error
-      }
-      return user
-    } catch (e) {
-      console.error('Supabase saveUser exception:', e.message)
-      throw e
-    }
-  }
-  const users = await getUsers()
-  users.push(user)
-  await writeFile(USERS_FILE, JSON.stringify(users, null, 2))
+/** Verify Supabase Auth JWT (access token). */
+export async function verifyAuthJwt(accessToken) {
+  if (!accessToken) return null
+  const supabase = getSupabaseAdmin()
+  const { data: { user }, error } = await supabase.auth.getUser(accessToken)
+  if (error || !user) return null
   return user
 }
 
-/**
- * @param {string} userId
- * @param {object} updates Fields to merge into the user
- * @returns {Promise<object|null>} Updated user or null
- */
-export async function updateUser(userId, updates) {
-  initSupabase()
-  if (useSupabase && supabase) {
-    try {
-      const { data: rows, error: fetchErr } = await supabase.from('users').select('data').eq('id', userId).limit(1)
-      if (fetchErr || !rows?.length) return null
-      const current = rows[0].data
-      const merged = { ...current, ...updates }
-      const { error: updateErr } = await supabase.from('users').update({ data: merged }).eq('id', userId)
-      if (updateErr) {
-        console.error('Supabase updateUser error:', updateErr.message)
-        return null
-      }
-      return merged
-    } catch (e) {
-      console.error('Supabase updateUser exception:', e.message)
-      return null
-    }
+export async function getProfileForAuthUser(user) {
+  if (!user?.id) return null
+  const supabase = getSupabaseAdmin()
+  const { data: byAuth } = await supabase
+    .from('profiles')
+    .select('id, email, first_name, last_name, phone, auth_id')
+    .eq('auth_id', user.id)
+    .maybeSingle()
+  if (byAuth) return byAuth
+  if (!user.email) return null
+  const { data: byEmail } = await supabase
+    .from('profiles')
+    .select('id, email, first_name, last_name, phone, auth_id')
+    .eq('email', user.email.trim().toLowerCase())
+    .maybeSingle()
+  return byEmail
+}
+
+export async function upsertProfileForAuthUser(user, extra = {}) {
+  const supabase = getSupabaseAdmin()
+  const row = {
+    id: user.id,
+    auth_id: user.id,
+    email: user.email,
+    first_name: extra.first_name ?? user.user_metadata?.first_name ?? '',
+    last_name: extra.last_name ?? user.user_metadata?.last_name ?? '',
+    phone: extra.phone != null ? String(extra.phone) : String(user.user_metadata?.phone ?? ''),
   }
-  const users = await getUsers()
-  const index = users.findIndex((u) => u.id === userId)
-  if (index === -1) return null
-  users[index] = { ...users[index], ...updates }
-  await writeFile(USERS_FILE, JSON.stringify(users, null, 2))
-  return users[index]
+  const { data, error } = await supabase.from('profiles').upsert(row, { onConflict: 'id' }).select().single()
+  if (error) throw error
+  return data
+}
+
+/** @deprecated List profiles — only for legacy scripts. */
+export async function getUsers() {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase.from('profiles').select('id, email, first_name, last_name, phone, auth_id')
+  if (error) return []
+  return (data || []).map(profileToApiUser)
+}
+
+export async function updateUser(userId, updates) {
+  const supabase = getSupabaseAdmin()
+  const patch = {}
+  if (updates.phone !== undefined) patch.phone = String(updates.phone)
+  if (updates.firstName !== undefined) patch.first_name = updates.firstName
+  if (updates.lastName !== undefined) patch.last_name = updates.lastName
+  if (updates.email !== undefined) patch.email = String(updates.email).trim().toLowerCase()
+  if (!Object.keys(patch).length) return profileToApiUser(await getProfileById(userId))
+  const { data, error } = await supabase.from('profiles').update(patch).eq('id', userId).select().single()
+  if (error) return null
+  return profileToApiUser(data)
+}
+
+async function getProfileById(id) {
+  const supabase = getSupabaseAdmin()
+  const { data } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle()
+  return data
+}
+
+export async function saveUser() {
+  throw new Error('saveUser removed: register with Supabase Auth')
 }
 
 export function isUsingSupabaseForUsers() {
-  initSupabase()
-  return useSupabase
+  try {
+    getSupabaseAdmin()
+    return true
+  } catch {
+    return false
+  }
 }

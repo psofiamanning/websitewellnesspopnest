@@ -1,72 +1,26 @@
-# Reservas y usuarios con Supabase (persistentes en producción)
+# Supabase (esquema normalizado)
 
-Las reservas y los usuarios se guardan en **Supabase** cuando configuras `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` en el backend. Con **solo esas dos variables** es suficiente; no hace falta ninguna otra de Supabase.
+El backend usa **solo** Supabase como fuente de verdad para reservas, perfiles y paquetes vendidos. Variables obligatorias en `server/.env`:
 
-**Proyecto actual:** Wellness Database · Project ID: `cgtiuulyregyxdpaudtf`  
-→ URL: `https://cgtiuulyregyxdpaudtf.supabase.co`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_ANON_KEY` (misma clave **anon** pública que en el frontend; necesaria para `/api/auth/login` y `/api/auth/signup` desde Express)
 
-## 1. Crear proyecto en Supabase
+En el frontend (`.env` en la raíz del repo Vite):
 
-1. Entra en [supabase.com](https://supabase.com) y crea una cuenta (gratis).
-2. **New project** → nombre, contraseña de DB (guárdala), región.
-3. Cuando esté listo, ve a **Project Settings** (⚙️) → **API**.
-4. Copia:
-   - **Project URL** → `SUPABASE_URL`
-   - **service_role** key (en "Project API keys", la que dice "secret") → `SUPABASE_SERVICE_ROLE_KEY`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-## 2. Crear las tablas (reservas y usuarios)
+## Tablas esperadas
 
-En el dashboard de Supabase: **SQL Editor** → New query → pega y ejecuta:
+- `profiles` — `id` (uuid), `email`, `first_name`, `last_name`, `phone`, `auth_id`
+- `classes`, `teachers`, `schedules`, `packages`, `customer_packages`
+- `bookings_new`, `payments_new`
 
-```sql
--- Tabla para reservas (cada fila = una reserva, el JSON completo en "data")
-create table if not exists public.bookings (
-  id text primary key,
-  data jsonb not null,
-  created_at timestamptz default now()
-);
+Las lecturas de reservas se adaptan al **mismo JSON plano** que consumía la API antes (ver `server/db/bookingAdapter.js`).
 
--- Índice para listar por fecha de creación
-create index if not exists bookings_created_at_idx on public.bookings (created_at);
+## Recuperación de contraseña (clientes)
 
--- Tabla para usuarios (registro, login, compra de paquetes)
-create table if not exists public.users (
-  id text primary key,
-  data jsonb not null,
-  created_at timestamptz default now()
-);
+El correo lo envía **Supabase** (`resetPasswordForEmail`). La ruta `/reset-password` del SPA debe abrirse desde ese enlace para que exista sesión de recuperación; luego se llama a `supabase.auth.updateUser({ password })`.
 
-create index if not exists users_created_at_idx on public.users (created_at);
-
--- El backend usa service_role, así que no hace falta RLS para desarrollo.
--- Si quieres restringir acceso después, puedes añadir políticas (RLS).
-```
-
-Luego **Run**.
-
-## 3. Configurar el backend
-
-En **Railway** (o donde corra el backend):
-
-- Variables de entorno:
-  - `SUPABASE_URL` = la Project URL (ej. `https://xxxxx.supabase.co`)
-  - `SUPABASE_SERVICE_ROLE_KEY` = la clave **service_role** (la secreta)
-
-En **local** (carpeta `server/`):
-
-- Copia `server/.env.example` a `server/.env` y añade las mismas dos variables.
-
-Reinicia el servidor. Al arrancar deberías ver en consola:
-
-```
-📝 Bookings: Supabase
-👥 Users: Supabase
-```
-
-Si no configuras estas variables, el backend sigue usando `server/bookings.json` y `server/users.json` (los datos se pierden en cada deploy en producción).
-
-## 4. Migrar datos existentes (opcional)
-
-**Reservas:** Si tienes reservas en `bookings.json`, configura Supabase y la tabla como arriba; luego ejecuta un script que lea `bookings.json` e inserte cada objeto en la tabla `bookings` (columnas `id`, `data`, `created_at`).
-
-**Usuarios:** Si tienes usuarios en `users.json`, después de crear la tabla `users` puedes ejecutar un script que lea `users.json` e inserte cada usuario en la tabla `users` (columnas `id`, `data`, `created_at`). El backend usa las mismas variables `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` para reservas y usuarios.
+Los archivos `bookings.json`, `users.json` y `packages.json` ya no se usan para esos datos.

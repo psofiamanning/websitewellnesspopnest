@@ -1,21 +1,43 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { resetPassword } from '../services/authService'
+import { supabase } from '../lib/supabaseClient.js'
 
 function ResetPassword() {
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const token = searchParams.get('token') || ''
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
-    if (!token) setError('Falta el enlace de restablecimiento. Solicita uno nuevo desde "Olvidé mi contraseña".')
-  }, [token])
+    let cancelled = false
+    const run = async () => {
+      if (!supabase) {
+        setError('Falta configurar Supabase en el frontend (VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY).')
+        return
+      }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (cancelled) return
+      if (!session) {
+        setError(
+          'Abre esta página desde el enlace de recuperación que envió Supabase por correo (debe cargarse en esta misma ventana).'
+        )
+        return
+      }
+      setSessionReady(true)
+      if (session.access_token) {
+        localStorage.setItem('auth_token', session.access_token)
+      }
+    }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -30,7 +52,7 @@ function ResetPassword() {
     }
     setIsLoading(true)
     try {
-      const result = await resetPassword(token, password)
+      const result = await resetPassword(null, password)
       if (result.success) {
         setSuccess(true)
         setTimeout(() => navigate('/login'), 2500)
@@ -44,7 +66,15 @@ function ResetPassword() {
     }
   }
 
-  if (!token) {
+  if (!sessionReady && !error) {
+    return (
+      <div className="wellness-background min-h-screen flex items-center justify-center py-20">
+        <p className="font-body text-body">Cargando…</p>
+      </div>
+    )
+  }
+
+  if (error && !sessionReady) {
     return (
       <div className="wellness-background min-h-screen flex items-center justify-center py-20">
         <div className="wellness-shapes">
@@ -143,7 +173,7 @@ function ResetPassword() {
                   backgroundColor: '#B73D37',
                   color: '#FFFFFF',
                   border: 'none',
-                  boxShadow: '0 4px 12px rgba(183, 61, 55, 0.3)'
+                  boxShadow: '0 4px 12px rgba(183, 61, 55, 0.3)',
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoading) {

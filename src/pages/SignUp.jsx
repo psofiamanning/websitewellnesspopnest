@@ -65,11 +65,11 @@ function SignUp() {
         
         setShowSuccess(true)
         
-        // Redirigir después de 2 segundos para que el usuario vea el mensaje
+        // Redirigir después de 4 segundos para que el usuario lea el aviso
         setTimeout(() => {
           const from = new URLSearchParams(window.location.search).get('from') || '/'
           navigate(from)
-        }, 2000)
+        }, 4000)
       } else {
         setError(result.error || 'Error al registrarse')
       }
@@ -120,6 +120,9 @@ function SignUp() {
                   </h3>
                   <p className="text-sm font-body leading-relaxed" style={{ color: '#15803d' }}>
                     Bienvenido a Estudio Popnest Wellness. Tu cuenta ha sido creada y ya puedes reservar clases y comprar paquetes.
+                  </p>
+                  <p className="text-xs font-body mt-2" style={{ color: '#166534' }}>
+                    En unos segundos te regresaremos a la pagina principal.
                   </p>
                 </div>
               </div>

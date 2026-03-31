@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { login, setPassword } from '../services/authService'
+import { login, setPassword, POST_LOGIN_CLASSES_SESSION_KEY } from '../services/authService'
 
 function Login() {
   const navigate = useNavigate()
@@ -38,6 +38,17 @@ function Login() {
         setUserNeedingPassword(result.user)
         setError('')
       } else if (result.success) {
+        if (
+          typeof result.totalClassesRemaining === 'number' &&
+          result.totalClassesRemaining >= 1
+        ) {
+          try {
+            sessionStorage.setItem(
+              POST_LOGIN_CLASSES_SESSION_KEY,
+              String(result.totalClassesRemaining),
+            )
+          } catch (_) {}
+        }
         const firstName = result.user?.firstName || result.user?.email?.split('@')[0] || 'Usuario'
         setWelcomeMessage(firstName)
         setTimeout(() => {

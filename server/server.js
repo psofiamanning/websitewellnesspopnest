@@ -1330,10 +1330,25 @@ app.post('/api/auth/login', async (req, res) => {
         phone: data.user.user_metadata?.phone || '',
       })
 
+    const emailForPackages = (userOut.email || data.user.email || '').trim()
+    let totalClassesRemaining = 0
+    if (emailForPackages) {
+      try {
+        const activePackages = await getUserActivePackagesByEmail(emailForPackages)
+        totalClassesRemaining = activePackages.reduce(
+          (sum, pkg) => sum + (pkg.classesRemaining || 0),
+          0,
+        )
+      } catch (e) {
+        console.error('Login active packages:', e.message)
+      }
+    }
+
     res.json({
       success: true,
       user: userOut,
       token: data.session.access_token,
+      totalClassesRemaining,
     })
   } catch (error) {
     console.error('Error in login:', error)

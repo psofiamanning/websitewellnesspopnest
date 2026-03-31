@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import PostLoginClassesBanner from './components/PostLoginClassesBanner'
 import Footer from './components/Footer'
 import { initMetaPixel, trackMetaPageView } from './utils/metaPixel'
 import { canUseMarketingCookies } from './utils/cookieConsent'
@@ -62,6 +63,7 @@ function App() {
       <ScrollToTop />
       <PageSEO />
       <Navbar />
+      <PostLoginClassesBanner />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<Classes />} />

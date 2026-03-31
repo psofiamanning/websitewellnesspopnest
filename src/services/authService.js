@@ -3,6 +3,9 @@ import { supabase } from '../lib/supabaseClient.js'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'
 
+/** Tras iniciar sesión con paquete activo: sessionStorage para mostrar aviso de clases. */
+export const POST_LOGIN_CLASSES_SESSION_KEY = 'epw_post_login_classes_remaining'
+
 const saveToken = (token) => {
   if (token) localStorage.setItem('auth_token', token)
 }
@@ -41,6 +44,9 @@ export const isAuthenticated = () => {
 
 export const logout = () => {
   localStorage.removeItem('auth_token')
+  try {
+    sessionStorage.removeItem(POST_LOGIN_CLASSES_SESSION_KEY)
+  } catch (_) {}
   if (supabase) supabase.auth.signOut().catch(() => {})
   window.location.href = '/'
 }
@@ -192,6 +198,8 @@ export const login = async (email, password) => {
       success: true,
       user: data.user,
       token: data.token,
+      totalClassesRemaining:
+        typeof data.totalClassesRemaining === 'number' ? data.totalClassesRemaining : 0,
     }
   } catch (error) {
     console.error('Error en login:', error)

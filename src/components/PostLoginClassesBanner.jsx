@@ -30,6 +30,15 @@ function PostLoginClassesBanner() {
     readStorage()
   }, [location.pathname, readStorage])
 
+  useEffect(() => {
+    const onLoginClasses = (e) => {
+      const c = e?.detail?.count
+      if (typeof c === 'number' && c >= 1) setCount(c)
+    }
+    window.addEventListener('epw-post-login-classes', onLoginClasses)
+    return () => window.removeEventListener('epw-post-login-classes', onLoginClasses)
+  }, [])
+
   const dismiss = () => {
     try {
       sessionStorage.removeItem(POST_LOGIN_CLASSES_SESSION_KEY)
@@ -50,9 +59,9 @@ function PostLoginClassesBanner() {
       <div className={`${BANNER_HEIGHT_CLASS} w-full shrink-0`} aria-hidden="true" />
       <div
         role="status"
-        className="fixed left-0 right-0 z-40 border-b px-4 py-2.5 shadow-sm flex items-center justify-center gap-3 flex-wrap"
+        className="fixed left-0 right-0 z-[55] border-b px-4 py-2.5 shadow-sm flex items-center justify-center gap-3 flex-wrap pointer-events-auto"
         style={{
-          top: 'calc(7rem + env(safe-area-inset-top, 0px))',
+          top: 'calc(env(safe-area-inset-top, 0px) + 8rem)',
           backgroundColor: '#ecfdf5',
           borderColor: '#86efac',
           color: '#166534',

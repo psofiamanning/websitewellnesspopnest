@@ -30,6 +30,7 @@ import {
 import {
   listAllPackagePurchases,
   getUserActivePackagesByEmail,
+  getUserActivePackagesByProfileId,
   insertCustomerPackageAfterPayment,
   resolveProfileIdForPackagePurchase,
 } from './db/packages.js'
@@ -1330,18 +1331,20 @@ app.post('/api/auth/login', async (req, res) => {
         phone: data.user.user_metadata?.phone || '',
       })
 
-    const emailForPackages = (userOut.email || data.user.email || '').trim()
+    const emailForPackages = (userOut.email || data.user.email || '').trim().toLowerCase()
     let totalClassesRemaining = 0
-    if (emailForPackages) {
-      try {
-        const activePackages = await getUserActivePackagesByEmail(emailForPackages)
-        totalClassesRemaining = activePackages.reduce(
-          (sum, pkg) => sum + (pkg.classesRemaining || 0),
-          0,
-        )
-      } catch (e) {
-        console.error('Login active packages:', e.message)
-      }
+    try {
+      const activePackages = profile?.id
+        ? await getUserActivePackagesByProfileId(profile.id)
+        : emailForPackages
+          ? await getUserActivePackagesByEmail(emailForPackages)
+          : []
+      totalClassesRemaining = activePackages.reduce(
+        (sum, pkg) => sum + (pkg.classesRemaining || 0),
+        0,
+      )
+    } catch (e) {
+      console.error('Login active packages:', e.message)
     }
 
     res.json({

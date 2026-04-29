@@ -6,26 +6,11 @@ import { createPaymentIntent } from '../services/bookingService'
 import { getCurrentUser, isAuthenticated } from '../services/authService'
 import { trackMetaLead } from '../utils/metaPixel'
 import StripeCardElement from '../components/StripeCardElement'
+import { PACKAGE_OFFERS } from '../data/packageOffers'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'
 
-// Datos de paquetes
-const packages = [
-  {
-    id: 'package-10-classes',
-    name: 'Paquete de 10 Clases',
-    classes: 10,
-    price: 1800,
-    originalPrice: 2000,
-    description: 'Ahorra $200 comprando 10 clases. Puedes usar estas clases para cualquier práctica disponible en nuestro estudio.',
-    benefits: [
-      'Válido para todas las clases',
-      'Válido por 2 meses desde la compra',
-      'Ahorra $20 por clase',
-      'Flexibilidad total'
-    ]
-  }
-]
+const packages = PACKAGE_OFFERS
 
 function PackagePurchase() {
   const { id } = useParams()

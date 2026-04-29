@@ -4,6 +4,9 @@
 
 import { getSupabaseAdmin } from './supabaseClient.js'
 import { upsertProfileFromCustomer, getProfileByEmail } from './users.js'
+import { countBookingsByCustomerPackageIds } from './bookings.js'
+
+const PAQUETE_20_NOMBRE = 'Paquete de 20 Clases'
 
 const CUSTOMER_PACKAGE_SELECT = `
   *,
@@ -11,12 +14,22 @@ const CUSTOMER_PACKAGE_SELECT = `
   profiles (email, first_name, last_name, phone)
 `
 
-function adaptCustomerPackageRow(row) {
+function adaptCustomerPackageRow(row, options = {}) {
   if (!row) return null
   const pkg = row.packages
   const prof = row.profiles
   const total = row.classes_total ?? pkg?.total_classes ?? 0
-  const rem = row.classes_remaining ?? 0
+  const confirmedCount = options.confirmedCount
+  let rem
+  let used
+  if (confirmedCount != null && Number.isFinite(Number(confirmedCount))) {
+    const n = Number(confirmedCount)
+    used = n
+    rem = Math.max(0, total - n)
+  } else {
+    rem = row.classes_remaining ?? 0
+    used = Math.max(0, total - rem)
+  }
   return {
     id: String(row.id),
     type: 'package',
@@ -44,9 +57,19 @@ function adaptCustomerPackageRow(row) {
     expiresAt: row.expires_at,
     status: row.payment_status === 'succeeded' ? 'confirmed' : 'pending',
     classesRemaining: rem,
-    classesUsed: Math.max(0, total - rem),
+    classesUsed: used,
     userId: row.customer_id,
   }
+}
+
+async function mapPackagesWithBookingCounts(rows) {
+  const list = rows || []
+  const ids = list.map((r) => r.id).filter((id) => id != null)
+  const countMap = await countBookingsByCustomerPackageIds(ids)
+  const getCount = (id) =>
+    countMap.get(id) ?? countMap.get(Number(id)) ?? countMap.get(String(id)) ?? 0
+
+  return list.map((row) => adaptCustomerPackageRow(row, { confirmedCount: getCount(row.id) }))
 }
 
 export async function listAllPackagePurchases() {
@@ -59,27 +82,37 @@ export async function listAllPackagePurchases() {
     console.error('listAllPackagePurchases:', error.message)
     return []
   }
-  return (data || []).map(adaptCustomerPackageRow).filter(Boolean)
+  const rows = data || []
+  return (await mapPackagesWithBookingCounts(rows)).filter(Boolean)
+}
+
+async function fetchActivePackagesForCustomerId(customerId) {
+  if (!customerId) return []
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('customer_packages')
+    .select(CUSTOMER_PACKAGE_SELECT)
+    .eq('customer_id', customerId)
+    .eq('payment_status', 'succeeded')
+    .gt('classes_remaining', 0)
+  if (error) {
+    console.error('fetchActivePackagesForCustomerId:', error.message)
+    return []
+  }
+  const now = new Date()
+  const enriched = await mapPackagesWithBookingCounts(data || [])
+  return enriched.filter((p) => p && (!p.expiresAt || new Date(p.expiresAt) > now))
+}
+
+/** Paquetes activos por id de perfil (mismo criterio que por email). */
+export async function getUserActivePackagesByProfileId(profileId) {
+  return fetchActivePackagesForCustomerId(profileId)
 }
 
 export async function getUserActivePackagesByEmail(email) {
   const profile = await getProfileByEmail(email)
   if (!profile) return []
-  const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
-    .from('customer_packages')
-    .select(CUSTOMER_PACKAGE_SELECT)
-    .eq('customer_id', profile.id)
-    .eq('payment_status', 'succeeded')
-    .gt('classes_remaining', 0)
-  if (error) {
-    console.error('getUserActivePackagesByEmail:', error.message)
-    return []
-  }
-  const now = new Date()
-  return (data || [])
-    .map(adaptCustomerPackageRow)
-    .filter((p) => p && (!p.expiresAt || new Date(p.expiresAt) > now))
+  return fetchActivePackagesForCustomerId(profile.id)
 }
 
 /**
@@ -110,13 +143,19 @@ export async function insertCustomerPackageAfterPayment({
     : null
 
   const payOk = paymentStatus === 'succeeded'
+  let classesTotal = pkg.total_classes
+  let classesRemaining = pkg.total_classes
+  if (pkg.name === PAQUETE_20_NOMBRE && classesTotal > 0) {
+    classesRemaining = Math.max(0, classesTotal - 2)
+  }
+
   const { data: inserted, error: iErr } = await supabase
     .from('customer_packages')
     .insert({
       customer_id: profileId,
       package_id: pkg.id,
-      classes_remaining: pkg.total_classes,
-      classes_total: pkg.total_classes,
+      classes_remaining: classesRemaining,
+      classes_total: classesTotal,
       payment_status: payOk ? 'succeeded' : 'pending',
       amount_paid: amountPaid,
       stripe_payment_intent_id: stripePaymentIntentId,
@@ -125,7 +164,9 @@ export async function insertCustomerPackageAfterPayment({
     .select(CUSTOMER_PACKAGE_SELECT)
     .single()
   if (iErr) throw iErr
-  return adaptCustomerPackageRow(inserted)
+  const map = await countBookingsByCustomerPackageIds([inserted.id])
+  const cnt = map.get(inserted.id) ?? map.get(Number(inserted.id)) ?? 0
+  return adaptCustomerPackageRow(inserted, { confirmedCount: cnt })
 }
 
 export async function resolveProfileIdForPackagePurchase(purchaseData, authUser) {

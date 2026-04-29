@@ -141,11 +141,56 @@ function mapBookingTypeForDb(t) {
   return t || 'clase'
 }
 
+function isMissingPackageCreditColumnError(err) {
+  const m = `${err?.message || ''} ${err?.details || ''}`.toLowerCase()
+  return m.includes('package_credit_deducted')
+}
+
 async function decrementScheduleSpot(scheduleId, currentSpots) {
   const supabase = getSupabaseAdmin()
   const next = Math.max(0, (currentSpots ?? 0) - 1)
   const { error } = await supabase.from('schedules').update({ spots_available: next }).eq('id', scheduleId)
   if (error) throw error
+}
+
+/** Reservas que cuentan para cupo/saldo de paquete (no canceladas). */
+export async function countBookingsForCustomerPackage(customerPackageId) {
+  const supabase = getSupabaseAdmin()
+  const id = Number(customerPackageId)
+  if (!Number.isFinite(id)) return 0
+  const { count, error } = await supabase
+    .from('bookings_new')
+    .select('*', { count: 'exact', head: true })
+    .eq('customer_package_id', id)
+    .neq('status', 'cancelled')
+  if (error) {
+    console.error('countBookingsForCustomerPackage:', error.message)
+    return 0
+  }
+  return count ?? 0
+}
+
+/** Map customer_package_id -> número de reservas no canceladas (para UI en lote). */
+export async function countBookingsByCustomerPackageIds(packageIds) {
+  const map = new Map()
+  const ids = (packageIds || []).map(Number).filter((n) => Number.isFinite(n))
+  if (!ids.length) return map
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('bookings_new')
+    .select('customer_package_id')
+    .in('customer_package_id', ids)
+    .neq('status', 'cancelled')
+  if (error) {
+    console.error('countBookingsByCustomerPackageIds:', error.message)
+    return map
+  }
+  for (const row of data || []) {
+    const pid = row.customer_package_id
+    if (pid == null) continue
+    map.set(pid, (map.get(pid) ?? 0) + 1)
+  }
+  return map
 }
 
 async function incrementScheduleSpot(scheduleId) {
@@ -185,6 +230,8 @@ export async function saveBooking(flat) {
   const type = mapBookingTypeForDb(flat.type)
   const status = flat.status || 'pending'
 
+  const PAQUETE_20_NOMBRE = 'Paquete de 20 Clases'
+
   if (paymentMethod === 'package') {
     const packageId = flat.packageId != null ? Number(flat.packageId) : NaN
     if (Number.isNaN(packageId)) {
@@ -192,7 +239,14 @@ export async function saveBooking(flat) {
     }
     const { data: cp, error: cpErr } = await supabase
       .from('customer_packages')
-      .select('id, classes_remaining')
+      .select(
+        `
+        id,
+        classes_remaining,
+        classes_total,
+        packages ( name, total_classes )
+      `
+      )
       .eq('id', packageId)
       .eq('customer_id', profile.id)
       .eq('payment_status', 'succeeded')
@@ -202,25 +256,55 @@ export async function saveBooking(flat) {
       throw new Error('No tienes clases disponibles en este paquete o el paquete no existe.')
     }
 
-    const { data: booking, error: bErr } = await supabase
+    const pkgName = cp.packages?.name?.trim() || ''
+    const packageTotal =
+      cp.classes_total ?? cp.packages?.total_classes ?? 0
+    const prevBookings = await countBookingsForCustomerPackage(cp.id)
+
+    if (pkgName === PAQUETE_20_NOMBRE && packageTotal > 0 && prevBookings >= packageTotal) {
+      throw new Error('Ya usaste las 20 reservaciones incluidas en este paquete.')
+    }
+
+    let deductCredit = true
+    if (pkgName === PAQUETE_20_NOMBRE) {
+      deductCredit = prevBookings >= 2
+    }
+
+    const insertRow = {
+      customer_id: profile.id,
+      schedule_id: schedule.id,
+      customer_package_id: cp.id,
+      type,
+      status,
+      payment_method: 'package',
+      package_credit_deducted: deductCredit,
+    }
+
+    let { data: booking, error: bErr } = await supabase
       .from('bookings_new')
-      .insert({
-        customer_id: profile.id,
-        schedule_id: schedule.id,
-        customer_package_id: cp.id,
-        type,
-        status,
-        payment_method: 'package',
-      })
+      .insert(insertRow)
       .select(BOOKING_RELATIONS)
       .single()
-    if (bErr) throw bErr
 
-    const { error: upCp } = await supabase
-      .from('customer_packages')
-      .update({ classes_remaining: Math.max(0, cp.classes_remaining - 1) })
-      .eq('id', cp.id)
-    if (upCp) throw upCp
+    if (bErr && isMissingPackageCreditColumnError(bErr)) {
+      const { package_credit_deducted: _omit, ...fallbackRow } = insertRow
+      const retry = await supabase.from('bookings_new').insert(fallbackRow).select(BOOKING_RELATIONS).single()
+      booking = retry.data
+      bErr = retry.error
+      console.warn(
+        'bookings_new.package_credit_deducted no existe; ejecuta server/sql/add_booking_package_credit_deducted.sql en Supabase.'
+      )
+    }
+    if (bErr) throw bErr
+    if (!booking) throw new Error('No se pudo crear la reserva con paquete.')
+
+    if (deductCredit) {
+      const { error: upCp } = await supabase
+        .from('customer_packages')
+        .update({ classes_remaining: Math.max(0, cp.classes_remaining - 1) })
+        .eq('id', cp.id)
+      if (upCp) throw upCp
+    }
 
     const decPkg = shouldDecrementSpotOnInsert({ ...flat, status, paymentMethod: 'package' })
     if (decPkg) await decrementScheduleSpot(schedule.id, avail)
@@ -379,16 +463,28 @@ export async function cancelBookingNormalized(bookingId) {
   const numId = Number(bookingId)
   if (Number.isNaN(numId)) return null
 
-  const { data: cur, error } = await supabase
+  let sel = await supabase
     .from('bookings_new')
-    .select('id, status, schedule_id, customer_package_id')
+    .select('id, status, schedule_id, customer_package_id, package_credit_deducted')
     .eq('id', numId)
     .single()
+
+  if (sel.error && isMissingPackageCreditColumnError(sel.error)) {
+    sel = await supabase
+      .from('bookings_new')
+      .select('id, status, schedule_id, customer_package_id')
+      .eq('id', numId)
+      .single()
+  }
+
+  const cur = sel.data
+  const error = sel.error && !cur ? sel.error : null
   if (error || !cur || cur.status === 'cancelled') return null
 
   await supabase.from('bookings_new').update({ status: 'cancelled' }).eq('id', numId)
 
-  if (cur.customer_package_id) {
+  /** Solo devuelve clase al paquete si esa reserva había descontado saldo (Paquete 20: primeras 2 tienen package_credit_deducted = false). */
+  if (cur.customer_package_id && cur.package_credit_deducted !== false) {
     const { data: cp } = await supabase
       .from('customer_packages')
       .select('classes_remaining')

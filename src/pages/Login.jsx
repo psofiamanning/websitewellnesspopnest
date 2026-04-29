@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { login, setPassword, POST_LOGIN_CLASSES_SESSION_KEY } from '../services/authService'
+import { getUserPackages } from '../services/bookingService'
 
 function Login() {
   const navigate = useNavigate()
@@ -38,14 +39,20 @@ function Login() {
         setUserNeedingPassword(result.user)
         setError('')
       } else if (result.success) {
-        if (
-          typeof result.totalClassesRemaining === 'number' &&
-          result.totalClassesRemaining >= 1
-        ) {
+        let remaining =
+          typeof result.totalClassesRemaining === 'number' ? result.totalClassesRemaining : 0
+        if (remaining < 1 && result.user?.email) {
           try {
-            sessionStorage.setItem(
-              POST_LOGIN_CLASSES_SESSION_KEY,
-              String(result.totalClassesRemaining),
+            const pkg = await getUserPackages(result.user.email)
+            remaining =
+              typeof pkg.totalClassesRemaining === 'number' ? pkg.totalClassesRemaining : 0
+          } catch (_) {}
+        }
+        if (remaining >= 1) {
+          try {
+            sessionStorage.setItem(POST_LOGIN_CLASSES_SESSION_KEY, String(remaining))
+            window.dispatchEvent(
+              new CustomEvent('epw-post-login-classes', { detail: { count: remaining } }),
             )
           } catch (_) {}
         }

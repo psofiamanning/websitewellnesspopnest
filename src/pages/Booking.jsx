@@ -100,9 +100,9 @@ function Booking() {
     const schedule = classSchedules[classId]
     if (!schedule) return
 
-    // Generar fechas disponibles para las próximas 4 semanas
+    // Generar fechas disponibles para los próximos 60 días
     const today = new Date()
-    const endDate = addDays(today, 28)
+    const endDate = addDays(today, 60)
     const allDays = eachDayOfInterval({ start: today, end: endDate })
     
     // Filtrar días según los días disponibles de la clase

@@ -51,9 +51,9 @@ function TeacherLogin() {
         if (data.teacher?.name) localStorage.setItem('teacher_name', data.teacher.name)
         if (data.teacher?.teacherId != null) localStorage.setItem('teacher_id', String(data.teacher.teacherId))
       }
-      navigate('/profesores', { replace: true })
+      navigate('/coaches/panel', { replace: true })
     } catch (err) {
-      console.error('Error en login de maestra:', err)
+      console.error('Error en login de coach:', err)
       setError(err.message || 'Error al iniciar sesión. Intenta de nuevo.')
     } finally {
       setIsLoading(false)
@@ -71,7 +71,7 @@ function TeacherLogin() {
       <div className="wellness-content relative z-10 w-full max-w-md mx-auto px-4">
         <div className="bg-white rounded-lg p-8 shadow-xl border-2" style={{ borderColor: '#E5B3B0' }}>
           <h1 className="text-3xl font-heading font-bold mb-2 text-center" style={{ color: '#1F2937' }}>
-            Acceso para profesores
+            Acceso para coaches
           </h1>
           <p className="text-body font-body text-center mb-8" style={{ color: '#6B7280' }}>
             Ingresa tus credenciales para ver las reservas de tus próximas clases

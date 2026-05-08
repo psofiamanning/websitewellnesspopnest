@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { teachers, classTypes, classSchedules, teacherSchedules } from '../data/classes'
+import { teachers, classTypes, classSchedules } from '../data/classes'
 import Calendar from '../components/Calendar'
 import TimeSlotSelector from '../components/TimeSlotSelector'
 import { format, addDays, startOfWeek, eachDayOfInterval, isSameDay } from 'date-fns'
@@ -9,6 +9,13 @@ import { saveBooking, createPaymentIntent, confirmBooking, confirmPayment, check
 import { getCurrentUser, isAuthenticated } from '../services/authService'
 import { trackMetaLead } from '../utils/metaPixel'
 import StripeCardElement from '../components/StripeCardElement'
+import { SINGLE_CLASS_AMOUNT_CENTS, SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
+import { formatCoachSpecialtyLabel } from '../utils/coachLabels'
+
+const SINGLE_CLASS_PRICE_LABEL = `$${SINGLE_CLASS_PRICE_MXN.toFixed(2)} MXN`
+
+/** Reserva por coach (actual) o por profesor (dato legado en BD). */
+const isCoachReservationType = (t) => t === 'coach' || t === 'profesor'
 
 // Función para cargar Stripe dinámicamente (solo si está instalado)
 // Esta función maneja el caso cuando Stripe no está instalado
@@ -46,9 +53,11 @@ const loadStripe = async () => {
 function Booking() {
   const { type, id } = useParams()
   const navigate = useNavigate()
+  /** Rutas legadas `/booking/teacher/:id` y actuales `/booking/coach/:id`. */
+  const isCoachBooking = type === 'teacher' || type === 'coach'
   const [selectedDate, setSelectedDate] = useState(null)
   const [selectedTime, setSelectedTime] = useState(null)
-  const [selectedClassId, setSelectedClassId] = useState(null) // Nueva: clase seleccionada cuando es profesor
+  const [selectedClassId, setSelectedClassId] = useState(null) // Clase elegida cuando la reserva es por coach
   const [availableDates, setAvailableDates] = useState([])
   const [availableTimes, setAvailableTimes] = useState([])
   
@@ -74,27 +83,27 @@ function Booking() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [formValidationMessage, setFormValidationMessage] = useState('')
 
-  // Obtener información según el tipo (profesor o clase)
-  const teacherInfo = type === 'teacher' ? teachers.find(t => t.id === parseInt(id)) : null
+  // Obtener información según el tipo (coach o clase)
+  const teacherInfo = isCoachBooking ? teachers.find(t => t.id === parseInt(id)) : null
   const classInfo = type === 'class' ? classTypes.find(c => c.id === id) : null
   const selectedClassInfo = selectedClassId ? classTypes.find(c => c.id === selectedClassId) : null
   
-  // bookingInfo será la clase seleccionada si es profesor, o la clase directa si es clase
-  const bookingInfo = type === 'teacher' 
+  // bookingInfo: clase elegida si es por coach, o la clase directa si es por tipo clase
+  const bookingInfo = isCoachBooking 
     ? (selectedClassInfo || teacherInfo)
     : classInfo
 
   // Obtener horarios disponibles - solo cuando hay una clase seleccionada
   useEffect(() => {
-    // Si es profesor y no hay clase seleccionada, no hacer nada
-    if (type === 'teacher' && !selectedClassId) {
+    // Si es coach y aún no hay clase elegida, no armar calendario
+    if (isCoachBooking && !selectedClassId) {
       setAvailableDates([])
       setAvailableTimes([])
       return
     }
 
-    // Si es clase directa o ya hay clase seleccionada del profesor
-    const classId = type === 'teacher' ? selectedClassId : id
+    // Reserva por clase o clase ya elegida del coach
+    const classId = isCoachBooking ? selectedClassId : id
     if (!classId) return
 
     const schedule = classSchedules[classId]
@@ -120,7 +129,7 @@ function Booking() {
 
   // Horarios por día (ej. Sound Healing: sábado solo 10:00)
   useEffect(() => {
-    const classId = type === 'teacher' ? selectedClassId : id
+    const classId = isCoachBooking ? selectedClassId : id
     if (!classId) return
     const schedule = classSchedules[classId]
     if (!schedule?.timesByDay) return
@@ -211,8 +220,8 @@ function Booking() {
   const handleBooking = async () => {
     setFormValidationMessage('')
 
-    // Validar que haya clase seleccionada si es profesor
-    if (type === 'teacher' && !selectedClassId) {
+    // Validar clase elegida si la reserva es por coach
+    if (isCoachBooking && !selectedClassId) {
       setFormValidationMessage('Por favor selecciona una clase primero.')
       return
     }
@@ -296,7 +305,7 @@ function Booking() {
       
       if (!usePackage) {
         // Precio de la clase (puedes obtenerlo de bookingInfo si lo tienes)
-        const amount = 20000 // $200.00 MXN en centavos
+        const amount = SINGLE_CLASS_AMOUNT_CENTS
         
         // Crear Payment Intent con Stripe (incluyendo información del cliente)
         try {
@@ -496,7 +505,7 @@ function Booking() {
 
       // Guardar la reserva con información completa
       const bookingData = {
-        type: type === 'teacher' ? 'profesor' : 'clase',
+        type: isCoachBooking ? 'coach' : 'clase',
         className: selectedClassInfo ? selectedClassInfo.name : bookingInfo.name,
         teacherName: type === 'class' ? bookingInfo.teacher : (teacherInfo ? teacherInfo.name : bookingInfo.name),
         date: format(selectedDate, 'yyyy-MM-dd'),
@@ -518,7 +527,7 @@ function Booking() {
           status: 'succeeded'
         } : {
           method: 'Tarjeta de Crédito/Débito',
-          amount: 20000,
+          amount: SINGLE_CLASS_AMOUNT_CENTS,
           currency: 'MXN',
           cardLastFour: stripeCardData?.paymentMethod?.card?.last4 || '****',
           status: paymentStatus
@@ -526,7 +535,7 @@ function Booking() {
         stripeInfo: usePackage ? null : {
           paymentIntentId: paymentIntent?.paymentIntentId,
           clientSecret: paymentIntent?.clientSecret,
-          amount: 20000,
+          amount: SINGLE_CLASS_AMOUNT_CENTS,
           currency: 'mxn',
           error: stripeError ? stripeError.message : null
         }
@@ -569,15 +578,15 @@ function Booking() {
 
       const panelMessage = '\n\nPuedes ver tus reservaciones en tu panel de usuario (Mis reservas).'
       if (usePackage) {
-        alert(`✅ ¡Reserva confirmada!\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}\n\nSe usó una clase de tu paquete.${panelMessage}`)
+        alert(`✅ ¡Reserva confirmada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}\n\nSe usó una clase de tu paquete.${panelMessage}`)
       } else if (stripeError) {
         const errorMessage = stripeError.message || 'Error desconocido'
         const errorType = stripeError.type || 'unknown'
-        alert(`⚠️ Reserva guardada pero el pago requiere atención.\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nError: ${errorMessage}\nTipo: ${errorType}\n\nRevisa la consola del navegador (F12) para más detalles o contacta al administrador.`)
+        alert(`⚠️ Reserva guardada pero el pago requiere atención.\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nError: ${errorMessage}\nTipo: ${errorType}\n\nRevisa la consola del navegador (F12) para más detalles o contacta al administrador.`)
       } else if (paymentStatus === 'succeeded') {
-        alert(`✅ ¡Reserva confirmada y pagada!\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${panelMessage}`)
+        alert(`✅ ¡Reserva confirmada y pagada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${panelMessage}`)
       } else {
-        alert(`⚠️ Reserva guardada pero el estado del pago es: ${paymentStatus}\n\n${bookingData.type === 'profesor' ? 'Profesor' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nRevisa el panel de administración para más detalles.${panelMessage}`)
+        alert(`⚠️ Reserva guardada pero el estado del pago es: ${paymentStatus}\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nRevisa el panel de administración para más detalles.${panelMessage}`)
       }
       
       navigate('/classes')
@@ -604,19 +613,19 @@ function Booking() {
     }
   }
 
-  // Validar que exista el profesor o la clase
-  if (type === 'teacher' && !teacherInfo) {
+  // Validar que exista el coach o la clase
+  if (isCoachBooking && !teacherInfo) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-h2 font-heading text-body mb-4">
-            No se encontró el profesor solicitado
+            No se encontró el coach solicitado
           </h2>
           <button
-            onClick={() => navigate('/teachers')}
+            onClick={() => navigate('/coaches')}
             className="text-primary hover:text-secondary font-body"
           >
-            Volver a los profesores
+            Volver a los coaches
           </button>
         </div>
       </div>
@@ -651,6 +660,11 @@ function Booking() {
         <div className="wellness-shape shape-5"></div>
       </div>
       <div className="wellness-content">
+      {!(
+        isCoachBooking &&
+        !selectedClassId &&
+        teacherInfo
+      ) && (
       <header className="relative z-10 mt-20 border-b"
               style={{ 
                 backgroundColor: '#FFFFFF',
@@ -659,30 +673,30 @@ function Booking() {
               }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-5">
           <button
-            onClick={() => navigate(type === 'teacher' ? '/teachers' : '/classes')}
-            className="text-primary hover:text-secondary mb-3 lg:mb-4 flex items-center font-body transition-colors duration-300"
-            style={{ color: '#B73D37' }}
-            onMouseEnter={(e) => e.target.style.color = '#C76661'}
-            onMouseLeave={(e) => e.target.style.color = '#B73D37'}
+            type="button"
+            onClick={() => navigate(isCoachBooking ? '/coaches' : '/classes')}
+            className="mb-3 text-sm font-body font-medium text-[#B73D37] underline decoration-[#B73D37]/40 underline-offset-4 transition-colors hover:text-[#C76661] hover:decoration-[#C76661] lg:mb-4"
           >
-            ← Volver
+            Volver
           </button>
           <div className="flex flex-col">
             <div className="inline-block mb-2 lg:mb-3">
               <div className="w-12 lg:w-16 h-0.5 lg:h-1 rounded-full" style={{ backgroundColor: '#D48D88' }}></div>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-4xl font-heading font-bold text-body">
-              Reservar {type === 'teacher' ? 'con' : ''} {type === 'teacher' ? teacherInfo?.name : bookingInfo.name}
+              Reservar {isCoachBooking ? 'con' : ''} {isCoachBooking ? teacherInfo?.name : bookingInfo.name}
             </h1>
-            {type === 'teacher' && teacherInfo?.specialty && (
+            {isCoachBooking && teacherInfo?.specialty && (
               <div className="mt-2 lg:mt-3">
-                <span className="inline-block px-4 py-1.5 rounded-full"
-                      style={{ 
-                        backgroundColor: '#FEE2E2',
-                        border: '1px solid #E5B3B0'
-                      }}>
-                  <span className="font-semibold text-xs font-body uppercase tracking-wide whitespace-nowrap" style={{ color: '#B73D37', letterSpacing: '0.05em' }}>
-                    {teacherInfo.specialty}
+                <span
+                  className="inline-block max-w-full rounded-full border px-4 py-1.5"
+                  style={{
+                    backgroundColor: '#FEE2E2',
+                    borderColor: '#E5B3B0'
+                  }}
+                >
+                  <span className="text-xs font-body font-semibold leading-snug text-[#B73D37] sm:text-sm">
+                    {formatCoachSpecialtyLabel(teacherInfo.specialty)}
                   </span>
                 </span>
               </div>
@@ -690,15 +704,150 @@ function Booking() {
           </div>
         </div>
       </header>
+      )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <div className="bg-white rounded-lg p-6 md:p-8 border-2"
-             style={{ 
-               borderColor: '#E5B3B0',
-               boxShadow: '0 8px 32px rgba(183, 61, 55, 0.1)'
-             }}>
+      <main
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 ${
+          isCoachBooking && !selectedClassId && teacherInfo ? 'pt-24 sm:pt-28' : ''
+        }`}
+      >
+        <div
+          className={`${
+            isCoachBooking && !selectedClassId && teacherInfo
+              ? 'border-0 bg-transparent p-0 shadow-none'
+              : 'rounded-lg border-2 bg-white p-6 md:p-8'
+          }`}
+          style={
+            isCoachBooking && !selectedClassId && teacherInfo
+              ? {}
+              : {
+                  borderColor: '#E5B3B0',
+                  boxShadow: '0 8px 32px rgba(183, 61, 55, 0.1)'
+                }
+          }
+        >
           {/* Layout de dos columnas en desktop: calendario a la izquierda, información a la derecha */}
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:items-start lg:overflow-visible">
+            {isCoachBooking && !selectedClassId && teacherInfo ? (
+              <div className="w-full overflow-hidden rounded-2xl bg-white ring-1 ring-gray-900/[0.06] shadow-[0_2px_48px_-12px_rgba(0,0,0,0.14)]">
+                <div className="grid grid-cols-1 lg:grid-cols-12 lg:min-h-[min(88vh,820px)]">
+                  {/* Columna izquierda: sin centrado vertical (evita empujar reservas abajo); perfil acotado con scroll, texto completo */}
+                  <div className="order-2 flex flex-col justify-start gap-6 px-6 py-8 sm:px-8 sm:py-10 lg:order-1 lg:col-span-5 lg:gap-6 lg:px-9 lg:py-10 xl:px-10 xl:py-11">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/coaches')}
+                      className="self-start text-sm font-body font-medium text-[#B73D37] underline decoration-[#B73D37]/40 underline-offset-4 transition-colors hover:text-[#C76661] hover:decoration-[#C76661]"
+                    >
+                      Volver
+                    </button>
+                    <div className="min-h-0 shrink-0">
+                      <h2 className="font-heading text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-[2.35rem] lg:leading-tight">
+                        {teacherInfo.name}
+                      </h2>
+                      <div className="mt-5 space-y-4 sm:mt-6 sm:space-y-5">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400 sm:text-[11px] sm:tracking-[0.2em]">
+                            Especialidad
+                          </p>
+                          <p className="mt-1.5 text-sm font-medium leading-snug text-gray-900 sm:text-base">
+                            {formatCoachSpecialtyLabel(teacherInfo.specialty)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400 sm:text-[11px] sm:tracking-[0.2em]">
+                            Clases
+                          </p>
+                          <p className="mt-1.5 text-sm leading-relaxed text-gray-700 sm:text-base">
+                            {teacherInfo.classes.join(' · ')}
+                          </p>
+                        </div>
+                        {teacherInfo.bio && (
+                          <div id={`coach-bio-${teacherInfo.id}`} className="min-h-0">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400 sm:text-[11px] sm:tracking-[0.2em]">
+                              Perfil
+                            </p>
+                            <div
+                              className="mt-1.5 max-h-[min(28vh,220px)] overflow-y-auto pr-1 text-sm leading-relaxed text-gray-600 sm:max-h-[min(30vh,260px)] sm:text-[0.9375rem] lg:max-h-[min(32vh,280px)] [scrollbar-width:thin]"
+                              tabIndex={0}
+                              aria-label="Perfil completo del coach"
+                            >
+                              {teacherInfo.bio}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="min-h-0 shrink-0 border-t border-gray-100 pt-5 lg:pt-6">
+                      <h3 className="font-heading text-lg font-bold text-gray-900 sm:text-xl">
+                        Reserva tu clase
+                      </h3>
+                      <p className="mt-1.5 max-w-md text-xs leading-relaxed text-gray-500 sm:text-sm">
+                        Elige una práctica. En el siguiente paso verás fechas y horarios disponibles.
+                      </p>
+                      <ul className="mt-5 flex flex-col gap-3 sm:mt-6 sm:gap-4">
+                        {teacherInfo.classes.map((className) => {
+                          const classData = classTypes.find((c) => c.name === className)
+                          if (!classData) return null
+                          return (
+                            <li key={classData.id}>
+                              <button
+                                type="button"
+                                onClick={() => handleClassSelect(classData.id)}
+                                className="group/pick flex w-full flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 text-left transition-colors hover:border-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B73D37] focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:gap-5 sm:p-5"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-heading text-base font-bold text-gray-900 sm:text-lg">
+                                    {classData.name}
+                                  </p>
+                                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-gray-500 sm:line-clamp-3 sm:text-sm">
+                                    {classData.description}
+                                  </p>
+                                  <p className="mt-2 text-xs text-gray-400">
+                                    {classData.duration} min
+                                  </p>
+                                </div>
+                                <span
+                                  className="inline-flex w-full shrink-0 items-center justify-center rounded-md px-5 py-3 text-sm font-semibold text-white transition-colors group-hover/pick:bg-[#9e342f] sm:w-auto sm:px-6"
+                                  style={{ backgroundColor: '#B73D37' }}
+                                >
+                                  Continuar
+                                </span>
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Foto grande + textura sutil (halftone) */}
+                  <div className="relative order-1 h-[40vh] min-h-[260px] bg-neutral-100 lg:order-2 lg:col-span-7 lg:h-auto lg:min-h-0">
+                    <div
+                      className="pointer-events-none absolute inset-0 z-[1] opacity-[0.28] mix-blend-multiply lg:opacity-[0.22]"
+                      style={{
+                        backgroundImage:
+                          'radial-gradient(circle at 1px 1px, rgba(183,61,55,0.2) 1px, transparent 0)',
+                        backgroundSize: '14px 14px'
+                      }}
+                      aria-hidden
+                    />
+                    {teacherInfo.image && (
+                      <img
+                        src={teacherInfo.image}
+                        alt={teacherInfo.name}
+                        className="relative z-0 h-full w-full object-cover lg:absolute lg:inset-0"
+                        style={{
+                          objectPosition:
+                            teacherInfo.id === 3 ? 'center 25%' : teacherInfo.id === 5 ? 'center center' : 'center top'
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
             {/* Columna derecha en desktop - Información de la clase y formulario */}
             <div className="flex-1 w-full order-2 lg:order-2 min-w-0 lg:pl-8 lg:border-l-2"
                  style={{ borderColor: '#E5B3B0' }}>
@@ -715,7 +864,7 @@ function Booking() {
                   <div className="text-body font-body space-y-3">
                     <div className="space-y-2">
                       <p style={{ color: '#6B7280' }}>
-                        <span className="font-semibold" style={{ color: '#B73D37' }}>Profesor:</span> {bookingInfo.teacher}
+                        <span className="font-semibold" style={{ color: '#B73D37' }}>Coach:</span> {bookingInfo.teacher}
                       </p>
                       <p style={{ color: '#6B7280' }}>
                         <span className="font-semibold" style={{ color: '#B73D37' }}>Duración:</span> {bookingInfo.duration} minutos
@@ -869,32 +1018,8 @@ function Booking() {
                 </div>
               )}
 
-              {/* Foto y bio del profesor - Solo cuando es tipo teacher y NO hay clase seleccionada */}
-              {type === 'teacher' && !selectedClassId && teacherInfo?.image && (
-                <div>
-                  <div className="mb-6">
-                    <div className="w-full max-w-lg mx-auto lg:mx-0 rounded-2xl overflow-hidden shadow-lg"
-                         style={{ 
-                           border: '3px solid #E5B3B0',
-                           boxShadow: '0 8px 24px rgba(183, 61, 55, 0.15)'
-                         }}>
-                      <img
-                        src={teacherInfo.image}
-                        alt={teacherInfo.name}
-                        className="w-full h-auto object-cover"
-                        style={{ 
-                          objectPosition: teacherInfo.id === 3 ? 'center 25%' : 'center top'
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <p className="text-body font-body max-w-lg mx-auto lg:mx-0" style={{ color: '#4B5563', lineHeight: '1.7' }}>{teacherInfo?.bio}</p>
-                </div>
-              )}
-
-
               {/* Información de la clase seleccionada - Solo cuando NO hay fecha seleccionada */}
-              {type === 'teacher' && selectedClassInfo && !selectedDate && (
+              {isCoachBooking && selectedClassInfo && !selectedDate && (
                 <div className="mb-6 p-6 rounded-xl border-2 relative overflow-hidden"
                      style={{
                        borderColor: '#D48D88',
@@ -1049,7 +1174,7 @@ function Booking() {
               )}
 
               {/* Información resumida cuando hay fecha seleccionada (tipo teacher) */}
-              {type === 'teacher' && selectedClassInfo && selectedDate && (
+              {isCoachBooking && selectedClassInfo && selectedDate && (
                 <div className="mb-6 p-6 rounded-xl border-2"
                      style={{
                        borderColor: '#D48D88',
@@ -1090,7 +1215,7 @@ function Booking() {
               )}
 
               {/* Instrucción clara para seleccionar fecha primero */}
-              {type === 'teacher' && selectedClassId && !selectedDate && (
+              {isCoachBooking && selectedClassId && !selectedDate && (
                 <div className="mb-8 p-6 rounded-xl border-2 relative"
                      style={{ 
                        backgroundColor: '#FEF3F2', 
@@ -1118,7 +1243,7 @@ function Booking() {
               )}
 
               {/* Mensaje después de seleccionar fecha - indicar que deben seleccionar horario */}
-              {type === 'teacher' && selectedClassId && selectedDate && !selectedTime && (
+              {isCoachBooking && selectedClassId && selectedDate && !selectedTime && (
                 <div className="mb-6 p-6 rounded-xl border-2 relative"
                      style={{ 
                        backgroundColor: '#FEF3F2', 
@@ -1143,7 +1268,7 @@ function Booking() {
               )}
 
               {/* Selección de hora (solo cuando hay clase seleccionada y fecha seleccionada) */}
-              {((type === 'teacher' && selectedClassId) || type === 'class') && selectedDate && (
+              {((isCoachBooking && selectedClassId) || type === 'class') && selectedDate && (
                 <div className="mb-6">
                   <h3 className="text-h3 font-heading text-body mb-4">
                     Horarios disponibles
@@ -1360,7 +1485,7 @@ function Booking() {
                           />
                           <label htmlFor="payment-card" className="flex items-center gap-2 cursor-pointer flex-1">
                             <span className="text-2xl">💳</span>
-                            <span className="font-body text-body">Tarjeta de Crédito/Débito - $200.00 MXN</span>
+                            <span className="font-body text-body">Tarjeta de Crédito/Débito - {SINGLE_CLASS_PRICE_LABEL}</span>
                           </label>
                         </div>
                       </div>
@@ -1444,7 +1569,7 @@ function Booking() {
                       ? 'Procesando...' 
                       : usePackage 
                         ? 'Reservar con Paquete' 
-                        : 'Pagar $200.00 MXN'}
+                        : `Pagar ${SINGLE_CLASS_PRICE_LABEL}`}
                   </button>
                   <p className="text-xs text-body font-body text-center mt-2 opacity-75">
                     {isFormValid ? 'Al hacer clic, procesaremos tu pago de forma segura' : 'Completa todos los campos obligatorios para continuar'}
@@ -1468,10 +1593,10 @@ function Booking() {
                       Resumen de tu reserva
                     </h3>
                     <div className="space-y-2 text-body font-body">
-                      {type === 'teacher' && (
+                      {isCoachBooking && (
                         <>
                           <p>
-                            <span className="font-medium">Profesor:</span>{' '}
+                            <span className="font-medium">Coach:</span>{' '}
                             {teacherInfo?.name}
                           </p>
                           <p>
@@ -1507,7 +1632,7 @@ function Booking() {
                         {usePackage ? (
                           <span className="text-green-600 font-semibold">Gratis (usando paquete)</span>
                         ) : (
-                          '$200.00 MXN'
+                          <span>{SINGLE_CLASS_PRICE_LABEL}</span>
                         )}
                       </p>
                       {usePackage && selectedPackageId && (
@@ -1541,78 +1666,8 @@ function Booking() {
               )}
             </div>
 
-            {/* Columna derecha - Selección de clase cuando es profesor sin clase seleccionada, o Calendario cuando hay clase seleccionada */}
-            {type === 'teacher' && !selectedClassId && (
-              <div className="w-full lg:w-96 lg:flex-shrink-0 order-1 lg:order-2">
-                <div className="lg:sticky lg:top-24">
-                  <div className="mb-6">
-                    <h3 className="text-h3 font-heading text-body mb-2">
-                      Selecciona una clase
-                    </h3>
-                    <p className="text-sm font-body" style={{ color: '#6B7280' }}>
-                      Elige la clase que deseas tomar con {teacherInfo?.name}. Ver todas las clases disponibles y sus horarios.
-                    </p>
-                  </div>
-                  <div className="space-y-4">
-                    {teacherInfo?.classes.map((className) => {
-                      const classData = classTypes.find(c => c.name === className)
-                      if (!classData) return null
-                      return (
-                        <div
-                          key={classData.id}
-                          onClick={() => handleClassSelect(classData.id)}
-                          className="p-6 rounded-xl border-2 cursor-pointer transition-all duration-300 group/class"
-                          style={{
-                            borderColor: '#E5B3B0',
-                            backgroundColor: '#FFFFFF',
-                            boxShadow: '0 2px 8px rgba(183, 61, 55, 0.08)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = '#B73D37'
-                            e.currentTarget.style.transform = 'translateY(-4px)'
-                            e.currentTarget.style.boxShadow = '0 8px 20px rgba(183, 61, 55, 0.2)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = '#E5B3B0'
-                            e.currentTarget.style.transform = 'translateY(0)'
-                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(183, 61, 55, 0.08)'
-                          }}
-                        >
-                          <div className="flex items-start gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                                 style={{ backgroundColor: '#FEE2E2' }}>
-                              <span className="text-xl">🧘</span>
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-lg font-heading font-bold mb-2" style={{ color: '#1F2937' }}>
-                                {classData.name}
-                              </h4>
-                              <p className="text-sm font-body mb-3" style={{ color: '#4B5563', lineHeight: '1.6' }}>
-                                {classData.description}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="pt-4 border-t"
-                               style={{ borderColor: '#F3F4F6' }}>
-                            <span className="text-sm font-body" style={{ color: '#6B7280' }}>
-                              <span className="font-semibold" style={{ color: '#B73D37' }}>Duración:</span> {classData.duration} min
-                            </span>
-                          </div>
-                          <div className="mt-4 flex items-center gap-2 text-sm font-body font-medium opacity-0 group-hover/class:opacity-100 transition-opacity duration-300"
-                               style={{ color: '#B73D37' }}>
-                            <span>Seleccionar</span>
-                            <span className="transform group-hover/class:translate-x-1 transition-transform duration-300">→</span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Columna izquierda en desktop - Proceso de reservación: calendario e instrucción */}
-            {((type === 'teacher' && selectedClassId) || type === 'class') && (
+            {/* Columna: calendario (coach con clase elegida o reserva directa por clase) */}
+            {((isCoachBooking && selectedClassId) || type === 'class') && (
               <div className="w-full lg:w-[400px] xl:w-[420px] lg:flex-shrink-0 order-1 lg:order-1">
                 <div className="lg:sticky lg:top-24 lg:pr-6">
                   {type === 'class' && !selectedDate && (
@@ -1626,7 +1681,7 @@ function Booking() {
                       </p>
                     </div>
                   )}
-                  {type === 'teacher' && selectedClassId && !selectedDate && (
+                  {isCoachBooking && selectedClassId && !selectedDate && (
                     <div className="mb-4 p-4 rounded-lg"
                          style={{ backgroundColor: '#FEE2E2', border: '1px solid #D48D88' }}>
                       <p className="text-sm font-body font-semibold text-center" style={{ color: '#B73D37' }}>
@@ -1644,6 +1699,8 @@ function Booking() {
                   />
                 </div>
               </div>
+            )}
+              </>
             )}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import PostLoginClassesBanner from './components/PostLoginClassesBanner'
 import Footer from './components/Footer'
@@ -67,7 +67,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<Classes />} />
-        <Route path="/teachers" element={<Teachers />} />
+        <Route path="/coaches/login" element={<TeacherLogin />} />
+        <Route path="/coaches/panel" element={<TeacherDashboard />} />
+        <Route path="/coaches" element={<Teachers />} />
+        <Route path="/teachers" element={<Navigate to="/coaches" replace />} />
         <Route path="/horario" element={<Schedule />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/booking/package/:id" element={<PackagePurchase />} />
@@ -80,8 +83,8 @@ function App() {
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
         <Route path="/admin/reset-password" element={<AdminResetPassword />} />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/profesores/login" element={<TeacherLogin />} />
-        <Route path="/profesores" element={<TeacherDashboard />} />
+        <Route path="/profesores/login" element={<Navigate to="/coaches/login" replace />} />
+        <Route path="/profesores" element={<Navigate to="/coaches" replace />} />
         <Route path="/ubicacion" element={<Ubicacion />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />

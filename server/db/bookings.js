@@ -138,6 +138,7 @@ function shouldDecrementSpotOnInsert(flat) {
 
 function mapBookingTypeForDb(t) {
   if (t === 'class') return 'clase'
+  if (t === 'profesor') return 'coach'
   return t || 'clase'
 }
 

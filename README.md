@@ -1,11 +1,11 @@
 # Estudio Popnest Wellness - Sistema de Reservas
 
-Sistema web para reservar clases en el Estudio Popnest Wellness. Los usuarios pueden hacer clic en un profesor o en una clase para ver las fechas disponibles y seleccionar el día y hora de su preferencia.
+Sistema web para reservar clases en el Estudio Popnest Wellness. Los usuarios pueden hacer clic en un coach o en una clase para ver las fechas disponibles y seleccionar el día y hora de su preferencia.
 
 ## Características
 
-- ✅ Visualización de profesores y clases disponibles
-- ✅ Reserva por profesor o por clase
+- ✅ Visualización de coaches y clases disponibles
+- ✅ Reserva por coach o por clase
 - ✅ Calendario interactivo con fechas disponibles
 - ✅ Selección de horarios según disponibilidad configurada
 - ✅ Interfaz moderna y responsive
@@ -27,12 +27,12 @@ npm run dev
 
 ## Configuración de Clases
 
-Puedes editar la configuración de clases, profesores y horarios en `src/data/classes.js`:
+Puedes editar la configuración de clases, coaches y horarios en `src/data/classes.js`:
 
-- **teachers**: Lista de profesores con su información
+- **teachers**: Lista de coaches con su información
 - **classTypes**: Tipos de clases disponibles
 - **classSchedules**: Horarios disponibles por clase
-- **teacherSchedules**: Horarios disponibles por profesor
+- **teacherSchedules**: Horarios disponibles por coach
 
 ## Estructura del Proyecto
 
@@ -42,7 +42,7 @@ src/
 │   ├── Calendar.jsx     # Componente de calendario
 │   └── TimeSlotSelector.jsx  # Selector de horarios
 ├── data/               # Datos de configuración
-│   └── classes.js      # Configuración de clases y profesores
+│   └── classes.js      # Configuración de clases y coaches
 ├── pages/              # Páginas de la aplicación
 │   ├── Home.jsx        # Página principal
 │   └── Booking.jsx     # Página de reserva
@@ -53,9 +53,9 @@ src/
 ## Uso
 
 1. En la página principal, los usuarios pueden:
-   - Ver todos los profesores disponibles
+   - Ver todos los coaches disponibles
    - Ver todas las clases disponibles
-   - Hacer clic en cualquier profesor o clase para reservar
+   - Hacer clic en cualquier coach o clase para reservar
 
 2. En la página de reserva:
    - Seleccionar una fecha disponible en el calendario

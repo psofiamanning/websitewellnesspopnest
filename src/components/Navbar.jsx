@@ -25,13 +25,16 @@ function Navbar() {
     if (path === '/') {
       return location.pathname === '/'
     }
+    if (path === '/coaches') {
+      return location.pathname === '/coaches'
+    }
     return location.pathname.startsWith(path)
   }
 
   const menuItems = [
     { path: '/', label: 'Inicio' },
     { path: '/classes', label: 'Clases' },
-    { path: '/teachers', label: 'Profesores' },
+    { path: '/coaches', label: 'Coaches' },
     { path: '/horario', label: 'Horario' },
     { path: '/packages', label: 'Paquetes' },
   ]

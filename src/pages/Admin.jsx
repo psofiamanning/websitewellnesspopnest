@@ -136,9 +136,9 @@ function Admin() {
     return acc
   }, {})
 
-  // Agrupar por profesor
+  // Agrupar por coach
   const byTeacher = bookingsByDate.reduce((acc, b) => {
-    const key = b.teacherName || 'Sin profesor'
+    const key = b.teacherName || 'Sin coach'
     if (!acc[key]) acc[key] = []
     acc[key].push(b)
     return acc
@@ -513,7 +513,7 @@ function Admin() {
                         <input type="text" placeholder="Ej. Tai Chi" value={addBookingClassName} onChange={(e) => setAddBookingClassName(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
                       </div>
                       <div>
-                        <label className="block text-body font-body font-medium mb-1">Profesor</label>
+                        <label className="block text-body font-body font-medium mb-1">Coach</label>
                         <input type="text" placeholder="Ej. Blanca Bear" value={addBookingTeacherName} onChange={(e) => setAddBookingTeacherName(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" />
                       </div>
                       <div className="md:col-span-2">
@@ -568,7 +568,7 @@ function Admin() {
 
             {/* Contenido según tab activo */}
             {activeTab === 'bookings' ? (
-              /* Reservas: filtrar por fecha → por clase o por profesor → detalle */
+              /* Reservas: filtrar por fecha → por clase o por coach → detalle */
               <div className="space-y-6">
                 {!filterDate ? (
                   /* Vista inicial: todas las reservas ordenadas por fecha (más recientes primero) */
@@ -625,12 +625,12 @@ function Admin() {
                       </div>
                     )}
                     <p className="text-body font-body text-sm text-neutral-600">
-                      Usa el filtro por fecha para ver las reservas agrupadas por clase o profesor. Haz clic en una fila para ver el detalle.
+                      Usa el filtro por fecha para ver las reservas agrupadas por clase o coach. Haz clic en una fila para ver el detalle.
                     </p>
                   </div>
                 ) : (
                   <>
-                    {/* Tabs Por clase / Por profesor (solo cuando hay fecha) */}
+                    {/* Tabs Por clase / Por coach (solo cuando hay fecha) */}
                     <div className="flex gap-2 border-b border-neutral pb-2">
                       <button
                         type="button"
@@ -654,7 +654,7 @@ function Admin() {
                         }`}
                         style={bookingsViewMode === 'teacher' ? { backgroundColor: '#B73D37' } : {}}
                       >
-                        Por profesor
+                        Por coach
                       </button>
                     </div>
 
@@ -670,7 +670,7 @@ function Admin() {
                           Volver
                         </button>
                         <h3 className="text-h3 font-heading text-body mb-4">
-                          {selectedGroup.type === 'class' ? 'Clase' : 'Profesor'}: {selectedGroup.name}
+                          {selectedGroup.type === 'class' ? 'Clase' : 'Coach'}: {selectedGroup.name}
                         </h3>
                         <div className="space-y-2">
                           {selectedGroupBookings.map((booking) => (
@@ -688,7 +688,7 @@ function Admin() {
                         </div>
                       </div>
                     ) : (
-                      /* Vista: grupos (clase o profesor) con número de reservas y nombres */
+                      /* Vista: grupos (clase o coach) con número de reservas y nombres */
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {groupList.length === 0 ? (
                           <div className="col-span-2 text-center py-12">
@@ -826,10 +826,10 @@ function Admin() {
                   <div>
                     <h3 className="text-h3 font-heading text-body mb-3">Información de la Clase</h3>
                     <div className="bg-quaternary rounded-lg p-4 space-y-2 text-body font-body">
-                      <p><span className="font-medium">Tipo:</span> {selectedBooking.type === 'profesor' ? 'Profesor' : 'Clase'}</p>
+                      <p><span className="font-medium">Tipo:</span> {(selectedBooking.type === 'profesor' || selectedBooking.type === 'coach') ? 'Coach' : 'Clase'}</p>
                       <p><span className="font-medium">Nombre:</span> {selectedBooking.className}</p>
                       {selectedBooking.teacherName && (
-                        <p><span className="font-medium">Profesor:</span> {selectedBooking.teacherName}</p>
+                        <p><span className="font-medium">Coach:</span> {selectedBooking.teacherName}</p>
                       )}
                       <p><span className="font-medium">Fecha:</span> {selectedBooking.formattedDate}</p>
                       <p><span className="font-medium">Hora:</span> {selectedBooking.time}</p>

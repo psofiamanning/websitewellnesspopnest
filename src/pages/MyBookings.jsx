@@ -165,7 +165,7 @@ function MyBookings() {
                       </p>
                       {booking.teacherName && (
                         <p className="font-body text-sm mt-0.5" style={{ color: '#6B7280' }}>
-                          Profesor: {booking.teacherName}
+                          Coach: {booking.teacherName}
                         </p>
                       )}
                     </div>

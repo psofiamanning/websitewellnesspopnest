@@ -16,9 +16,21 @@ export const ROUTE_SEO = {
     title: 'Clases de Yoga y Bienestar en Coyoacán | Estudio Popnest Wellness',
     description: 'Descubre clases de yoga, tai chi, meditación y sound healing en Coyoacán. Reserva en línea. Estudio boutique en Coyoacán, CDMX.'
   },
+  '/coaches': {
+    title: 'Coaches de Yoga en Coyoacán | Estudio Popnest Wellness',
+    description: 'Conoce a los coaches de yoga y bienestar en Estudio Popnest Wellness, Coyoacán. Reserva tu clase en línea.'
+  },
+  '/coaches/login': {
+    title: 'Acceso coaches | Estudio Popnest Wellness',
+    description: 'Inicio de sesión para el equipo de coaches en Estudio Popnest Wellness, Coyoacán.'
+  },
+  '/coaches/panel': {
+    title: 'Panel coach | Estudio Popnest Wellness',
+    description: 'Consulta tus próximas reservas como coach en Estudio Popnest Wellness.'
+  },
   '/teachers': {
-    title: 'Profesores de Yoga en Coyoacán | Estudio Popnest Wellness',
-    description: 'Conoce a los profesores de yoga y bienestar en Estudio Popnest Wellness, Coyoacán. Reserva tu clase en línea.'
+    title: 'Coaches de Yoga en Coyoacán | Estudio Popnest Wellness',
+    description: 'Conoce a los coaches de yoga y bienestar en Estudio Popnest Wellness, Coyoacán. Reserva tu clase en línea.'
   },
   '/horario': {
     title: 'Horario de Clases en Coyoacán | Estudio Popnest Wellness',
@@ -56,11 +68,13 @@ export const ROUTE_SEO = {
 
 /** Nombre legible por slug de clase (para breadcrumb Reservar X). */
 const CLASS_SLUG_TO_NAME = {
-  'yoga-restaurativo': 'Yoga Restaurativo',
-  'hatha': 'Hatha Yoga',
+  'hatha-yoga': 'Hatha Yoga',
   'tai-chi': 'Tai Chi',
   'sound-healing': 'Sound Healing',
-  'meditacion': 'Meditación'
+  'meditacion': 'Meditación',
+  'yoga-vinyasa': 'Yoga Vinyasa',
+  'power-yoga-1': 'Power Yoga',
+  pilates: 'Pilates'
 }
 
 /**
@@ -79,14 +93,31 @@ export function getBreadcrumbItems(pathname) {
     return items
   }
 
+  if (segments[0] === 'coaches') {
+    if (segments[1] === 'login') {
+      items.push({ name: 'Acceso coaches', url: pathname })
+      return items
+    }
+    if (segments[1] === 'panel') {
+      items.push({ name: 'Panel coach', url: pathname })
+      return items
+    }
+    items.push({ name: 'Coaches', url: '/coaches' })
+    return items
+  }
+
   if (segments[0] === 'teachers') {
-    items.push({ name: 'Profesores', url: '/teachers' })
+    items.push({ name: 'Coaches', url: '/coaches' })
     if (segments.length > 1) items.push({ name: 'Reservar', url: pathname })
     return items
   }
 
   if (segments[0] === 'booking') {
-    items.push({ name: 'Clases', url: '/classes' })
+    if (segments[1] === 'coach' || segments[1] === 'teacher') {
+      items.push({ name: 'Coaches', url: '/coaches' })
+    } else {
+      items.push({ name: 'Clases', url: '/classes' })
+    }
     if (segments[1] === 'class' && segments[2]) {
       const className = CLASS_SLUG_TO_NAME[segments[2]] || segments[2]
       items.push({ name: `Reservar ${className}`, url: pathname })
@@ -115,6 +146,7 @@ export function getBreadcrumbItems(pathname) {
 export function getSeoForPath(pathname) {
   const exact = ROUTE_SEO[pathname]
   if (exact) return exact
+  if (pathname === '/teachers') return ROUTE_SEO['/coaches']
   if (pathname.startsWith('/booking/class/')) {
     return {
       title: 'Reservar clase | Yoga en Coyoacán | Estudio Popnest Wellness',

@@ -153,7 +153,7 @@ function PackagePurchase() {
 
     try {
       // Precio del paquete en centavos
-      const amount = packageInfo.price * 100 // precio en centavos (ej. $1800 = 180000)
+      const amount = packageInfo.price * 100 // precio en centavos (ej. $2,250 = 225000)
       
       // Crear Payment Intent con Stripe
       let paymentIntent

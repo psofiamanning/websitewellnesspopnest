@@ -51,8 +51,8 @@ Una vez configurado, puedes acceder al panel de administración en:
 Cada reserva guarda la siguiente información:
 
 ### Información de la reserva:
-- Tipo (profesor/clase)
-- Nombre de la clase/profesor
+- Tipo (coach/clase)
+- Nombre de la clase/coach
 - Fecha y hora de la reserva
 - Fecha de creación
 
@@ -86,7 +86,7 @@ El panel de administración (`/admin`) incluye:
 ### Información mostrada:
 - Estado del pago (Pagado/Pendiente)
 - Datos completos del cliente
-- Información de la clase/profesor
+- Información de la clase/coach
 - Detalles del pago con Stripe
 - Timestamp de creación
 

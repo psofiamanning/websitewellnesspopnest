@@ -3,10 +3,13 @@ import brendaGranadosPhoto from '../assets/brenda-granados.png'
 import madelineRojasPhoto from '../assets/madeline-rojas.png'
 import soundHealingPhoto from '../assets/sound-healing.png'
 import yogaRestaurativoPhoto from '../assets/yoga-restaurativo.png'
-import hathaPhoto from '../assets/hatha.png'
 import taiChiPhoto from '../assets/tai-chi.png'
+import yogaVinyasaPhoto from '../assets/yoga-vinyasa.png'
+import rocioEncisoPhoto from '../assets/rocio-enciso.png'
+import powerYogaPhoto from '../assets/power-yoga.png'
+import pilatesPhoto from '../assets/pilates.png'
 
-// Configuración de clases y profesores
+// Configuración de clases y coaches (`teachers` en código)
 export const teachers = [
   {
     id: 1,
@@ -14,7 +17,7 @@ export const teachers = [
     specialty: 'Movimiento y Yoga',
     image: blancaBearPhoto,
     bio: 'Maestra de movimiento con más de diez años de experiencia y una formación profunda y continua en yoga, tai chi, meditación, pilates y movimiento somático. Su práctica une estructura y sensibilidad, observando con atención, ajustando con cuidado y acompañando cada práctica desde la escucha corporal. Sus clases se sienten contenidas, claras y humanas, invitando al movimiento con presencia, estabilidad y confianza.',
-    classes: ['Yoga Restaurativo', 'Hatha Yoga', 'Tai Chi']
+    classes: ['Hatha Yoga', 'Pilates', 'Tai Chi']
   },
   {
     id: 2,
@@ -31,39 +34,49 @@ export const teachers = [
     image: madelineRojasPhoto,
     bio: 'Guía holística y facilitadora de espacios de conexión, conciencia y transformación personal. Su camino comenzó hace más de diez años, a través de cursos y certificaciones en herramientas de crecimiento personal, energía y prácticas meditativas. Actualmente acompaña procesos de transición, expansión y reconexión interna, integrando meditación, trabajo energético y rituales conscientes. Facilita meditaciones grupales.',
     classes: ['Meditación']
+  },
+  {
+    id: 4,
+    name: 'Hayde Ortiz',
+    specialty: 'Yoga Vinyasa',
+    image: yogaVinyasaPhoto,
+    bio: 'Maestra de yoga que facilita Vinyasa con un enfoque consciente: el movimiento fluye con la respiración, integrando fuerza, movilidad y pausas para una práctica equilibrada y segura. Certificación Yoga Alliance de 200 horas y formación en alineamiento restaurativo y yoga terapéutico. Imparte clases privadas y en estudio.',
+    classes: ['Yoga Vinyasa']
+  },
+  {
+    id: 5,
+    name: 'Rocío Enciso',
+    specialty: 'Power Yoga · Yoga deportivo',
+    image: rocioEncisoPhoto,
+    bio: 'Preparadora física y maestra en Hatha Yoga & Fitness con certificación internacional Yoga Alliance (+500 h) y más de quince años de trayectoria. Referente en yoga deportivo: dos veces campeona nacional en México, jefa nacional de entrenadores de la Fundación Mexicana de Yoga y años en el circuito internacional con presencia en el top ten mundial. Formación en Anusara y Vinyasa, Pilates Stott y Total Barre (Akrostudio España), y talleres en pre y postnatal, espalda y rehabilitación. Embajadora oficial de la IYSF.',
+    classes: ['Power Yoga']
   }
 ]
 
 export const classTypes = [
   {
-    id: 'yoga-restaurativo',
-    name: 'Yoga Restaurativo',
-    teacher: 'Blanca Bear',
-    teacherId: 1,
-    duration: 60,
-    description: 'Práctica de yoga restaurativo en Coyoacán diseñada para liberar tensión física y mental mediante posturas pasivas sostenidas con soportes. Ideal para reducir estrés y promover relajación profunda.',
-    fullDescription: 'El Yoga Restaurativo es una práctica terapéutica diseñada para activar el sistema nervioso parasimpático y promover una relajación profunda. Durante la clase, te sumergirás en posturas pasivas sostenidas durante varios minutos, utilizando soportes como cojines, mantas y bloques que permiten que el cuerpo se libere completamente de la tensión.\n\nLa práctica se realiza en un ambiente tranquilo y acogedor, con iluminación suave y música relajante. Puedes esperar una experiencia de descanso activo donde el cuerpo se regenera mientras la mente encuentra calma.\n\nEsta práctica es especialmente beneficiosa para reducir el estrés crónico, aliviar la ansiedad, mejorar la calidad del sueño, disminuir la presión arterial, aliviar dolores de espalda y cuello, fortalecer el sistema inmunológico y promover una sensación general de bienestar y equilibrio emocional.',
-    image: yogaRestaurativoPhoto
-  },
-  {
-    id: 'hatha',
+    id: 'hatha-yoga',
     name: 'Hatha Yoga',
     teacher: 'Blanca Bear',
     teacherId: 1,
     duration: 60,
-    description: 'Práctica de yoga tradicional que equilibra cuerpo y mente a través de posturas y respiración',
-    fullDescription: 'El Hatha Yoga es una práctica milenaria que equilibra las energías del cuerpo mediante la combinación de posturas físicas (asanas) y técnicas de respiración (pranayama). En esta clase tradicional, explorarás secuencias de posturas que fortalecen y flexibilizan el cuerpo mientras desarrollas conciencia corporal y mental.\n\nLa práctica se desarrolla a un ritmo moderado, permitiendo que cada postura se explore con atención y precisión. Puedes esperar una clase estructurada que comienza con calentamiento, continúa con posturas de pie, sentadas y acostadas, y culmina con una relajación final.\n\nEsta práctica equilibra el sistema nervioso, mejora la flexibilidad y fuerza muscular, aumenta la capacidad pulmonar, reduce el estrés y la ansiedad, mejora la postura y alineación corporal, fortalece el sistema inmunológico, promueve la concentración y claridad mental, y ayuda a equilibrar las emociones, proporcionando una sensación de armonía y bienestar integral.',
-    image: hathaPhoto
+    description:
+      'Práctica tradicional de Hatha Yoga en Coyoacán para equilibrar cuerpo y mente con posturas, respiración y atención consciente.',
+    fullDescription:
+      'Hatha Yoga es una práctica clásica que integra posturas sostenidas, respiración consciente y pausas de atención para fortalecer el cuerpo y calmar la mente. El ritmo es claro y accesible, ideal para construir base técnica y presencia.\n\nPuedes esperar una secuencia progresiva con movilidad suave, trabajo de alineación, respiración guiada y cierre de relajación. Es una práctica equilibrada para cultivar estabilidad, flexibilidad y enfoque.',
+    image: yogaRestaurativoPhoto
   },
   {
-    id: 'tai-chi',
-    name: 'Tai Chi',
+    id: 'pilates',
+    name: 'Pilates',
     teacher: 'Blanca Bear',
     teacherId: 1,
     duration: 60,
-    description: 'Arte marcial suave y meditativo que integra movimientos fluidos, técnicas de respiración consciente y principios de meditación. Practica Tai Chi en Coyoacán para mejorar equilibrio y bienestar integral.',
-    fullDescription: 'El Tai Chi es un arte marcial interno chino que combina movimientos lentos, fluidos y circulares con respiración profunda y meditación en movimiento. Esta práctica milenaria se realiza de pie, ejecutando secuencias de movimientos que fluyen como una danza suave y continua.\n\nDurante la clase, aprenderás formas tradicionales que conectan cuerpo, mente y espíritu en un movimiento armonioso. Puedes esperar una práctica accesible para todos los niveles, donde cada movimiento se enseña paso a paso, permitiendo que desarrolles coordinación, equilibrio y conciencia corporal.\n\nEl Tai Chi mejora significativamente el equilibrio y reduce el riesgo de caídas, aumenta la flexibilidad y rango de movimiento, fortalece las piernas y el core, reduce el estrés y la ansiedad, mejora la concentración y claridad mental, fortalece el sistema cardiovascular de manera suave, alivia dolores articulares y musculares, promueve la circulación sanguínea y linfática, y desarrolla la coordinación y agilidad, ofreciendo beneficios tanto físicos como mentales para personas de todas las edades.',
-    image: taiChiPhoto
+    description:
+      'Clase de Pilates en Coyoacán enfocada en core, alineación y control del movimiento. Ideal para fortalecer el centro del cuerpo, mejorar postura y ganar estabilidad con guía experta.',
+    fullDescription:
+      'En esta sesión trabajamos desde los principios del método: respiración, precisión y fluidez. La clase integra ejercicios en colchoneta y opciones progresivas para distintos niveles, con atención a la columna y la pelvis.\n\nPuedes esperar calentamiento articular, series de fortalecimiento del abdomen y espalda, y cierre con estiramientos. Es una práctica clara y contenida, pensada para sentir el cuerpo con más consciencia y sin prisa.',
+    image: pilatesPhoto
   },
   {
     id: 'sound-healing',
@@ -84,22 +97,60 @@ export const classTypes = [
     description: 'Práctica de meditación guiada en Coyoacán que integra técnicas contemplativas, trabajo energético y rituales conscientes para desarrollar atención plena y reducir estrés.',
     fullDescription: 'La Meditación es una práctica contemplativa milenaria que entrena la mente para desarrollar atención plena, presencia y conciencia del momento presente. En esta clase guiada, explorarás diversas técnicas meditativas que incluyen meditación de atención plena (mindfulness), visualización, trabajo con la respiración, y prácticas de conexión energética.\n\nLa sesión se desarrolla en un ambiente sagrado y acogedor, donde cada práctica se adapta a tu nivel de experiencia. Puedes esperar una experiencia transformadora donde aprenderás herramientas prácticas para calmar la mente, observar tus pensamientos sin juicio, y desarrollar una relación más consciente contigo mismo y con el mundo.\n\nLa meditación reduce significativamente el estrés, la ansiedad y la depresión, mejora la concentración y la memoria, aumenta la capacidad de autorregulación emocional, fortalece el sistema inmunológico, reduce la presión arterial y mejora la salud cardiovascular, promueve la neuroplasticidad y el crecimiento de materia gris en el cerebro, mejora la calidad del sueño, desarrolla la compasión y empatía, y proporciona una sensación de paz interior y bienestar duradero, transformando tu relación con los desafíos de la vida cotidiana.',
     image: madelineRojasPhoto
+  },
+  {
+    id: 'yoga-vinyasa',
+    name: 'Yoga Vinyasa',
+    teacher: 'Hayde Ortiz',
+    teacherId: 4,
+    duration: 60,
+    description: 'Vinyasa consciente en Coyoacán: secuencias que enlazan movimiento y respiración con fuerza, movilidad y momentos de pausa para una práctica equilibrada y segura.',
+    fullDescription: 'El Yoga Vinyasa que facilita Hayde enlaza posturas en fluidez, sincronizadas con la respiración. La clase integra fuerza y movilidad con espacios de contención para mantener una práctica equilibrada y segura, accesible a distintos niveles.\n\nPuedes esperar calentamiento, secuencias dinámicas y cierre con relajación. Es una práctica ideal para quien busca energía y claridad corporal sin renunciar al cuidado y la escucha.',
+    image: yogaVinyasaPhoto
+  },
+  {
+    id: 'power-yoga-1',
+    name: 'Power Yoga',
+    teacher: 'Rocío Enciso',
+    teacherId: 5,
+    duration: 60,
+    description: 'Clase dinámica en Coyoacán que combina fuerza, resistencia y alineación en secuencias exigentes y claras, ideal para quien busca profundizar en posturas y energía atlética con guía experta.',
+    fullDescription: 'Power Yoga es una práctica vigorosa en la que el calor y el ritmo sostienen secuencias fluidas entre posturas de pie, equilibrios y trabajo de fuerza. Rocío integra su experiencia en yoga deportivo y preparación física para ofrecer una clase desafiante y ordenada, con atención al detalle y opciones para distintos niveles.\n\nPuedes esperar calentamiento activo, series que desarrollan resistencia y estabilidad, y un cierre que devuelve el cuerpo a la calma. Es una propuesta para quien disfruta del movimiento intenso sin perder la consciencia respiratoria y la integridad articular.',
+    image: powerYogaPhoto
+  },
+  {
+    id: 'tai-chi',
+    name: 'Tai Chi',
+    teacher: 'Blanca Bear',
+    teacherId: 1,
+    duration: 60,
+    description: 'Arte marcial suave y meditativo que integra movimientos fluidos, técnicas de respiración consciente y principios de meditación. Practica Tai Chi en Coyoacán para mejorar equilibrio y bienestar integral.',
+    fullDescription: 'El Tai Chi es un arte marcial interno chino que combina movimientos lentos, fluidos y circulares con respiración profunda y meditación en movimiento. Esta práctica milenaria se realiza de pie, ejecutando secuencias de movimientos que fluyen como una danza suave y continua.\n\nDurante la clase, aprenderás formas tradicionales que conectan cuerpo, mente y espíritu en un movimiento armonioso. Puedes esperar una práctica accesible para todos los niveles, donde cada movimiento se enseña paso a paso, permitiendo que desarrolles coordinación, equilibrio y conciencia corporal.\n\nEl Tai Chi mejora significativamente el equilibrio y reduce el riesgo de caídas, aumenta la flexibilidad y rango de movimiento, fortalece las piernas y el core, reduce el estrés y la ansiedad, mejora la concentración y claridad mental, fortalece el sistema cardiovascular de manera suave, alivia dolores articulares y musculares, promueve la circulación sanguínea y linfática, y desarrolla la coordinación y agilidad, ofreciendo beneficios tanto físicos como mentales para personas de todas las edades.',
+    image: taiChiPhoto
   }
 ]
 
 // Horarios disponibles por clase
 export const classSchedules = {
-  'yoga-restaurativo': {
+  'hatha-yoga': {
     days: ['Martes', 'Jueves'],
-    times: ['10:00']
-  },
-  'hatha': {
-    days: ['Martes', 'Jueves'],
-    times: ['19:30']
+    times: ['10:30', '19:30'],
+    timesByDay: {
+      Martes: ['10:30', '19:30'],
+      Jueves: ['10:30', '19:30']
+    }
   },
   'tai-chi': {
     days: ['Sábado'],
     times: ['11:30']
+  },
+  'pilates': {
+    days: ['Martes', 'Jueves'],
+    times: ['09:30'],
+    timesByDay: {
+      Martes: ['09:30'],
+      Jueves: ['09:30']
+    }
   },
   'sound-healing': {
     days: ['Sábado', 'Domingo'],
@@ -110,15 +161,29 @@ export const classSchedules = {
   'meditacion': {
     days: ['Lunes', 'Miércoles'],
     times: ['08:00', '19:00']
+  },
+  'yoga-vinyasa': {
+    days: ['Martes', 'Jueves'],
+    times: ['07:00']
+  },
+  'power-yoga-1': {
+    days: ['Lunes', 'Martes', 'Miércoles', 'Jueves'],
+    times: [],
+    timesByDay: {
+      'Lunes': ['07:00'],
+      'Martes': ['08:30'],
+      'Miércoles': ['07:00'],
+      'Jueves': ['08:30']
+    }
   }
 }
 
-// Horarios disponibles por profesor
+// Horarios disponibles por coach (id = teachers.id)
 export const teacherSchedules = {
   1: { // Blanca Bear
-    classes: ['yoga-restaurativo', 'hatha', 'tai-chi'],
+    classes: ['hatha-yoga', 'tai-chi', 'pilates'],
     days: ['Martes', 'Jueves', 'Sábado'],
-    times: ['10:00', '11:30', '19:30']
+    times: ['09:30', '10:30', '19:30', '11:30']
   },
   2: { // Brenda Granados Segovia - Sábado solo 10:00
     classes: ['sound-healing'],
@@ -130,5 +195,21 @@ export const teacherSchedules = {
     classes: ['meditacion'],
     days: ['Lunes', 'Miércoles'],
     times: ['08:00', '19:00']
+  },
+  4: { // Hayde Ortiz
+    classes: ['yoga-vinyasa'],
+    days: ['Martes', 'Jueves'],
+    times: ['07:00']
+  },
+  5: { // Rocío Enciso
+    classes: ['power-yoga-1'],
+    days: ['Lunes', 'Martes', 'Miércoles', 'Jueves'],
+    times: ['07:00', '08:30'],
+    timesByDay: {
+      'Lunes': ['07:00'],
+      'Martes': ['08:30'],
+      'Miércoles': ['07:00'],
+      'Jueves': ['08:30']
+    }
   }
 }

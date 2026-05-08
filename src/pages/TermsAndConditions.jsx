@@ -23,7 +23,7 @@ function TermsAndConditions() {
             <section>
               <h2 className="text-xl font-heading font-medium mb-3" style={{ color: '#1F2937' }}>2. Servicios ofrecidos</h2>
               <p>
-                FINOVIX S.A.P.I. (Estudio Popnest Wellness) ofrece clases de yoga, meditación, tai chi, sound healing y actividades afines, así como la posibilidad de reservar clases individuales o adquirir paquetes de clases a través de esta plataforma. Los horarios, profesores y condiciones específicas de cada clase se indican en la web y pueden estar sujetos a disponibilidad.
+                FINOVIX S.A.P.I. (Estudio Popnest Wellness) ofrece clases de yoga, meditación, tai chi, sound healing y actividades afines, así como la posibilidad de reservar clases individuales o adquirir paquetes de clases a través de esta plataforma. Los horarios, coaches y condiciones específicas de cada clase se indican en la web y pueden estar sujetos a disponibilidad.
               </p>
             </section>
 
@@ -47,7 +47,7 @@ function TermsAndConditions() {
                 No realizamos reembolsos en dinero. Si no puedes asistir a una clase reservada o deseas cambiar la fecha u horario, puedes <strong>reagendar</strong> tu reserva a otra fecha y hora disponible para la misma clase, desde la sección «Mis reservas» en tu cuenta, con al menos <strong>48 horas de anticipación</strong> a la clase reservada. Si prefieres, también puedes contactarnos para solicitar el cambio. Las políticas de cancelación o cambio de reserva se comunican en el proceso de reserva o en el estudio.
               </p>
               <p className="mt-2">
-                En caso de cancelación o cambio por parte del estudio (por ejemplo, por fuerza mayor o baja del profesor), se te ofrecerá <strong>reprogramación</strong> a otra fecha u horario; no se realizan reembolsos en efectivo salvo que la ley aplicable lo exija.
+                En caso de cancelación o cambio por parte del estudio (por ejemplo, por fuerza mayor o baja del coach), se te ofrecerá <strong>reprogramación</strong> a otra fecha u horario; no se realizan reembolsos en efectivo salvo que la ley aplicable lo exija.
               </p>
               <p className="mt-2">
                 Para paquetes de clases ya adquiridos, no se devuelve el importe pagado; las clases no utilizadas podrán usarse en otras fechas dentro del periodo de validez del paquete, o reagendarse según las condiciones del paquete.

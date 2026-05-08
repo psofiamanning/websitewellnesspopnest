@@ -8,13 +8,13 @@ export const teacherLogout = () => {
   localStorage.removeItem('teacher_token')
   localStorage.removeItem('teacher_name')
   localStorage.removeItem('teacher_id')
-  window.location.href = '/profesores/login'
+  window.location.href = '/coaches/login'
 }
 
-/** Obtiene las reservas confirmadas de las próximas clases de la maestra logueada */
+/** Obtiene las reservas confirmadas de las próximas clases del coach logueado */
 export const getTeacherUpcomingBookings = async () => {
   const token = getTeacherToken()
-  if (!token) throw new Error('No hay sesión de maestra')
+  if (!token) throw new Error('No hay sesión de coach')
   const response = await fetch(`${BACKEND_URL}/api/bookings/teacher/upcoming`, {
     headers: { Authorization: `Bearer ${token}` }
   })

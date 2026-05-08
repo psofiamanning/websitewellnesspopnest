@@ -16,7 +16,7 @@ function AdminLogin() {
   const [adminError, setAdminError] = useState('')
   const [adminLoading, setAdminLoading] = useState(false)
 
-  // Profesores
+  // Coaches
   const [teacherForm, setTeacherForm] = useState({ email: '', password: '' })
   const [teacherError, setTeacherError] = useState('')
   const [teacherLoading, setTeacherLoading] = useState(false)
@@ -97,7 +97,7 @@ function AdminLogin() {
         if (data.teacher?.name) localStorage.setItem('teacher_name', data.teacher.name)
         if (data.teacher?.teacherId != null) localStorage.setItem('teacher_id', String(data.teacher.teacherId))
       }
-      navigate('/profesores', { replace: true })
+      navigate('/coaches/panel', { replace: true })
     } catch (err) {
       setTeacherError(err.message || 'Error al iniciar sesión. Intenta de nuevo.')
     } finally {
@@ -209,13 +209,13 @@ function AdminLogin() {
             </form>
           </div>
 
-          {/* Profesores */}
+          {/* Coaches */}
           <div
             className="bg-white rounded-lg p-6 md:p-8 shadow-xl border-2 flex flex-col"
             style={{ borderColor: '#E5B3B0' }}
           >
             <h2 className="text-xl font-heading font-bold mb-1" style={{ color: '#1F2937' }}>
-              Profesores
+              Coaches
             </h2>
             <p className="text-body font-body text-sm mb-6" style={{ color: '#6B7280' }}>
               Ver reservas de tus próximas clases

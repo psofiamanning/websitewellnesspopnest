@@ -12,7 +12,7 @@ function TeacherDashboard() {
 
   useEffect(() => {
     if (!isTeacherAuthenticated()) {
-      navigate('/profesores/login', { replace: true })
+      navigate('/coaches/login', { replace: true })
       return
     }
     let cancelled = false
@@ -30,7 +30,7 @@ function TeacherDashboard() {
     return () => { cancelled = true }
   }, [navigate])
 
-  const teacherName = getTeacherName() || 'Maestra'
+  const teacherName = getTeacherName() || 'Coach'
 
   // Agrupar por fecha y luego por clase+hora
   const byDate = bookings.reduce((acc, b) => {

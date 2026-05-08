@@ -84,10 +84,10 @@ function Footer() {
               </li>
               <li>
                 <Link 
-                  to="/teachers" 
+                  to="/coaches" 
                   className="text-white/90 font-body text-sm hover:text-white transition-colors duration-200"
                 >
-                  Profesores
+                  Coaches
                 </Link>
               </li>
               <li>
@@ -212,10 +212,10 @@ function Footer() {
                 Admin
               </Link>
               <Link 
-                to="/profesores/login" 
+                to="/coaches/login" 
                 className="text-white/80 font-body text-xs hover:text-white transition-colors duration-200"
               >
-                Acceso profesores
+                Acceso coaches
               </Link>
               <Link 
                 to="/privacidad" 

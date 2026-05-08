@@ -3,5 +3,5 @@
 UPDATE packages
 SET
   total_classes = 20,
-  price = 3600
+  price = 4500
 WHERE name = 'Paquete de 20 Clases';

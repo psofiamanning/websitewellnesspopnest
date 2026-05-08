@@ -618,12 +618,12 @@ const parseTeacherToken = (req) => {
   }
 }
 
-// Endpoint: Reservas próximas para la maestra (solo las clases que imparte ella)
+// Endpoint: Reservas próximas para el coach (solo las clases que imparte)
 app.get('/api/bookings/teacher/upcoming', async (req, res) => {
   try {
     const payload = parseTeacherToken(req)
     if (!payload || !payload.name) {
-      return res.status(401).json({ error: 'Debes iniciar sesión como maestra' })
+      return res.status(401).json({ error: 'Debes iniciar sesión como coach' })
     }
     const teacherName = payload.name.trim()
     const bookings = await getBookings()
@@ -901,7 +901,7 @@ app.post('/api/auth/admin/login', (req, res) => {
   }
 })
 
-// Endpoint: Login de maestra (para ver sus próximas clases reservadas)
+// Endpoint: Login de coach (para ver sus próximas clases reservadas)
 app.post('/api/auth/teacher/login', (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')

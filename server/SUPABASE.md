@@ -17,6 +17,15 @@ En el frontend (`.env` en la raíz del repo Vite):
 - `classes`, `teachers`, `schedules`, `packages`, `customer_packages`
 - `bookings_new`, `payments_new`
 
+### `schedules.valid_from` / `schedules.valid_until` (opcional)
+
+Columnas tipo `date` (nullable). Definen la ventana en la que un slot acepta **nuevas** reservas, sin borrar la fila ni romper historial en `bookings_new`.
+
+- **NULL en ambos** (o sin columnas hasta migrar): comportamiento como antes.
+- **Cerrar un horario** sin `DELETE`: por ejemplo `valid_until = ayer` en filas futuras (ver `server/sql/remove_*.sql` actualizados).
+
+Migración: `server/sql/add_schedules_valid_from_until.sql`. La lógica está en `findScheduleBySlot` en `server/db/bookings.js`.
+
 Las lecturas de reservas se adaptan al **mismo JSON plano** que consumía la API antes (ver `server/db/bookingAdapter.js`).
 
 ## Recuperación de contraseña (clientes)

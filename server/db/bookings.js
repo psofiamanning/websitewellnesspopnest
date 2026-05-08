@@ -33,8 +33,34 @@ function normalizeTime(t) {
   return sec != null ? `${h}:${m}:${sec}` : `${h}:${m}`
 }
 
+/** `date` del calendario como YYYY-MM-DD (string). */
+function toYyyyMmDd(date) {
+  if (date == null || date === '') return ''
+  if (typeof date === 'string') return date.slice(0, 10)
+  const d = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(d.getTime())) return String(date).slice(0, 10)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+/**
+ * Slots con `valid_from` / `valid_until` (nullable): ventana para **nuevas** reservas.
+ * Reservas ya guardadas siguen apuntando al mismo `schedule_id`; no se borran filas.
+ */
+function isScheduleSlotOpenForNewBookings(schedule, requestedDateYyyyMmDd) {
+  if (!schedule || schedule.status !== 'active') return false
+  const day = requestedDateYyyyMmDd
+  if (!day) return false
+  if (schedule.valid_from && day < schedule.valid_from) return false
+  if (schedule.valid_until && day > schedule.valid_until) return false
+  return true
+}
+
 export async function findScheduleBySlot(className, date, time) {
   const supabase = getSupabaseAdmin()
+  const dateKey = toYyyyMmDd(date)
   const t1 = normalizeTime(time)
   const t2 = t1.length === 5 ? `${t1}:00` : t1
   const { data, error } = await supabase
@@ -42,15 +68,20 @@ export async function findScheduleBySlot(className, date, time) {
     .select(
       `
       id, spots_available, spots_total, scheduled_date, scheduled_time, status,
+      valid_from, valid_until,
       classes!inner (name),
       teachers (full_name)
     `
     )
-    .eq('scheduled_date', date)
+    .eq('scheduled_date', dateKey)
     .in('scheduled_time', [t1, t2])
     .eq('status', 'active')
   if (error) throw error
-  const row = (data || []).find((s) => (s.classes?.name || '').trim() === (className || '').trim())
+  const row = (data || []).find(
+    (s) =>
+      (s.classes?.name || '').trim() === (className || '').trim() &&
+      isScheduleSlotOpenForNewBookings(s, dateKey)
+  )
   return row || null
 }
 

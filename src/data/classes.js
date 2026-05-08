@@ -134,10 +134,10 @@ export const classTypes = [
 export const classSchedules = {
   'hatha-yoga': {
     days: ['Martes', 'Jueves'],
-    times: ['10:30', '19:30'],
+    times: ['19:30'],
     timesByDay: {
-      Martes: ['10:30', '19:30'],
-      Jueves: ['10:30', '19:30']
+      Martes: ['19:30'],
+      Jueves: ['19:30']
     }
   },
   'tai-chi': {
@@ -153,14 +153,22 @@ export const classSchedules = {
     }
   },
   'sound-healing': {
-    days: ['Sábado', 'Domingo'],
-    times: ['08:00', '10:00'],
-    // Sábado solo 10:00; Domingo mantiene ambos horarios
-    timesByDay: { 'Sábado': ['10:00'], 'Domingo': ['08:00', '10:00'] }
+    days: ['Miércoles', 'Sábado', 'Domingo'],
+    times: ['08:30', '10:00', '20:00'],
+    timesByDay: {
+      Miércoles: ['20:00'],
+      Sábado: ['10:00'],
+      Domingo: ['08:30', '10:00']
+    }
   },
   'meditacion': {
-    days: ['Lunes', 'Miércoles'],
-    times: ['08:00', '19:00']
+    days: ['Lunes', 'Miércoles', 'Sábado'],
+    times: ['08:00', '09:00', '19:00'],
+    timesByDay: {
+      Lunes: ['19:00'],
+      Miércoles: ['08:00', '19:00'],
+      Sábado: ['09:00']
+    }
   },
   'yoga-vinyasa': {
     days: ['Martes', 'Jueves'],
@@ -183,18 +191,27 @@ export const teacherSchedules = {
   1: { // Blanca Bear
     classes: ['hatha-yoga', 'tai-chi', 'pilates'],
     days: ['Martes', 'Jueves', 'Sábado'],
-    times: ['09:30', '10:30', '19:30', '11:30']
+    times: ['09:30', '19:30', '11:30']
   },
-  2: { // Brenda Granados Segovia - Sábado solo 10:00
+  2: { // Brenda Granados Segovia
     classes: ['sound-healing'],
-    days: ['Sábado', 'Domingo'],
-    times: ['08:00', '10:00'],
-    timesByDay: { 'Sábado': ['10:00'], 'Domingo': ['08:00', '10:00'] }
+    days: ['Miércoles', 'Sábado', 'Domingo'],
+    times: ['20:00', '10:00', '08:30'],
+    timesByDay: {
+      Miércoles: ['20:00'],
+      Sábado: ['10:00'],
+      Domingo: ['08:30', '10:00']
+    }
   },
   3: { // Madeline Rojas Givaudan
     classes: ['meditacion'],
-    days: ['Lunes', 'Miércoles'],
-    times: ['08:00', '19:00']
+    days: ['Lunes', 'Miércoles', 'Sábado'],
+    times: ['08:00', '09:00', '19:00'],
+    timesByDay: {
+      Lunes: ['19:00'],
+      Miércoles: ['08:00', '19:00'],
+      Sábado: ['09:00']
+    }
   },
   4: { // Hayde Ortiz
     classes: ['yoga-vinyasa'],

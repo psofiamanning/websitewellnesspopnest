@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { teachers, classTypes, classSchedules } from '../data/classes'
 import Calendar from '../components/Calendar'
 import TimeSlotSelector from '../components/TimeSlotSelector'
@@ -16,6 +16,16 @@ const SINGLE_CLASS_PRICE_LABEL = `$${SINGLE_CLASS_PRICE_MXN.toFixed(2)} MXN`
 
 /** Reserva por coach (actual) o por profesor (dato legado en BD). */
 const isCoachReservationType = (t) => t === 'coach' || t === 'profesor'
+
+/** Navbar fija (~88px + padding). Evita que el título de horarios quede tapado al hacer scroll. */
+const BOOKING_NAV_SCROLL_OFFSET_PX = 104
+
+/** Scroll de ventana hasta `el` debajo del navbar (más fiable que scrollIntoView en dos columnas + sticky). */
+function scrollElementBelowFixedNav(el, offsetPx = BOOKING_NAV_SCROLL_OFFSET_PX) {
+  if (!el || typeof window === 'undefined') return
+  const y = el.getBoundingClientRect().top + window.scrollY - offsetPx
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' })
+}
 
 // Función para cargar Stripe dinámicamente (solo si está instalado)
 // Esta función maneja el caso cuando Stripe no está instalado
@@ -82,6 +92,9 @@ function Booking() {
   const [usePackage, setUsePackage] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [formValidationMessage, setFormValidationMessage] = useState('')
+  const [selectDateError, setSelectDateError] = useState('')
+  const [selectTimeError, setSelectTimeError] = useState('')
+  const timeSlotsSectionRef = useRef(null)
 
   // Obtener información según el tipo (coach o clase)
   const teacherInfo = isCoachBooking ? teachers.find(t => t.id === parseInt(id)) : null
@@ -174,6 +187,8 @@ function Booking() {
   // Resetear índice de imagen cuando cambia la clase
   useEffect(() => {
     setCurrentImageIndex(0)
+    setSelectDateError('')
+    setSelectTimeError('')
   }, [selectedClassId, type, id])
 
   // Limpiar mensaje de validación cuando el usuario corrige datos de pago o contacto
@@ -185,6 +200,8 @@ function Booking() {
     setSelectedClassId(classId)
     setSelectedDate(null)
     setSelectedTime(null)
+    setSelectDateError('')
+    setSelectTimeError('')
     setCardholderName('')
     setStripeCardData(null)
   }
@@ -192,10 +209,32 @@ function Booking() {
   const handleDateSelect = (date) => {
     setSelectedDate(date)
     setSelectedTime(null) // Resetear hora al cambiar fecha
+    setSelectDateError('')
+    setSelectTimeError('')
+  }
+
+  const handleCalendarSelectContinue = () => {
+    if (!selectedDate) {
+      setSelectDateError('Selecciona una fecha primero antes de continuar')
+      setSelectTimeError('')
+      return
+    }
+    setSelectDateError('')
+    if (!selectedTime) {
+      setSelectTimeError('Selecciona una hora para tu clase')
+      window.setTimeout(() => {
+        requestAnimationFrame(() => {
+          scrollElementBelowFixedNav(timeSlotsSectionRef.current)
+        })
+      }, 0)
+      return
+    }
+    setSelectTimeError('')
   }
 
   const handleTimeSelect = (time) => {
     setSelectedTime(time)
+    setSelectTimeError('')
     // Resetear información de tarjeta al cambiar hora
     setCardholderName('')
     setStripeCardData(null)
@@ -1269,7 +1308,11 @@ function Booking() {
 
               {/* Selección de hora (solo cuando hay clase seleccionada y fecha seleccionada) */}
               {((isCoachBooking && selectedClassId) || type === 'class') && selectedDate && (
-                <div className="mb-6">
+                <div
+                  className="mb-6 scroll-mt-[104px]"
+                  ref={timeSlotsSectionRef}
+                  id="booking-time-slots"
+                >
                   <h3 className="text-h3 font-heading text-body mb-4">
                     Horarios disponibles
                   </h3>
@@ -1286,6 +1329,31 @@ function Booking() {
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {selectedTime && !isAuthenticated() && (
+                <div
+                  className="mb-6 rounded-xl border-2 p-4 sm:p-5"
+                  style={{
+                    backgroundColor: '#FEF3F2',
+                    borderColor: '#D48D88',
+                    boxShadow: '0 2px 10px rgba(183, 61, 55, 0.08)'
+                  }}
+                >
+                  <p className="text-sm font-body leading-relaxed sm:text-base" style={{ color: '#374151' }}>
+                    <span className="font-heading font-semibold" style={{ color: '#1F2937' }}>
+                      ¿Tienes un paquete de clases o ya tienes cuenta?
+                    </span>{' '}
+                    Inicia sesión para ver tu saldo y reservar usando las clases de tu paquete.
+                  </p>
+                  <Link
+                    to={`/login?from=${encodeURIComponent(`/booking/${type}/${id}`)}`}
+                    className="mt-3 inline-block text-sm font-body font-semibold transition-colors hover:underline sm:text-base"
+                    style={{ color: '#B73D37' }}
+                  >
+                    Iniciar sesión
+                  </Link>
                 </div>
               )}
 
@@ -1697,6 +1765,44 @@ function Booking() {
                     selectedDate={selectedDate}
                     onDateSelect={handleDateSelect}
                   />
+                  {selectDateError && (
+                    <p
+                      className="mt-4 text-center font-body font-semibold leading-snug lg:text-left text-xl sm:text-2xl md:text-3xl"
+                      role="alert"
+                      style={{ color: '#B73D37' }}
+                    >
+                      {selectDateError}
+                    </p>
+                  )}
+                  {selectTimeError && (
+                    <p
+                      className="mt-4 text-center font-body font-semibold leading-snug lg:text-left text-xl sm:text-2xl md:text-3xl"
+                      role="alert"
+                      style={{ color: '#B73D37' }}
+                    >
+                      {selectTimeError}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleCalendarSelectContinue}
+                    className="mt-5 w-full rounded-lg py-3.5 text-base font-semibold font-body transition-all shadow-lg transform hover:scale-[1.01] sm:py-4 sm:text-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #374151 0%, #1F2937 100%)',
+                      color: '#FFFFFF',
+                      border: '1px solid #111827',
+                      cursor: 'pointer',
+                      boxShadow: '0 8px 20px rgba(15, 23, 42, 0.22)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'linear-gradient(135deg, #4B5563 0%, #374151 100%)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'linear-gradient(135deg, #374151 0%, #1F2937 100%)'
+                    }}
+                  >
+                    Seleccionar
+                  </button>
                 </div>
               </div>
             )}

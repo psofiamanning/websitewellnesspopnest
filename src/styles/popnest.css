@@ -1,0 +1,12 @@
+/* ============================================================
+   POPNEST DESIGN SYSTEM - ENTRADA PRINCIPAL
+   Importa este unico archivo cuando estemos listos para activar
+   el nuevo sistema visual.
+
+   Uso:
+     @import './styles/popnest.css';
+   ============================================================ */
+
+@import url('./tokens.css');
+@import url('./base.css');
+@import url('./components.css');

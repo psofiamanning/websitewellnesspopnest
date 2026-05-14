@@ -1,0 +1,906 @@
+/* ============================================================
+   POPNEST COMPONENTS
+   Componentes CSS reutilizables del sistema.
+   Importa tokens.css y base.css antes de este archivo.
+   ============================================================ */
+
+/* ----------------------------------------
+   BUTTONS
+   ---------------------------------------- */
+
+.pn-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  font-family: var(--pn-font-sans);
+  font-size: 12px;
+  letter-spacing: var(--pn-tracking-wider);
+  text-transform: uppercase;
+  font-weight: var(--pn-weight-medium);
+  cursor: pointer;
+  text-align: center;
+  border: none;
+  transition: background var(--pn-transition-base), color var(--pn-transition-base), border-color var(--pn-transition-base);
+}
+
+/* CTA principal - rojo solido */
+.pn-btn--primary {
+  background: var(--pn-color-primary);
+  color: #fff;
+}
+
+.pn-btn--primary:hover {
+  background: var(--pn-color-primary-hover);
+}
+
+/* CTA secundario - outline oscuro */
+.pn-btn--ghost {
+  background: transparent;
+  color: var(--pn-color-text);
+  border: 0.5px solid var(--pn-color-text);
+  padding: 13px 24px;
+}
+
+.pn-btn--ghost:hover {
+  background: var(--pn-color-text);
+  color: #fff;
+}
+
+/* CTA outline blanco - para fondos oscuros */
+.pn-btn--ghost-light {
+  background: transparent;
+  color: var(--pn-color-on-dark);
+  border: 0.5px solid var(--pn-color-on-dark);
+  padding: 13px 24px;
+}
+
+.pn-btn--ghost-light:hover {
+  background: var(--pn-color-on-dark);
+  color: var(--pn-color-text);
+}
+
+/* Tamanos */
+.pn-btn--sm {
+  padding: 10px 18px;
+  font-size: 11px;
+}
+
+.pn-btn--lg {
+  padding: 16px 28px;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+}
+
+.pn-btn--block {
+  width: 100%;
+}
+
+/* ----------------------------------------
+   LINK SUBRAYADO EDITORIAL
+   ---------------------------------------- */
+
+.pn-link {
+  font-size: 13px;
+  color: var(--pn-color-primary);
+  border-bottom: 0.5px solid var(--pn-color-primary);
+  padding-bottom: 3px;
+  cursor: pointer;
+  letter-spacing: var(--pn-tracking-wide);
+  font-weight: var(--pn-weight-medium);
+  display: inline-block;
+  transition: color var(--pn-transition-base), border-color var(--pn-transition-base);
+}
+
+.pn-link:hover {
+  color: var(--pn-color-primary-hover);
+  border-bottom-color: var(--pn-color-primary-hover);
+}
+
+/* ----------------------------------------
+   NAVEGACION
+   ---------------------------------------- */
+
+.pn-nav {
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: var(--pn-border-soft);
+  background: var(--pn-color-bg-base);
+}
+
+.pn-nav__logo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.pn-nav__logo-e {
+  font-family: var(--pn-font-serif);
+  font-style: italic;
+  font-size: 30px;
+  color: var(--pn-color-primary);
+  line-height: 1;
+}
+
+.pn-nav__logo-name {
+  font-size: 11px;
+  letter-spacing: var(--pn-tracking-formal);
+  text-transform: uppercase;
+  color: var(--pn-color-text);
+  font-weight: var(--pn-weight-medium);
+}
+
+.pn-nav__items {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.pn-nav__item {
+  font-size: 14px;
+  letter-spacing: var(--pn-tracking-wide);
+  color: var(--pn-color-text);
+  cursor: pointer;
+  transition: color var(--pn-transition-base);
+}
+
+.pn-nav__item:hover,
+.pn-nav__item--active {
+  color: var(--pn-color-primary);
+}
+
+.pn-nav__item--secondary {
+  font-size: 13px;
+  color: var(--pn-color-text-muted);
+}
+
+.pn-nav__divider {
+  width: 1px;
+  height: 14px;
+  background: var(--pn-color-border);
+}
+
+/* Hamburguesa para mobile */
+.pn-nav__hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.pn-nav__hamburger span {
+  width: 18px;
+  height: 1.5px;
+  background: var(--pn-color-text);
+}
+
+@media (max-width: 768px) {
+  .pn-nav {
+    padding: 16px 20px;
+  }
+
+  .pn-nav__items {
+    display: none;
+  }
+
+  .pn-nav__hamburger {
+    display: flex;
+  }
+}
+
+/* ----------------------------------------
+   PRACTICE DOT - sistema de color-coding
+   ---------------------------------------- */
+
+.pn-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.pn-dot--yoga { background: var(--pn-color-practice-yoga); }
+.pn-dot--pilates { background: var(--pn-color-practice-pilates); }
+.pn-dot--meditation { background: var(--pn-color-practice-meditation); }
+.pn-dot--sound { background: var(--pn-color-practice-sound); }
+.pn-dot--taichi { background: var(--pn-color-practice-taichi); }
+
+/* ----------------------------------------
+   TAG / PILL
+   ---------------------------------------- */
+
+.pn-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  background: var(--pn-color-bg-secondary);
+  font-size: 10px;
+  letter-spacing: var(--pn-tracking-wider);
+  text-transform: uppercase;
+  color: var(--pn-color-success-text);
+  border-radius: var(--pn-radius-pill);
+  font-weight: var(--pn-weight-medium);
+}
+
+/* ----------------------------------------
+   CHIPS (filtros)
+   ---------------------------------------- */
+
+.pn-chip {
+  padding: 8px 14px;
+  border: 0.5px solid var(--pn-color-border-strong);
+  border-radius: var(--pn-radius-pill);
+  font-size: 10px;
+  letter-spacing: var(--pn-tracking-wider);
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--pn-color-text);
+  background: var(--pn-color-bg-elevated);
+  font-weight: var(--pn-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  transition: border-color var(--pn-transition-base), color var(--pn-transition-base);
+}
+
+.pn-chip:hover {
+  border-color: var(--pn-color-primary);
+  color: var(--pn-color-primary);
+}
+
+.pn-chip--active {
+  background: var(--pn-color-text);
+  color: #fff;
+  border-color: var(--pn-color-text);
+}
+
+.pn-chip-row {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Scroll horizontal en mobile */
+@media (max-width: 768px) {
+  .pn-chip-row--scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+  .pn-chip-row--scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ----------------------------------------
+   CARDS
+   ---------------------------------------- */
+
+.pn-card {
+  background: var(--pn-color-bg-elevated);
+  border: var(--pn-border-thin);
+  overflow: hidden;
+  transition: background var(--pn-transition-slow), border-color var(--pn-transition-slow), transform var(--pn-transition-slow);
+}
+
+.pn-card--interactive {
+  cursor: pointer;
+}
+
+.pn-card--interactive:hover {
+  background: #fff;
+  border-color: var(--pn-color-primary);
+  transform: translateY(-2px);
+}
+
+.pn-card--dark {
+  background: var(--pn-color-bg-dark);
+  color: var(--pn-color-on-dark);
+  border-color: var(--pn-color-bg-dark);
+}
+
+.pn-card--accent {
+  border-left: var(--pn-border-accent);
+}
+
+.pn-card__body {
+  padding: 24px 22px 26px;
+}
+
+/* ----------------------------------------
+   FORM FIELDS
+   ---------------------------------------- */
+
+.pn-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.pn-field__label {
+  font-size: 11px;
+  letter-spacing: var(--pn-tracking-wider);
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle);
+  font-weight: var(--pn-weight-medium);
+}
+
+.pn-field__input {
+  padding: 14px 16px;
+  background: var(--pn-color-bg-elevated);
+  border: var(--pn-border-thin);
+  font-size: 15px;
+  color: var(--pn-color-text);
+  line-height: 1.4;
+  width: 100%;
+  transition: border-color var(--pn-transition-base), background var(--pn-transition-base), box-shadow var(--pn-transition-base);
+}
+
+.pn-field__input:hover {
+  border-color: var(--pn-color-text-subtle);
+  background: #fff;
+}
+
+.pn-field__input:focus {
+  border-color: var(--pn-color-primary);
+  background: #fff;
+  outline: none;
+  box-shadow: var(--pn-shadow-focus);
+}
+
+.pn-field__input::placeholder {
+  color: var(--pn-color-text-faint);
+}
+
+.pn-field__hint {
+  font-size: 11px;
+  color: var(--pn-color-text-subtle);
+  margin-top: 2px;
+  letter-spacing: var(--pn-tracking-base);
+}
+
+.pn-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Checkbox */
+.pn-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 0.5px solid var(--pn-color-border-strong);
+  background: var(--pn-color-bg-elevated);
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  transition: border-color var(--pn-transition-base);
+}
+
+.pn-checkbox:hover {
+  border-color: var(--pn-color-primary);
+}
+
+/* ----------------------------------------
+   FROM-BANNER - banner contextual de journey
+   ---------------------------------------- */
+
+.pn-from-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  background: var(--pn-color-bg-elevated);
+  border: var(--pn-border-thin);
+  border-left: var(--pn-border-accent);
+  margin-bottom: 28px;
+}
+
+.pn-from-banner__icon {
+  width: 38px;
+  height: 38px;
+  background: var(--pn-color-error-bg);
+  color: var(--pn-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.pn-from-banner__label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle);
+  font-weight: var(--pn-weight-medium);
+  margin-bottom: 3px;
+}
+
+.pn-from-banner__value {
+  font-size: 14px;
+  color: var(--pn-color-text);
+  line-height: 1.4;
+}
+
+/* ----------------------------------------
+   STEP - flujo paso a paso (booking)
+   ---------------------------------------- */
+
+.pn-step {
+  background: #fff;
+  border: var(--pn-border-thin);
+  margin-bottom: 10px;
+  transition: background var(--pn-transition-base), border-color var(--pn-transition-base);
+}
+
+.pn-step--done {
+  background: var(--pn-color-bg-elevated);
+}
+
+.pn-step--active {
+  background: #fff;
+  border-color: var(--pn-color-text-subtle);
+}
+
+.pn-step--locked {
+  background: transparent;
+  border: 0.5px solid var(--pn-color-border-soft);
+  opacity: 0.55;
+}
+
+.pn-step__head {
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  cursor: pointer;
+}
+
+.pn-step__num {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 0.5px solid var(--pn-color-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--pn-color-text-subtle);
+  font-weight: var(--pn-weight-medium);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.pn-step__num--done {
+  background: var(--pn-color-text);
+  border-color: var(--pn-color-text);
+  color: #fff;
+}
+
+.pn-step__num--active {
+  background: var(--pn-color-primary);
+  border-color: var(--pn-color-primary);
+  color: #fff;
+}
+
+.pn-step__title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pn-step__body {
+  padding: 0 32px 32px;
+  border-top: 0.5px solid #e6dcc6;
+}
+
+/* ----------------------------------------
+   PRACTICE CARD - tarjeta de practica
+   ---------------------------------------- */
+
+.pn-practice-card {
+  padding: 24px 22px 26px;
+  border: var(--pn-border-thin);
+  background: var(--pn-color-bg-elevated);
+  cursor: pointer;
+  transition: all var(--pn-transition-slow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 200px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pn-practice-card:hover {
+  background: #fff;
+  border-color: var(--pn-color-primary);
+  transform: translateY(-2px);
+}
+
+.pn-practice-card__image {
+  height: 120px;
+  overflow: hidden;
+  margin: -24px -22px 0;
+  filter: var(--pn-img-grading);
+}
+
+.pn-practice-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pn-practice-card__arrow {
+  color: var(--pn-color-text-faint);
+  font-size: 14px;
+  transition: all var(--pn-transition-base);
+  align-self: flex-end;
+  margin-top: auto;
+}
+
+.pn-practice-card:hover .pn-practice-card__arrow {
+  color: var(--pn-color-primary);
+  transform: translateX(4px);
+}
+
+/* ----------------------------------------
+   CLASS ROW - fila de clase en horario
+   ---------------------------------------- */
+
+.pn-class-row {
+  display: grid;
+  grid-template-columns: 64px 14px 1fr auto auto;
+  gap: 16px;
+  padding: 14px 0;
+  align-items: baseline;
+  cursor: pointer;
+  border-bottom: 0.5px solid var(--pn-color-border-soft);
+  transition: padding var(--pn-transition-base);
+}
+
+.pn-class-row:last-child {
+  border-bottom: none;
+}
+
+.pn-class-row:hover {
+  padding-left: 6px;
+}
+
+.pn-class-row:hover .pn-class-row__name {
+  color: var(--pn-color-primary);
+}
+
+.pn-class-row:hover .pn-class-row__arrow {
+  color: var(--pn-color-primary);
+  transform: translateX(4px);
+}
+
+.pn-class-row__time {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--pn-color-text);
+}
+
+.pn-class-row__name {
+  font-size: 14px;
+  font-weight: var(--pn-weight-medium);
+  color: var(--pn-color-text);
+  transition: color var(--pn-transition-base);
+}
+
+.pn-class-row__coach {
+  font-size: 11px;
+  color: var(--pn-color-text-muted);
+  letter-spacing: var(--pn-tracking-wide);
+  margin-top: 2px;
+}
+
+.pn-class-row__duration {
+  font-size: 10px;
+  letter-spacing: var(--pn-tracking-wider);
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle);
+}
+
+.pn-class-row__arrow {
+  color: var(--pn-color-text-faint);
+  font-size: 13px;
+  transition: all var(--pn-transition-base);
+}
+
+@media (max-width: 768px) {
+  .pn-class-row {
+    grid-template-columns: 50px 12px 1fr auto;
+    gap: 12px;
+  }
+}
+
+/* ----------------------------------------
+   RESERVATION CARD - tarjeta de reserva (Mis reservas)
+   ---------------------------------------- */
+
+.pn-res-card {
+  background: var(--pn-color-bg-elevated);
+  border: var(--pn-border-thin);
+  margin-bottom: 14px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  align-items: stretch;
+  transition: background var(--pn-transition-base), border-color var(--pn-transition-base);
+}
+
+.pn-res-card:hover {
+  background: #fff;
+  border-color: var(--pn-color-text-subtle);
+}
+
+.pn-res-card__date {
+  padding: 28px 22px;
+  background: var(--pn-color-bg-secondary);
+  border-right: var(--pn-border-thin);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.pn-res-card__day-name {
+  font-size: 12px;
+  letter-spacing: var(--pn-tracking-widest);
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle);
+  font-weight: var(--pn-weight-medium);
+  margin-bottom: 6px;
+}
+
+.pn-res-card__day-num {
+  font-size: 54px;
+  line-height: 1;
+  letter-spacing: var(--pn-tracking-snug);
+  font-weight: var(--pn-weight-regular);
+  color: var(--pn-color-text);
+}
+
+.pn-res-card__month {
+  font-size: 13px;
+  letter-spacing: var(--pn-tracking-wider);
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle);
+  margin-top: 6px;
+  font-weight: var(--pn-weight-medium);
+}
+
+@media (max-width: 768px) {
+  .pn-res-card {
+    grid-template-columns: 90px 1fr;
+  }
+  .pn-res-card__date {
+    padding: 18px 12px;
+  }
+  .pn-res-card__day-num {
+    font-size: 36px;
+  }
+}
+
+/* ----------------------------------------
+   SUMMARY (resumen de reserva)
+   ---------------------------------------- */
+
+.pn-summary {
+  padding: 28px 26px;
+  background: var(--pn-color-bg-elevated);
+  border: var(--pn-border-thin);
+  position: sticky;
+  top: 24px;
+}
+
+.pn-summary__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 11px 0;
+  font-size: 13px;
+  border-bottom: 0.5px solid var(--pn-color-border-soft);
+}
+
+.pn-summary__row:last-child {
+  border-bottom: none;
+}
+
+.pn-summary__label {
+  color: var(--pn-color-text-subtle);
+  letter-spacing: var(--pn-tracking-wide);
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: var(--pn-weight-medium);
+}
+
+.pn-summary__value {
+  color: var(--pn-color-text);
+  text-align: right;
+}
+
+/* ----------------------------------------
+   TABS
+   ---------------------------------------- */
+
+.pn-tabs {
+  display: flex;
+  gap: 32px;
+  border-bottom: var(--pn-border-thin);
+}
+
+.pn-tab {
+  padding: 14px 0;
+  font-size: 13px;
+  letter-spacing: var(--pn-tracking-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--pn-color-text-subtle);
+  font-weight: var(--pn-weight-medium);
+  border-bottom: 1.5px solid transparent;
+  transition: color var(--pn-transition-base), border-color var(--pn-transition-base);
+}
+
+.pn-tab:hover {
+  color: var(--pn-color-text);
+}
+
+.pn-tab--active {
+  color: var(--pn-color-text);
+  border-bottom-color: var(--pn-color-primary);
+}
+
+.pn-tab__count {
+  font-size: 10px;
+  letter-spacing: var(--pn-tracking-wide);
+  color: var(--pn-color-text-faint);
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--pn-weight-regular);
+  text-transform: none;
+}
+
+.pn-tab--active .pn-tab__count {
+  color: var(--pn-color-primary);
+}
+
+/* ----------------------------------------
+   FAQ ITEM (acordeon)
+   ---------------------------------------- */
+
+.pn-faq-item {
+  padding: 24px 0;
+  border-bottom: 0.5px solid var(--pn-color-border-soft);
+  cursor: pointer;
+}
+
+.pn-faq-item:last-child {
+  border-bottom: none;
+}
+
+.pn-faq-item__question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  font-size: 18px;
+  color: var(--pn-color-text);
+  font-weight: var(--pn-weight-regular);
+  transition: color var(--pn-transition-base);
+}
+
+.pn-faq-item__arrow {
+  color: var(--pn-color-text-faint);
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: color var(--pn-transition-base);
+}
+
+.pn-faq-item:hover .pn-faq-item__question,
+.pn-faq-item:hover .pn-faq-item__arrow {
+  color: var(--pn-color-primary);
+}
+
+/* ----------------------------------------
+   STATUS PILL
+   ---------------------------------------- */
+
+.pn-status {
+  font-size: 10px;
+  letter-spacing: var(--pn-tracking-wider);
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle);
+  font-weight: var(--pn-weight-medium);
+  padding: 5px 10px;
+  background: #fff;
+  border: var(--pn-border-thin);
+  display: inline-block;
+}
+
+.pn-status--confirmed {
+  background: var(--pn-color-success-bg);
+  color: var(--pn-color-success-text);
+  border-color: var(--pn-color-border);
+}
+
+/* ----------------------------------------
+   FOOTER
+   ---------------------------------------- */
+
+.pn-footer {
+  padding: 48px 32px;
+  background: var(--pn-color-bg-secondary);
+  border-top: var(--pn-border-soft);
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 36px;
+}
+
+.pn-footer__col-title {
+  font-size: 11px;
+  letter-spacing: var(--pn-tracking-widest);
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle);
+  font-weight: var(--pn-weight-medium);
+  margin-bottom: 14px;
+}
+
+.pn-footer__link {
+  font-size: 13px;
+  color: var(--pn-color-text);
+  cursor: pointer;
+  display: block;
+  margin-bottom: 10px;
+  transition: color var(--pn-transition-base);
+}
+
+.pn-footer__link:hover {
+  color: var(--pn-color-primary);
+}
+
+.pn-footer__bottom {
+  padding: 20px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  letter-spacing: var(--pn-tracking-wider);
+  text-transform: uppercase;
+  color: var(--pn-color-text-muted);
+  background: var(--pn-color-bg-tertiary);
+  border-top: var(--pn-border-soft);
+}
+
+@media (max-width: 768px) {
+  .pn-footer {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 36px 24px;
+  }
+  .pn-footer__bottom {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    padding: 16px 24px;
+  }
+}

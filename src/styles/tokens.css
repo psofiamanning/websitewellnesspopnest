@@ -1,0 +1,187 @@
+/* ============================================================
+   POPNEST DESIGN TOKENS
+   Sistema de diseno boutique editorial para Estudio Popnest
+   ============================================================ */
+
+:root {
+  /* ----------------------------------------
+     COLORES - MARCA
+     ---------------------------------------- */
+
+  /* Brand principal */
+  --pn-color-primary: #b73d37;          /* Rojo terracota - CTAs, acentos, headings */
+  --pn-color-primary-hover: #9d342e;    /* Rojo oscuro - hover de CTAs */
+  --pn-color-secondary: #c76661;        /* Rojo polvo - Pilates, acentos secundarios */
+  --pn-color-tertiary: #d48d88;         /* Rosa antiguo - Sound Healing */
+
+  /* Body & text */
+  --pn-color-text: #2d2e35;             /* Texto principal */
+  --pn-color-text-soft: #4a4a4f;        /* Texto secundario / parrafos */
+  --pn-color-text-muted: #6b6960;       /* Texto terciario */
+  --pn-color-text-subtle: #7a6b54;      /* Eyebrows, labels */
+  --pn-color-text-faint: #998f7e;       /* Texto deshabilitado / muy sutil */
+
+  /* Backgrounds */
+  --pn-color-bg-base: #f4ede2;          /* Fondo crema principal */
+  --pn-color-bg-elevated: #fbf6ec;      /* Fondo crema claro - cards, inputs */
+  --pn-color-bg-secondary: #ede4d2;     /* Fondo crema medio - secciones diferenciadas */
+  --pn-color-bg-tertiary: #e4d9c3;      /* Fondo crema oscuro - footer */
+  --pn-color-bg-warm: #d8c5af;          /* Fondo sand - heroes editoriales */
+  --pn-color-bg-dark: #2d2e35;          /* Fondo oscuro - CTAs grandes, manifesto */
+
+  /* Borders & lines */
+  --pn-color-border: #c9bda6;           /* Border principal de cards */
+  --pn-color-border-soft: #d9cdb8;      /* Separadores internos */
+  --pn-color-border-strong: #b8a886;    /* Borders activos / chips */
+
+  /* Sistema de practicas (color-coding) */
+  --pn-color-practice-yoga: #b73d37;
+  --pn-color-practice-pilates: #c76661;
+  --pn-color-practice-meditation: #374151;
+  --pn-color-practice-sound: #d48d88;
+  --pn-color-practice-taichi: #a89a82;
+
+  /* Estados */
+  --pn-color-success-bg: #ede4d2;
+  --pn-color-success-text: #5a4d39;
+  --pn-color-error-bg: #fbe5e3;
+  --pn-color-error-text: #b73d37;
+
+  /* Inverso (dentro de bloques oscuros) */
+  --pn-color-on-dark: #f4ede2;
+  --pn-color-on-dark-soft: #d8c5af;
+  --pn-color-on-dark-muted: #e6dcc6;
+
+  /* ----------------------------------------
+     TIPOGRAFIA
+     ---------------------------------------- */
+
+  --pn-font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --pn-font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+
+  /* Tallas - desktop */
+  --pn-text-display-xl: 88px;     /* Hero titles */
+  --pn-text-display-lg: 72px;     /* Section titles principales */
+  --pn-text-display: 54px;        /* Headings grandes */
+  --pn-text-h1: 52px;             /* H1 normal */
+  --pn-text-h2: 42px;             /* H2 seccion */
+  --pn-text-h3: 32px;             /* H3 subseccion */
+  --pn-text-h4: 26px;             /* H4 / nombres de cards */
+  --pn-text-lg: 18px;             /* Texto destacado */
+  --pn-text-base: 15px;           /* Texto body por defecto */
+  --pn-text-sm: 14px;             /* Texto secundario */
+  --pn-text-xs: 13px;             /* Captions */
+  --pn-text-eyebrow: 11px;        /* Eyebrows uppercase espaciado */
+  --pn-text-micro: 10px;          /* Tags muy pequenos */
+
+  /* Tallas - mobile (sobreescribir via media query) */
+  --pn-text-display-xl-mobile: 56px;
+  --pn-text-display-lg-mobile: 54px;
+  --pn-text-display-mobile: 42px;
+  --pn-text-h1-mobile: 36px;
+  --pn-text-h2-mobile: 32px;
+  --pn-text-h3-mobile: 26px;
+
+  /* Pesos */
+  --pn-weight-regular: 400;
+  --pn-weight-medium: 500;
+
+  /* Line heights */
+  --pn-leading-tight: 0.95;
+  --pn-leading-snug: 1.15;
+  --pn-leading-normal: 1.55;
+  --pn-leading-relaxed: 1.7;
+
+  /* Letter spacing */
+  --pn-tracking-tight: -0.035em;     /* Titles grandes */
+  --pn-tracking-snug: -0.02em;       /* H2 / H3 */
+  --pn-tracking-base: 0;
+  --pn-tracking-wide: 0.04em;        /* Texto sutil */
+  --pn-tracking-wider: 0.18em;       /* Eyebrows pequenos */
+  --pn-tracking-widest: 0.22em;      /* Eyebrows formales */
+  --pn-tracking-formal: 0.3em;       /* Logo lockup */
+
+  /* ----------------------------------------
+     SPACING & LAYOUT
+     ---------------------------------------- */
+
+  --pn-space-1: 4px;
+  --pn-space-2: 8px;
+  --pn-space-3: 12px;
+  --pn-space-4: 14px;
+  --pn-space-5: 18px;
+  --pn-space-6: 22px;
+  --pn-space-7: 28px;
+  --pn-space-8: 32px;
+  --pn-space-9: 40px;
+  --pn-space-10: 48px;
+  --pn-space-11: 56px;
+  --pn-space-12: 64px;
+  --pn-space-13: 72px;
+  --pn-space-14: 80px;
+  --pn-space-15: 88px;
+
+  /* Padding standard de secciones */
+  --pn-section-padding-x: 32px;
+  --pn-section-padding-y: 80px;
+  --pn-section-padding-x-mobile: 24px;
+  --pn-section-padding-y-mobile: 40px;
+
+  /* Container max-width */
+  --pn-container-max: 1280px;
+  --pn-container-narrow: 760px;
+
+  /* ----------------------------------------
+     BORDERS
+     ---------------------------------------- */
+
+  --pn-border-thin: 0.5px solid var(--pn-color-border);
+  --pn-border-soft: 0.5px solid var(--pn-color-border-soft);
+  --pn-border-strong: 1px solid var(--pn-color-text-subtle);
+  --pn-border-accent: 3px solid var(--pn-color-primary);
+
+  /* Radius (uso minimo - boutique tiende a bordes rectos) */
+  --pn-radius-none: 0;
+  --pn-radius-pill: 100px;
+
+  /* ----------------------------------------
+     SHADOWS (uso muy escaso - diseno minimal)
+     ---------------------------------------- */
+
+  --pn-shadow-focus: 0 0 0 3px rgba(183, 61, 55, 0.08);
+
+  /* ----------------------------------------
+     IMAGE FILTERS
+     ---------------------------------------- */
+
+  --pn-img-grading: grayscale(0.3) sepia(0.12);          /* Para imagenes generales */
+  --pn-img-grading-strong: grayscale(0.5) sepia(0.1) contrast(1.05);  /* Retratos de coaches */
+  --pn-img-grading-soft: grayscale(0.2) sepia(0.12) brightness(0.95); /* Hero images */
+  --pn-img-grading-dark: grayscale(0.4) brightness(0.55); /* Backgrounds con texto encima */
+
+  /* ----------------------------------------
+     TRANSITIONS
+     ---------------------------------------- */
+
+  --pn-transition-fast: 150ms ease;
+  --pn-transition-base: 200ms ease;
+  --pn-transition-slow: 250ms ease;
+  --pn-transition-image: 600ms ease;
+}
+
+/* ----------------------------------------
+   AJUSTES MOBILE
+   ---------------------------------------- */
+
+@media (max-width: 768px) {
+  :root {
+    --pn-text-display-xl: var(--pn-text-display-xl-mobile);
+    --pn-text-display-lg: var(--pn-text-display-lg-mobile);
+    --pn-text-display: var(--pn-text-display-mobile);
+    --pn-text-h1: var(--pn-text-h1-mobile);
+    --pn-text-h2: var(--pn-text-h2-mobile);
+    --pn-text-h3: var(--pn-text-h3-mobile);
+    --pn-section-padding-x: var(--pn-section-padding-x-mobile);
+    --pn-section-padding-y: var(--pn-section-padding-y-mobile);
+  }
+}

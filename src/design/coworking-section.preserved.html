@@ -1,0 +1,48 @@
+<!--
+  SECCION COWORKING (preservada, no activa en la web todavia)
+  Origen: vista previa /packages-redesign antes de quitarla del mock.
+
+  Como reactivarla:
+  1. Abre src/pages/PackagesRedesign.jsx
+  2. Pega el bloque <section class="pkg-section">...</section> de abajo
+     justo despues de la seccion "Lo que incluye cualquier paquete" (cierre </section> del pkg-section--warm)
+     y antes de la seccion FAQ (pkg-faq).
+  3. Los estilos usan las mismas clases que el resto de esa pagina: .pkg-section,
+     .pkg-section__head, .pkg-pricing, .pkg-card, .pn-btn, etc. (definidas en el
+     mismo archivo dentro del <style> del iframe).
+
+  Precios al momento de archivar: Day pass $300, Flex $1,800, Plus $2,800 MXN/mes.
+-->
+<section class="pkg-section">
+  <div class="pkg-section__head">
+    <div class="pn-eyebrow" style="margin-bottom: 14px;">Coworking</div>
+    <h2 class="pn-h2">Para quien tambien <span class="pn-serif" style="color: var(--pn-color-primary);">trabaja aqui.</span></h2>
+    <p class="pn-text" style="margin-top: 16px;">Si usas el espacio para trabajar, puedes combinarlo con tus clases.</p>
+  </div>
+  <div class="pkg-pricing">
+    <article class="pkg-card">
+      <div class="pkg-card__eyebrow">Un dia</div>
+      <h3 class="pn-h4">Day pass</h3>
+      <div class="pkg-card__price">$300</div>
+      <p class="pkg-card__sub">MXN · acceso 9:00 a 19:00</p>
+      <ul><li>Wifi y cafe</li><li>Sala silenciosa</li></ul>
+      <button type="button" class="pn-btn pn-btn--ghost pn-btn--block">Comprar day pass</button>
+    </article>
+    <article class="pkg-card">
+      <div class="pkg-card__eyebrow">Flexible</div>
+      <h3 class="pn-h4">Membresia Flex</h3>
+      <div class="pkg-card__price">$1,800</div>
+      <p class="pkg-card__sub">MXN / mes · ~6x el day pass + clases</p>
+      <ul><li>Hasta 8 dias de coworking al mes</li><li>Incluye 4 clases del horario regular</li><li>Ideal si vienes 2 veces por semana</li></ul>
+      <button type="button" class="pn-btn pn-btn--ghost pn-btn--block">Detalles</button>
+    </article>
+    <article class="pkg-card">
+      <div class="pkg-card__eyebrow">Todo incluido</div>
+      <h3 class="pn-h4">Membresia Plus</h3>
+      <div class="pkg-card__price">$2,800</div>
+      <p class="pkg-card__sub">MXN / mes · coworking + practica</p>
+      <ul><li>Coworking ilimitado en horario del estudio</li><li>Clases ilimitadas (mismo beneficio que ilimitado solo clases, con espacio de trabajo)</li><li>Mejor si vives entre mat y laptop</li></ul>
+      <button type="button" class="pn-btn pn-btn--primary pn-btn--block">Lo quiero</button>
+    </article>
+  </div>
+</section>

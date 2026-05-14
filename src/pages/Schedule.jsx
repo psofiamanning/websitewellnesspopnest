@@ -1,38 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { classTypes, classSchedules } from '../data/classes'
+import { DAY_ORDER, buildScheduleSlots } from '../data/scheduleSlots'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns'
 import { es } from 'date-fns/locale'
-
-const DAY_ORDER = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
-
-function buildScheduleSlots() {
-  const slots = []
-  classTypes.forEach((cls) => {
-    const s = classSchedules[cls.id]
-    if (!s || !s.days) return
-    const days = s.days
-    days.forEach((day) => {
-      const times = s.timesByDay && s.timesByDay[day] ? s.timesByDay[day] : (s.times || [])
-      times.forEach((time) => {
-        slots.push({
-          classId: cls.id,
-          className: cls.name,
-          teacher: cls.teacher,
-          day,
-          time
-        })
-      })
-    })
-  })
-  slots.sort((a, b) => {
-    const dayA = DAY_ORDER.indexOf(a.day)
-    const dayB = DAY_ORDER.indexOf(b.day)
-    if (dayA !== dayB) return dayA - dayB
-    return (a.time || '').localeCompare(b.time || '')
-  })
-  return slots
-}
 
 function Schedule() {
   const navigate = useNavigate()

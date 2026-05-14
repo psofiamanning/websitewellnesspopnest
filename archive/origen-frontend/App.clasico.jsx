@@ -28,12 +28,6 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import MyBookings from './pages/MyBookings'
 import Ubicacion from './pages/Ubicacion'
-import DesignSystem from './pages/DesignSystem'
-import HomeRedesign from './pages/HomeRedesign'
-import ScheduleRedesign from './pages/ScheduleRedesign'
-import PackagesRedesign from './pages/PackagesRedesign'
-import MyBookingsRedesign from './pages/MyBookingsRedesign'
-import Previews from './pages/Previews'
 import './App.css'
 
 /** Solo inicializa y hace tracking con Meta Pixel si el usuario aceptó cookies de marketing. */
@@ -62,24 +56,14 @@ function ScrollToTop() {
   return null
 }
 
-function AppContent() {
-  const { pathname } = useLocation()
-  const isStandalonePreview =
-    pathname === '/design-system' ||
-    pathname === '/schedule-redesign' ||
-    pathname === '/packages-redesign' ||
-    pathname === '/mis-reservas-redesign' ||
-    pathname === '/previews'
-
-  const hideGlobalNavbar = pathname === '/' || pathname === '/home-redesign'
-
+function App() {
   return (
-    <>
+    <Router>
       <MetaPixelRouter />
       <ScrollToTop />
       <PageSEO />
-      {!hideGlobalNavbar && !isStandalonePreview && <Navbar />}
-      {!isStandalonePreview && <PostLoginClassesBanner />}
+      <Navbar />
+      <PostLoginClassesBanner />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<Classes />} />
@@ -105,23 +89,9 @@ function AppContent() {
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />
         <Route path="/mis-reservas" element={<MyBookings />} />
-        <Route path="/design-system" element={<DesignSystem />} />
-        <Route path="/home-redesign" element={<HomeRedesign />} />
-        <Route path="/schedule-redesign" element={<ScheduleRedesign />} />
-        <Route path="/packages-redesign" element={<PackagesRedesign />} />
-        <Route path="/mis-reservas-redesign" element={<MyBookingsRedesign />} />
-        <Route path="/previews" element={<Previews />} />
       </Routes>
-      {!isStandalonePreview && <Footer />}
-      {!isStandalonePreview && <CookieConsent />}
-    </>
-  )
-}
-
-function App() {
-  return (
-    <Router>
-      <AppContent />
+      <Footer />
+      <CookieConsent />
     </Router>
   )
 }

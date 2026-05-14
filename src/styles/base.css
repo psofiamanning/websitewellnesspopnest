@@ -1,0 +1,239 @@
+/* ============================================================
+   POPNEST BASE STYLES
+   Reset minimal + tipografia base + fuentes
+   Importa tokens.css antes de este archivo
+   ============================================================ */
+
+/* ----------------------------------------
+   IMPORTAR FUENTES
+   ---------------------------------------- */
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/dm-sans/400.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/dm-sans/500.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/instrument-serif/400.css');
+
+/* ----------------------------------------
+   RESET MINIMAL
+   ---------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--pn-font-sans);
+  font-size: var(--pn-text-base);
+  line-height: var(--pn-leading-normal);
+  color: var(--pn-color-text);
+  background: var(--pn-color-bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reset de botones e inputs: el sistema necesita un base limpio
+   porque los estilos default del navegador rompen el look boutique */
+button {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input,
+textarea,
+select {
+  all: unset;
+  box-sizing: border-box;
+  font-family: inherit;
+  cursor: text;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--pn-color-text);
+  font-weight: var(--pn-weight-regular);
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ----------------------------------------
+   TIPOGRAFIA - UTILITY CLASSES
+   ---------------------------------------- */
+
+/* Serif italic - acento editorial */
+.pn-serif {
+  font-family: var(--pn-font-serif);
+  font-style: italic;
+}
+
+/* Eyebrow - etiqueta uppercase sobre titulos */
+.pn-eyebrow {
+  font-size: var(--pn-text-eyebrow);
+  letter-spacing: var(--pn-tracking-widest);
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle);
+  font-weight: var(--pn-weight-medium);
+}
+
+.pn-eyebrow--red {
+  color: var(--pn-color-primary);
+}
+
+.pn-eyebrow--on-dark {
+  color: var(--pn-color-on-dark-soft);
+}
+
+/* Heading display - el mas grande */
+.pn-display {
+  font-size: var(--pn-text-display-xl);
+  font-weight: var(--pn-weight-regular);
+  letter-spacing: var(--pn-tracking-tight);
+  line-height: var(--pn-leading-tight);
+  color: var(--pn-color-text);
+  margin: 0;
+}
+
+.pn-display-lg {
+  font-size: var(--pn-text-display-lg);
+  font-weight: var(--pn-weight-regular);
+  letter-spacing: var(--pn-tracking-tight);
+  line-height: var(--pn-leading-tight);
+  color: var(--pn-color-text);
+  margin: 0;
+}
+
+/* Heading h1-h4 */
+.pn-h1 {
+  font-size: var(--pn-text-h1);
+  font-weight: var(--pn-weight-regular);
+  letter-spacing: var(--pn-tracking-snug);
+  line-height: var(--pn-leading-snug);
+  color: var(--pn-color-text);
+  margin: 0;
+}
+
+.pn-h2 {
+  font-size: var(--pn-text-h2);
+  font-weight: var(--pn-weight-regular);
+  letter-spacing: var(--pn-tracking-snug);
+  line-height: var(--pn-leading-snug);
+  color: var(--pn-color-text);
+  margin: 0;
+}
+
+.pn-h3 {
+  font-size: var(--pn-text-h3);
+  font-weight: var(--pn-weight-regular);
+  letter-spacing: var(--pn-tracking-snug);
+  line-height: var(--pn-leading-snug);
+  color: var(--pn-color-text);
+  margin: 0;
+}
+
+.pn-h4 {
+  font-size: var(--pn-text-h4);
+  font-weight: var(--pn-weight-regular);
+  line-height: 1.1;
+  color: var(--pn-color-text);
+  margin: 0;
+}
+
+/* Body text */
+.pn-text-lg {
+  font-size: var(--pn-text-lg);
+  line-height: var(--pn-leading-relaxed);
+  color: var(--pn-color-text-soft);
+}
+
+.pn-text {
+  font-size: var(--pn-text-base);
+  line-height: var(--pn-leading-relaxed);
+  color: var(--pn-color-text-soft);
+}
+
+.pn-text-sm {
+  font-size: var(--pn-text-sm);
+  line-height: var(--pn-leading-relaxed);
+  color: var(--pn-color-text-soft);
+}
+
+.pn-text-xs {
+  font-size: var(--pn-text-xs);
+  line-height: 1.6;
+  color: var(--pn-color-text-muted);
+}
+
+/* ----------------------------------------
+   LAYOUT - UTILITY CLASSES
+   ---------------------------------------- */
+
+.pn-section {
+  padding: var(--pn-section-padding-y) var(--pn-section-padding-x);
+}
+
+.pn-section--bg-secondary {
+  background: var(--pn-color-bg-secondary);
+  border-top: var(--pn-border-soft);
+  border-bottom: var(--pn-border-soft);
+}
+
+.pn-section--bg-dark {
+  background: var(--pn-color-bg-dark);
+  color: var(--pn-color-on-dark);
+}
+
+.pn-container {
+  max-width: var(--pn-container-max);
+  margin: 0 auto;
+}
+
+.pn-container--narrow {
+  max-width: var(--pn-container-narrow);
+  margin: 0 auto;
+}
+
+/* Divider editorial - linea con texto eyebrow al medio */
+.pn-divider-editorial {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pn-divider-editorial::before,
+.pn-divider-editorial::after {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 0.5px;
+  background: var(--pn-color-text-subtle);
+}
+
+/* ----------------------------------------
+   IMAGENES
+   ---------------------------------------- */
+
+.pn-img-graded {
+  filter: var(--pn-img-grading);
+}
+
+.pn-img-graded-strong {
+  filter: var(--pn-img-grading-strong);
+}
+
+.pn-img-graded-soft {
+  filter: var(--pn-img-grading-soft);
+}
+
+.pn-img-graded-dark {
+  filter: var(--pn-img-grading-dark);
+}

@@ -226,11 +226,21 @@
   text-decoration: none;
   color: inherit;
   min-height: 380px;
+  scroll-margin-top: 100px;
+  /* Sin padding arriba: evita que el margin negativo del recorte empuje la foto bajo overflow:hidden */
+  padding: 0 22px 26px;
 }
 
 .cl-practice-grid .pn-practice-card__image {
-  height: 200px;
-  margin: -24px -22px 4px;
+  height: 228px;
+  /* Solo bleed horizontal; nunca margin-top negativo (recorta la cabeza) */
+  margin: 0 -22px 14px;
+  /* Reemplaza el grading gris del design system: más luz y tono cálido */
+  filter: brightness(1.09) saturate(1.2) contrast(1.02) sepia(0.08);
+}
+
+.cl-practice-grid .pn-practice-card:hover .pn-practice-card__image {
+  filter: brightness(1.12) saturate(1.22) contrast(1.02) sepia(0.09);
 }
 
 .cl-practice-grid .pn-practice-card:hover .pn-practice-card__image img {
@@ -238,6 +248,9 @@
 }
 
 .cl-practice-grid .pn-practice-card__image img {
+  object-fit: cover;
+  object-position: center top;
+  transform-origin: center top;
   transition: transform 0.45s ease;
 }
 
@@ -274,10 +287,6 @@
 .cl-pcard__head .pn-h4 {
   margin: 0;
   font-weight: 600;
-}
-
-.cl-practice-grid .pn-practice-card {
-  scroll-margin-top: 100px;
 }
 
 .cl-shell .pn-eyebrow {

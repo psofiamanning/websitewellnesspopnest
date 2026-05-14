@@ -76,13 +76,14 @@ function Classes() {
                 style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}
               >
                 {/* Imagen: móvil/narrow arriba; desde sm (640px) columna izquierda (ancho fijo %) */}
-                <div className="relative h-48 sm:h-auto sm:w-[40%] sm:min-w-[150px] md:min-w-[168px] lg:min-w-[184px] shrink-0 bg-neutral-100 sm:self-stretch">
+                <div className="relative h-56 sm:h-auto sm:w-[40%] sm:min-w-[150px] md:min-w-[168px] lg:min-w-[184px] shrink-0 bg-neutral-100 sm:self-stretch">
                   <img
                     src={classType.image}
                     alt=""
                     className="h-full w-full sm:absolute sm:inset-0 object-cover"
                     style={{
-                      objectPosition: classType.id === 'sound-healing' ? 'center top' : 'center center'
+                      objectPosition: 'center top',
+                      filter: 'brightness(1.08) saturate(1.18) contrast(1.02) sepia(0.07)',
                     }}
                   />
                 </div>

@@ -14,7 +14,7 @@ const redesignItems = [
   {
     to: '/classes-redesign',
     title: 'Clases / prácticas (rediseño)',
-    note: 'Mock de la página de disciplinas; no reemplaza /classes. Reservas enlazan al flujo real.',
+    note: 'Hero + chips + tarjetas pn-practice-card (design system). /classes sigue siendo la vista pública.',
   },
   {
     to: '/schedule-redesign',

@@ -9,7 +9,12 @@ const redesignItems = [
   {
     to: '/home-redesign',
     title: 'Inicio (rediseño)',
-    note: 'Mock de la home nueva; no reemplaza la ruta /.',
+    note: 'Alias de la home nueva; misma vista que /.',
+  },
+  {
+    to: '/classes-redesign',
+    title: 'Clases / prácticas (rediseño)',
+    note: 'Mock de la página de disciplinas; no reemplaza /classes. Reservas enlazan al flujo real.',
   },
   {
     to: '/schedule-redesign',

@@ -33,6 +33,7 @@ import HomeRedesign from './pages/HomeRedesign'
 import ScheduleRedesign from './pages/ScheduleRedesign'
 import PackagesRedesign from './pages/PackagesRedesign'
 import MyBookingsRedesign from './pages/MyBookingsRedesign'
+import ClassesRedesign from './pages/ClassesRedesign'
 import Previews from './pages/Previews'
 import './App.css'
 
@@ -71,7 +72,8 @@ function AppContent() {
     pathname === '/mis-reservas-redesign' ||
     pathname === '/previews'
 
-  const hideGlobalNavbar = pathname === '/' || pathname === '/home-redesign'
+  const hideGlobalNavbar =
+    pathname === '/' || pathname === '/home-redesign' || pathname === '/classes-redesign'
 
   return (
     <>
@@ -110,6 +112,7 @@ function AppContent() {
         <Route path="/schedule-redesign" element={<ScheduleRedesign />} />
         <Route path="/packages-redesign" element={<PackagesRedesign />} />
         <Route path="/mis-reservas-redesign" element={<MyBookingsRedesign />} />
+        <Route path="/classes-redesign" element={<ClassesRedesign />} />
         <Route path="/previews" element={<Previews />} />
       </Routes>
       {!isStandalonePreview && <Footer />}

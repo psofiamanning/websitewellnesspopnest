@@ -249,8 +249,9 @@
 
 .cl-practice-grid .pn-practice-card__image img {
   object-fit: cover;
-  object-position: center top;
-  transform-origin: center top;
+  /* Fotos de salón: arriba del archivo suele ser techo; anclar abajo prioriza suelo / personas */
+  object-position: center bottom;
+  transform-origin: center bottom;
   transition: transform 0.45s ease;
 }
 

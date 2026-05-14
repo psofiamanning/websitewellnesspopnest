@@ -82,7 +82,7 @@ function Classes() {
                     alt=""
                     className="h-full w-full sm:absolute sm:inset-0 object-cover"
                     style={{
-                      objectPosition: 'center top',
+                      objectPosition: 'center bottom',
                       filter: 'brightness(1.08) saturate(1.18) contrast(1.02) sepia(0.07)',
                     }}
                   />

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import tokensCss from '../styles/tokens.css?raw'
 import baseCss from '../styles/base.css?raw'
 import componentsCss from '../styles/components.css?raw'
+import logoUrl from '../assets/logo.svg?url'
 import { buildRedesignScheduleSnippets } from '../utils/redesignScheduleFromData'
 
 const cleanBaseCss = baseCss.replace(/@import[^;]+;\n/g, '')
@@ -551,9 +552,8 @@ function buildSchedulePreviewHtml(referenceDate) {
   <body>
     <div class="schedule-shell">
       <nav class="schedule-nav">
-        <div class="pn-nav__logo">
-          <span class="pn-serif pn-nav__logo-e">e</span>
-          <span class="pn-nav__logo-name">studio popnest</span>
+        <div class="pn-nav__logo pn-nav__logo--official">
+          <img src="${logoUrl}" alt="Estudio Popnest Wellness" style="height:42px;width:auto;display:block;max-width:200px;object-fit:contain;" />
         </div>
         <div class="schedule-nav__links">
           <a class="schedule-nav__link" href="#">Practicas</a>
@@ -646,9 +646,8 @@ function buildSchedulePreviewHtml(referenceDate) {
       <footer class="schedule-footer">
         <div class="schedule-footer__grid">
           <div>
-            <div class="pn-nav__logo" style="margin-bottom: 18px;">
-              <span class="pn-serif pn-nav__logo-e">e</span>
-              <span class="pn-nav__logo-name">studio popnest</span>
+            <div class="pn-nav__logo pn-nav__logo--official" style="margin-bottom: 18px;">
+              <img src="${logoUrl}" alt="Estudio Popnest Wellness" style="height:44px;width:auto;display:block;max-width:220px;object-fit:contain;" />
             </div>
             <p class="pn-text-sm">Un espacio pequeno para una practica honesta.</p>
           </div>

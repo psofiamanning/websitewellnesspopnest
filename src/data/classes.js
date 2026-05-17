@@ -1,13 +1,15 @@
 import blancaBearPhoto from '../assets/blanca-bear.png'
 import brendaGranadosPhoto from '../assets/brenda-granados.png'
 import madelineRojasPhoto from '../assets/madeline-rojas.png'
-import soundHealingPhoto from '../assets/sound-healing.png'
-import yogaRestaurativoPhoto from '../assets/yoga-restaurativo.png'
-import taiChiPhoto from '../assets/tai-chi.png'
 import yogaVinyasaPhoto from '../assets/yoga-vinyasa.png'
 import rocioEncisoPhoto from '../assets/rocio-enciso.png'
-import powerYogaPhoto from '../assets/power-yoga.png'
-import pilatesPhoto from '../assets/pilates.png'
+import classIconHatha from '../assets/class-hatha-yoga.png'
+import classIconPilates from '../assets/class-pilates.png'
+import classIconSound from '../assets/class-sound-healing.png'
+import classIconMeditacion from '../assets/class-meditacion.png'
+import classIconVinyasa from '../assets/class-yoga-vinyasa.png'
+import classIconPower from '../assets/class-power-yoga.png'
+import classIconTaiChi from '../assets/class-tai-chi.png'
 
 // Configuración de clases y coaches (`teachers` en código)
 export const teachers = [
@@ -64,7 +66,7 @@ export const classTypes = [
       'Práctica tradicional de Hatha Yoga en Coyoacán para equilibrar cuerpo y mente con posturas, respiración y atención consciente.',
     fullDescription:
       'Hatha Yoga es una práctica clásica que integra posturas sostenidas, respiración consciente y pausas de atención para fortalecer el cuerpo y calmar la mente. El ritmo es claro y accesible, ideal para construir base técnica y presencia.\n\nPuedes esperar una secuencia progresiva con movilidad suave, trabajo de alineación, respiración guiada y cierre de relajación. Es una práctica equilibrada para cultivar estabilidad, flexibilidad y enfoque.',
-    image: yogaRestaurativoPhoto
+    image: classIconHatha,
   },
   {
     id: 'pilates',
@@ -76,7 +78,7 @@ export const classTypes = [
       'Clase de Pilates en Coyoacán enfocada en core, alineación y control del movimiento. Ideal para fortalecer el centro del cuerpo, mejorar postura y ganar estabilidad con guía experta.',
     fullDescription:
       'En esta sesión trabajamos desde los principios del método: respiración, precisión y fluidez. La clase integra ejercicios en colchoneta y opciones progresivas para distintos niveles, con atención a la columna y la pelvis.\n\nPuedes esperar calentamiento articular, series de fortalecimiento del abdomen y espalda, y cierre con estiramientos. Es una práctica clara y contenida, pensada para sentir el cuerpo con más consciencia y sin prisa.',
-    image: pilatesPhoto
+    image: classIconPilates,
   },
   {
     id: 'sound-healing',
@@ -86,7 +88,7 @@ export const classTypes = [
     duration: 60,
     description: 'Experiencia de sanación sonora en Coyoacán que utiliza cuencos tibetanos, gongs y vibraciones terapéuticas para facilitar relajación profunda, reducir ansiedad y promover equilibrio energético.',
     fullDescription: 'El Sound Healing o Sanación Sonora es una terapia vibracional que utiliza instrumentos ancestrales como cuencos tibetanos, gongs, campanas, diapasones y la voz para crear frecuencias curativas que resuenan con el cuerpo y la mente.\n\nDurante la sesión, te recostarás cómodamente mientras te envuelves en un baño de sonidos que penetran profundamente en tus células y tejidos. La experiencia es completamente pasiva, permitiendo que el cuerpo entre en un estado de relajación profunda mientras las vibraciones trabajan a nivel celular.\n\nPuedes esperar una experiencia transformadora donde los sonidos te guían hacia estados de conciencia expandida, liberando tensiones físicas y emocionales almacenadas.\n\nEl Sound Healing reduce significativamente el estrés y la ansiedad, mejora la calidad del sueño, equilibra el sistema nervioso, libera bloqueos emocionales y traumas almacenados, reduce el dolor crónico y la inflamación, mejora la concentración y claridad mental, promueve la producción de ondas cerebrales alfa y theta asociadas con la relajación profunda, fortalece el sistema inmunológico, y facilita estados meditativos profundos, proporcionando una experiencia de sanación holística que integra cuerpo, mente y espíritu.',
-    image: soundHealingPhoto
+    image: classIconSound,
   },
   {
     id: 'meditacion',
@@ -96,7 +98,7 @@ export const classTypes = [
     duration: 60,
     description: 'Práctica de meditación guiada en Coyoacán que integra técnicas contemplativas, trabajo energético y rituales conscientes para desarrollar atención plena y reducir estrés.',
     fullDescription: 'La Meditación es una práctica contemplativa milenaria que entrena la mente para desarrollar atención plena, presencia y conciencia del momento presente. En esta clase guiada, explorarás diversas técnicas meditativas que incluyen meditación de atención plena (mindfulness), visualización, trabajo con la respiración, y prácticas de conexión energética.\n\nLa sesión se desarrolla en un ambiente sagrado y acogedor, donde cada práctica se adapta a tu nivel de experiencia. Puedes esperar una experiencia transformadora donde aprenderás herramientas prácticas para calmar la mente, observar tus pensamientos sin juicio, y desarrollar una relación más consciente contigo mismo y con el mundo.\n\nLa meditación reduce significativamente el estrés, la ansiedad y la depresión, mejora la concentración y la memoria, aumenta la capacidad de autorregulación emocional, fortalece el sistema inmunológico, reduce la presión arterial y mejora la salud cardiovascular, promueve la neuroplasticidad y el crecimiento de materia gris en el cerebro, mejora la calidad del sueño, desarrolla la compasión y empatía, y proporciona una sensación de paz interior y bienestar duradero, transformando tu relación con los desafíos de la vida cotidiana.',
-    image: madelineRojasPhoto
+    image: classIconMeditacion,
   },
   {
     id: 'yoga-vinyasa',
@@ -106,7 +108,7 @@ export const classTypes = [
     duration: 60,
     description: 'Vinyasa consciente en Coyoacán: secuencias que enlazan movimiento y respiración con fuerza, movilidad y momentos de pausa para una práctica equilibrada y segura.',
     fullDescription: 'El Yoga Vinyasa que facilita Hayde enlaza posturas en fluidez, sincronizadas con la respiración. La clase integra fuerza y movilidad con espacios de contención para mantener una práctica equilibrada y segura, accesible a distintos niveles.\n\nPuedes esperar calentamiento, secuencias dinámicas y cierre con relajación. Es una práctica ideal para quien busca energía y claridad corporal sin renunciar al cuidado y la escucha.',
-    image: yogaVinyasaPhoto
+    image: classIconVinyasa,
   },
   {
     id: 'power-yoga-1',
@@ -116,7 +118,7 @@ export const classTypes = [
     duration: 60,
     description: 'Clase dinámica en Coyoacán que combina fuerza, resistencia y alineación en secuencias exigentes y claras, ideal para quien busca profundizar en posturas y energía atlética con guía experta.',
     fullDescription: 'Power Yoga es una práctica vigorosa en la que el calor y el ritmo sostienen secuencias fluidas entre posturas de pie, equilibrios y trabajo de fuerza. Rocío integra su experiencia en yoga deportivo y preparación física para ofrecer una clase desafiante y ordenada, con atención al detalle y opciones para distintos niveles.\n\nPuedes esperar calentamiento activo, series que desarrollan resistencia y estabilidad, y un cierre que devuelve el cuerpo a la calma. Es una propuesta para quien disfruta del movimiento intenso sin perder la consciencia respiratoria y la integridad articular.',
-    image: powerYogaPhoto
+    image: classIconPower,
   },
   {
     id: 'tai-chi',
@@ -126,8 +128,8 @@ export const classTypes = [
     duration: 60,
     description: 'Arte marcial suave y meditativo que integra movimientos fluidos, técnicas de respiración consciente y principios de meditación. Practica Tai Chi en Coyoacán para mejorar equilibrio y bienestar integral.',
     fullDescription: 'El Tai Chi es un arte marcial interno chino que combina movimientos lentos, fluidos y circulares con respiración profunda y meditación en movimiento. Esta práctica milenaria se realiza de pie, ejecutando secuencias de movimientos que fluyen como una danza suave y continua.\n\nDurante la clase, aprenderás formas tradicionales que conectan cuerpo, mente y espíritu en un movimiento armonioso. Puedes esperar una práctica accesible para todos los niveles, donde cada movimiento se enseña paso a paso, permitiendo que desarrolles coordinación, equilibrio y conciencia corporal.\n\nEl Tai Chi mejora significativamente el equilibrio y reduce el riesgo de caídas, aumenta la flexibilidad y rango de movimiento, fortalece las piernas y el core, reduce el estrés y la ansiedad, mejora la concentración y claridad mental, fortalece el sistema cardiovascular de manera suave, alivia dolores articulares y musculares, promueve la circulación sanguínea y linfática, y desarrolla la coordinación y agilidad, ofreciendo beneficios tanto físicos como mentales para personas de todas las edades.',
-    image: taiChiPhoto
-  }
+    image: classIconTaiChi,
+  },
 ]
 
 // Horarios disponibles por clase

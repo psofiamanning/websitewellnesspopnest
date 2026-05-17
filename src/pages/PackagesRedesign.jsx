@@ -1,6 +1,7 @@
 import tokensCss from '../styles/tokens.css?raw'
 import baseCss from '../styles/base.css?raw'
 import componentsCss from '../styles/components.css?raw'
+import logoUrl from '../assets/logo.svg?url'
 
 const cleanBaseCss = baseCss.replace(/@import[^;]+;\n/g, '')
 
@@ -224,9 +225,8 @@ const previewHtml = `<!doctype html>
   <body>
     <div class="pkg-shell">
       <nav class="pkg-nav">
-        <div class="pn-nav__logo">
-          <span class="pn-serif pn-nav__logo-e">e</span>
-          <span class="pn-nav__logo-name">studio popnest</span>
+        <div class="pn-nav__logo pn-nav__logo--official">
+          <img src="${logoUrl}" alt="Estudio Popnest Wellness" style="height:42px;width:auto;display:block;max-width:200px;object-fit:contain;" />
         </div>
         <div class="pkg-nav__links">
           <a class="pkg-nav__link" href="#">Practicas</a>
@@ -379,9 +379,8 @@ const previewHtml = `<!doctype html>
       <footer class="pkg-footer">
         <div class="pkg-footer__grid">
           <div>
-            <div class="pn-nav__logo" style="margin-bottom: 14px;">
-              <span class="pn-serif pn-nav__logo-e">e</span>
-              <span class="pn-nav__logo-name">studio popnest</span>
+            <div class="pn-nav__logo pn-nav__logo--official" style="margin-bottom: 14px;">
+              <img src="${logoUrl}" alt="Estudio Popnest Wellness" style="height:44px;width:auto;display:block;max-width:220px;object-fit:contain;" />
             </div>
             <p class="pn-text-sm">Paquetes y membresias para practicar con calma en Coyoacan.</p>
           </div>

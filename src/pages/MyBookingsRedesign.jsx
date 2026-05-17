@@ -1,6 +1,7 @@
 import tokensCss from '../styles/tokens.css?raw'
 import baseCss from '../styles/base.css?raw'
 import componentsCss from '../styles/components.css?raw'
+import logoUrl from '../assets/logo.svg?url'
 
 const cleanBaseCss = baseCss.replace(/@import[^;]+;\n/g, '')
 
@@ -253,9 +254,8 @@ const previewHtml = `<!doctype html>
   <body>
     <div class="mb-shell">
       <nav class="mb-nav">
-        <div class="pn-nav__logo">
-          <span class="pn-serif pn-nav__logo-e">e</span>
-          <span class="pn-nav__logo-name">studio popnest</span>
+        <div class="pn-nav__logo pn-nav__logo--official">
+          <img src="${logoUrl}" alt="Estudio Popnest Wellness" style="height:42px;width:auto;display:block;max-width:200px;object-fit:contain;" />
         </div>
         <div class="mb-nav__center">
           <span class="mb-nav__link">Practicas</span>

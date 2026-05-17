@@ -29,6 +29,13 @@
   --pn-color-bg-warm: #d8c5af;          /* Fondo sand - heroes editoriales */
   --pn-color-bg-dark: #2d2e35;          /* Fondo oscuro - CTAs grandes, manifesto */
 
+  /* Superficies editoriales (/classes, /horario) */
+  --pn-color-page-editorial: #f0e8d5;
+  --pn-color-card-editorial: #f7f0dc;
+  --pn-color-well-tan: #cbc0a0;
+  /** Ficha de hueco dentro de tarjeta de día (mock horario) */
+  --pn-color-bg-slot-editorial: #fbf6e6;
+
   /* Borders & lines */
   --pn-color-border: #c9bda6;           /* Border principal de cards */
   --pn-color-border-soft: #d9cdb8;      /* Separadores internos */
@@ -51,6 +58,9 @@
   --pn-color-on-dark: #f4ede2;
   --pn-color-on-dark-soft: #d8c5af;
   --pn-color-on-dark-muted: #e6dcc6;
+
+  /* Navbar fijo (todas las vistas públicas con menú global) */
+  --pn-site-nav-height: 88px;
 
   /* ----------------------------------------
      TIPOGRAFIA

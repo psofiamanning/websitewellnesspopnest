@@ -8,7 +8,7 @@ import { trackMetaLead } from '../utils/metaPixel'
 import StripeCardElement from '../components/StripeCardElement'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'
+import { BACKEND_URL } from '../config/api.js'
 
 const packages = PACKAGE_OFFERS
 
@@ -167,7 +167,7 @@ function PackagePurchase() {
       } catch (paymentError) {
         console.error('Error al crear Payment Intent:', paymentError)
         if (paymentError.message.includes('fetch') || paymentError.message.includes('Failed to fetch')) {
-          alert('⚠️ No se pudo conectar con el servidor de pagos. Por favor verifica que el backend esté corriendo en http://localhost:3002')
+          alert('⚠️ No se pudo conectar con el servidor de pagos. Intenta de nuevo en unos minutos.')
         } else {
           alert(`⚠️ Error al crear el intento de pago: ${paymentError.message}`)
         }
@@ -249,7 +249,7 @@ function PackagePurchase() {
       // Guardar en el backend
       try {
         const token = localStorage.getItem('auth_token')
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'}/api/packages/purchase`, {
+        const response = await fetch(`${BACKEND_URL}/api/packages/purchase`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

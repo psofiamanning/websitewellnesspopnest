@@ -30,7 +30,7 @@
 @layer base {
   html {
     overflow-x: visible;
-    scroll-padding-top: env(safe-area-inset-top, 0);
+    scroll-padding-top: calc(var(--pn-site-nav-height, 88px) + env(safe-area-inset-top, 0px));
   }
 
   body {

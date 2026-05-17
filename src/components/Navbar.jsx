@@ -1,299 +1,198 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Logo from './Logo'
 import { isAuthenticated, getCurrentUser, logout } from '../services/authService'
+import '../styles/navShell.css'
+
+const MENU_ITEMS = [
+  { id: 'inicio', label: 'Inicio', path: '/', hash: 'inicio' },
+  { id: 'clases', label: 'Clases', path: '/classes', hash: 'clases' },
+  { id: 'horario', label: 'Horario', path: '/horario', hash: 'horario' },
+  { id: 'planes', label: 'Planes', path: '/packages', hash: 'planes' },
+]
 
 function Navbar() {
-  const navigate = useNavigate()
   const location = useLocation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
 
+  const isHome = location.pathname === '/'
+
   useEffect(() => {
     setAuthenticated(isAuthenticated())
     setCurrentUser(getCurrentUser())
-  }, [location.pathname])
+    setIsMenuOpen(false)
+  }, [location.pathname, location.hash])
 
   const handleLogout = () => {
     logout()
     setAuthenticated(false)
     setCurrentUser(null)
-  }
-
-  const isActive = (path) => {
-    if (path === '/') {
-      return location.pathname === '/'
-    }
-    if (path === '/coaches') {
-      return location.pathname === '/coaches'
-    }
-    return location.pathname.startsWith(path)
-  }
-
-  const menuItems = [
-    { path: '/', label: 'Inicio' },
-    { path: '/classes', label: 'Clases' },
-    { path: '/coaches', label: 'Coaches' },
-    { path: '/horario', label: 'Horario' },
-    { path: '/packages', label: 'Paquetes' },
-  ]
-
-  const handleNavigate = (path) => {
-    navigate(path)
     setIsMenuOpen(false)
   }
 
-  return (
-    <nav
-      className="navbar fixed left-0 right-0 z-50 bg-white/98 backdrop-blur-lg shadow-sm border-b overflow-visible"
-      style={{
-        borderColor: '#E5B3B0',
-        top: 0,
-        paddingTop: 'env(safe-area-inset-top, 0)',
-      }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1">
-        <div className="flex items-center justify-between min-h-[88px] py-3 overflow-visible">
-          {/* Logo: contenedor con espacio suficiente para que no se corte */}
-          <div 
-            className="flex items-center justify-center cursor-pointer group overflow-visible"
-            onClick={() => handleNavigate('/')}
-            style={{ flexShrink: 0, minHeight: 56, padding: '6px 0' }}
-          >
-            <Logo 
-              height="44px"
-              width="auto"
-              variant="primary"
-              className="transition-all duration-300 group-hover:scale-105"
-              style={{
-                height: '44px',
-                width: 'auto',
-                maxWidth: '200px',
-                objectFit: 'contain',
-                objectPosition: 'center',
-                display: 'block',
-                verticalAlign: 'middle'
-              }}
-            />
-          </div>
+  const itemHref = (item) => {
+    if (isHome) {
+      return item.hash === 'inicio' ? '/#inicio' : `/#${item.hash}`
+    }
+    return item.path
+  }
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-6">
-            {menuItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => handleNavigate(item.path)}
-                className={`relative px-4 py-2 font-body transition-all duration-300 ${
-                  isActive(item.path)
-                    ? 'text-primary font-semibold'
-                    : 'text-body hover:text-secondary'
-                }`}
-              >
-                {item.label}
-                {isActive(item.path) && (
-                  <span 
-                    className="absolute bottom-0 left-0 right-0 h-0.5 transition-all duration-300"
-                    style={{ 
-                      backgroundColor: '#B73D37',
-                      boxShadow: '0 2px 4px rgba(183, 61, 55, 0.3)'
-                    }}
-                  ></span>
-                )}
-              </button>
-            ))}
-            <button
-              onClick={() => handleNavigate('/classes')}
-              className="px-6 py-2.5 rounded-lg font-body font-semibold transition-all duration-300 transform hover:scale-105 relative overflow-hidden"
-              style={{ 
-                backgroundColor: '#B73D37', 
-                color: '#FFFFFF',
-                boxShadow: '0 4px 12px rgba(183, 61, 55, 0.25)',
-                border: '1px solid rgba(183, 61, 55, 0.2)'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#C76661'
-                e.target.style.boxShadow = '0 6px 16px rgba(183, 61, 55, 0.35)'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#B73D37'
-                e.target.style.boxShadow = '0 4px 12px rgba(183, 61, 55, 0.25)'
-              }}
-            >
-              Reservar Clase
-            </button>
-            {authenticated ? (
-              <>
-                <button
-                  onClick={() => handleNavigate('/mis-reservas')}
-                  className={`px-4 py-2 font-body transition-all duration-300 ${
-                    isActive('/mis-reservas')
-                      ? 'text-primary font-semibold'
-                      : 'text-body hover:text-secondary'
-                  }`}
-                >
-                  Mis reservas
-                </button>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg border" style={{ borderColor: '#E5B3B0', backgroundColor: '#fef7f7' }}>
-                  <span
-                    className="flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-full font-body font-semibold text-white text-sm"
-                    style={{ backgroundColor: '#B73D37' }}
-                    aria-hidden
-                  >
-                    {currentUser?.firstName && currentUser?.lastName
-                      ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.lastName[0] || '').toUpperCase()}`
-                      : currentUser?.firstName
-                        ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.firstName[1] || '').toUpperCase()}`
-                        : '?'}
-                  </span>
-                  <span className="text-sm font-body font-medium" style={{ color: '#1F2937' }}>
-                    Bienvenido, {currentUser?.firstName || 'Usuario'}
-                  </span>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 font-body transition-all duration-300 text-body hover:text-secondary"
-                >
-                  Salir
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => handleNavigate('/login')}
-                  className={`px-4 py-2 font-body transition-all duration-300 ${
-                    isActive('/login')
-                      ? 'text-primary font-semibold'
-                      : 'text-body hover:text-secondary'
-                  }`}
-                >
-                  Iniciar Sesión
-                </button>
-                <button
-                  onClick={() => handleNavigate('/signup')}
-                  className="px-4 py-2 font-body transition-all duration-300 text-body hover:text-secondary"
-                >
-                  Registrarse
-                </button>
-              </>
-            )}
-          </div>
+  const isItemActive = (item) => {
+    if (isHome) {
+      const hash = (location.hash || '#inicio').replace('#', '')
+      return hash === item.hash
+    }
+    if (item.path === '/') {
+      return location.pathname === '/'
+    }
+    return location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+  }
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-neutral transition-colors"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
+  const userInitials =
+    currentUser?.firstName && currentUser?.lastName
+      ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.lastName[0] || '').toUpperCase()}`
+      : currentUser?.firstName
+        ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.firstName[1] || '').toUpperCase()}`
+        : '?'
+
+  const renderAccountLinks = (mobile = false) => {
+    const linkClass = mobile ? 'site-nav__link site-nav__link--muted' : 'site-nav__link site-nav__link--muted'
+
+    if (authenticated) {
+      return (
+        <>
+          <Link
+            to="/mis-reservas"
+            className={`${linkClass}${location.pathname.startsWith('/mis-reservas') ? ' site-nav__link--active' : ''}`}
+            onClick={() => setIsMenuOpen(false)}
           >
-            <svg className="w-6 h-6 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {isMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
+            Mis reservas
+          </Link>
+          {!mobile ? (
+            <span className="site-nav__user" title={currentUser?.email || ''}>
+              <span className="site-nav__user-initials" aria-hidden>
+                {userInitials}
+              </span>
+              <span className="site-nav__user-name">{currentUser?.firstName || 'Usuario'}</span>
+            </span>
+          ) : null}
+          <button type="button" className={linkClass} onClick={handleLogout}>
+            Salir
           </button>
-        </div>
+        </>
+      )
+    }
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden pb-4 border-t mt-4" style={{ borderColor: '#E5B3B0' }}>
-            <div className="flex flex-col gap-2 pt-4">
-              {menuItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => handleNavigate(item.path)}
-                  className={`px-4 py-3 rounded-lg text-left font-body transition-all duration-300 ${
-                    isActive(item.path)
-                      ? 'text-primary font-semibold'
-                      : 'text-body hover:bg-quaternary'
-                  }`}
-                  style={isActive(item.path) ? { 
-                    backgroundColor: '#E5B3B0',
-                    borderLeft: '3px solid #B73D37'
-                  } : {}}
+    return (
+      <>
+        <Link
+          to={`/login${location.search}`}
+          className={`${linkClass}${location.pathname === '/login' ? ' site-nav__link--active' : ''}`}
+          onClick={() => setIsMenuOpen(false)}
+        >
+          Iniciar sesión
+        </Link>
+        <Link
+          to={`/signup${location.search}`}
+          className={linkClass}
+          onClick={() => setIsMenuOpen(false)}
+        >
+          Crear cuenta
+        </Link>
+      </>
+    )
+  }
+
+  return (
+    <nav className={`site-nav${isMenuOpen ? ' site-nav--open' : ''}`} aria-label="Principal">
+      <div className="site-nav__inner">
+        <Link to="/" className="site-nav__logo" onClick={() => setIsMenuOpen(false)}>
+          <Logo height="44px" variant="primary" style={{ maxWidth: '200px' }} />
+        </Link>
+
+        <div className="site-nav__desktop">
+          <div className="site-nav__links">
+            {MENU_ITEMS.map((item) => {
+              const href = itemHref(item)
+              const active = isItemActive(item)
+              if (isHome) {
+                return (
+                  <a
+                    key={item.id}
+                    href={href}
+                    className={`site-nav__link${active ? ' site-nav__link--active' : ''}`}
+                  >
+                    {item.label}
+                  </a>
+                )
+              }
+              return (
+                <Link
+                  key={item.id}
+                  to={href}
+                  className={`site-nav__link${active ? ' site-nav__link--active' : ''}`}
                 >
                   {item.label}
-                </button>
-              ))}
-              <button
-                onClick={() => handleNavigate('/classes')}
-                className="mt-2 px-6 py-3 rounded-lg font-body font-semibold text-center transition-all duration-300"
-                style={{ 
-                  backgroundColor: '#B73D37', 
-                  color: '#FFFFFF',
-                  boxShadow: '0 4px 12px rgba(183, 61, 55, 0.25)'
-                }}
-              >
-                Reservar Clase
-              </button>
-              {authenticated ? (
-                <>
-                  <button
-                    onClick={() => handleNavigate('/mis-reservas')}
-                    className={`px-4 py-3 rounded-lg text-left font-body transition-all duration-300 ${
-                      isActive('/mis-reservas')
-                        ? 'text-primary font-semibold'
-                        : 'text-body hover:bg-quaternary'
-                    }`}
-                    style={isActive('/mis-reservas') ? {
-                      backgroundColor: '#E5B3B0',
-                      borderLeft: '3px solid #B73D37'
-                    } : {}}
-                  >
-                    Mis reservas
-                  </button>
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-lg" style={{ backgroundColor: '#fef7f7', borderLeft: '3px solid #B73D37' }}>
-                    <span
-                      className="flex items-center justify-center flex-shrink-0 w-9 h-9 rounded-full font-body font-semibold text-white text-sm"
-                      style={{ backgroundColor: '#B73D37' }}
-                      aria-hidden
-                    >
-                      {currentUser?.firstName && currentUser?.lastName
-                        ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.lastName[0] || '').toUpperCase()}`
-                        : currentUser?.firstName
-                          ? `${(currentUser.firstName[0] || '').toUpperCase()}${(currentUser.firstName[1] || '').toUpperCase()}`
-                          : '?'}
-                    </span>
-                    <div>
-                      <p className="text-xs font-body" style={{ color: '#6B7280' }}>Sesión iniciada</p>
-                      <p className="font-body font-medium" style={{ color: '#1F2937' }}>Bienvenido, {currentUser?.firstName || 'Usuario'}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="px-4 py-3 rounded-lg text-left font-body transition-all duration-300 text-body hover:bg-quaternary"
-                  >
-                    Salir
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleNavigate('/login')}
-                    className={`px-4 py-3 rounded-lg text-left font-body transition-all duration-300 ${
-                      isActive('/login')
-                        ? 'text-primary font-semibold'
-                        : 'text-body hover:bg-quaternary'
-                    }`}
-                    style={isActive('/login') ? { 
-                      backgroundColor: '#E5B3B0',
-                      borderLeft: '3px solid #B73D37'
-                    } : {}}
-                  >
-                    Iniciar Sesión
-                  </button>
-                  <button
-                    onClick={() => handleNavigate('/signup')}
-                    className="px-4 py-3 rounded-lg text-left font-body transition-all duration-300 text-body hover:bg-quaternary"
-                  >
-                    Registrarse
-                  </button>
-                </>
-              )}
-            </div>
+                </Link>
+              )
+            })}
           </div>
-        )}
+
+          <Link to="/classes" className="site-nav__cta">
+            Reservar clase
+          </Link>
+
+          <div className="site-nav__account">{renderAccountLinks(false)}</div>
+        </div>
+
+        <button
+          type="button"
+          className="site-nav__toggle"
+          aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={isMenuOpen}
+          onClick={() => setIsMenuOpen((open) => !open)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </div>
+
+      <div className="site-nav__mobile">
+        <div className="site-nav__mobile-links">
+          {MENU_ITEMS.map((item) => {
+            const href = itemHref(item)
+            const active = isItemActive(item)
+            if (isHome) {
+              return (
+                <a
+                  key={item.id}
+                  href={href}
+                  className={`site-nav__link${active ? ' site-nav__link--active' : ''}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </a>
+              )
+            }
+            return (
+              <Link
+                key={item.id}
+                to={href}
+                className={`site-nav__link${active ? ' site-nav__link--active' : ''}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            )
+          })}
+        </div>
+        <Link to="/classes" className="site-nav__cta" onClick={() => setIsMenuOpen(false)}>
+          Reservar clase
+        </Link>
+        <div className="site-nav__mobile-account">{renderAccountLinks(true)}</div>
       </div>
     </nav>
   )

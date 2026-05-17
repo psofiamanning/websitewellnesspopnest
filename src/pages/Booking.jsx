@@ -5,12 +5,22 @@ import Calendar from '../components/Calendar'
 import TimeSlotSelector from '../components/TimeSlotSelector'
 import { format, addDays, startOfWeek, eachDayOfInterval, isSameDay } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { saveBooking, createPaymentIntent, confirmBooking, confirmPayment, checkAvailability, getUserPackages } from '../services/bookingService'
+import {
+  saveBooking,
+  createPaymentIntent,
+  confirmBooking,
+  confirmPayment,
+  checkAvailability,
+  getUserPackages,
+  validateDiscountCode,
+} from '../services/bookingService'
 import { getCurrentUser, isAuthenticated } from '../services/authService'
 import { trackMetaLead } from '../utils/metaPixel'
 import StripeCardElement from '../components/StripeCardElement'
 import { SINGLE_CLASS_AMOUNT_CENTS, SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
 import { formatCoachSpecialtyLabel } from '../utils/coachLabels'
+import BookingClassEditorialView from '../components/booking/BookingClassEditorialView'
+import '../styles/bookingShell.css'
 
 const SINGLE_CLASS_PRICE_LABEL = `$${SINGLE_CLASS_PRICE_MXN.toFixed(2)} MXN`
 
@@ -94,6 +104,11 @@ function Booking() {
   const [formValidationMessage, setFormValidationMessage] = useState('')
   const [selectDateError, setSelectDateError] = useState('')
   const [selectTimeError, setSelectTimeError] = useState('')
+  const [discountCodeInput, setDiscountCodeInput] = useState('')
+  const [appliedDiscount, setAppliedDiscount] = useState(null)
+  const [discountError, setDiscountError] = useState('')
+  const [discountMessage, setDiscountMessage] = useState('')
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false)
   const timeSlotsSectionRef = useRef(null)
 
   // Obtener información según el tipo (coach o clase)
@@ -194,7 +209,59 @@ function Booking() {
   // Limpiar mensaje de validación cuando el usuario corrige datos de pago o contacto
   useEffect(() => {
     setFormValidationMessage('')
-  }, [customerInfo.firstName, customerInfo.lastName, customerInfo.email, customerInfo.phone, cardholderName, usePackage, selectedPackageId, stripeCardData?.isComplete])
+  }, [
+    customerInfo.firstName,
+    customerInfo.lastName,
+    customerInfo.email,
+    customerInfo.phone,
+    cardholderName,
+    usePackage,
+    selectedPackageId,
+    stripeCardData?.isComplete,
+    appliedDiscount,
+  ])
+
+  useEffect(() => {
+    if (!appliedDiscount) return
+    setAppliedDiscount(null)
+    setDiscountMessage('')
+    setDiscountError('Tu correo cambió. Vuelve a aplicar el código de descuento.')
+  }, [customerInfo.email])
+
+  const handleApplyDiscountCode = async () => {
+    setDiscountError('')
+    setDiscountMessage('')
+    if (!customerInfo.email?.trim()) {
+      setDiscountError('Ingresa tu correo electrónico antes de aplicar un código.')
+      return
+    }
+    if (!discountCodeInput.trim()) {
+      setDiscountError('Escribe un código de descuento.')
+      return
+    }
+    setIsValidatingDiscount(true)
+    try {
+      const result = await validateDiscountCode(customerInfo.email, discountCodeInput)
+      setAppliedDiscount({ code: result.code, label: result.label })
+      setDiscountMessage('Tu clase queda gratis con este código.')
+      setUsePackage(false)
+      setSelectedPackageId(null)
+      setCardholderName('')
+      setStripeCardData(null)
+    } catch (err) {
+      setAppliedDiscount(null)
+      setDiscountError(err.message || 'No se pudo aplicar el código.')
+    } finally {
+      setIsValidatingDiscount(false)
+    }
+  }
+
+  const handleRemoveDiscountCode = () => {
+    setAppliedDiscount(null)
+    setDiscountCodeInput('')
+    setDiscountMessage('')
+    setDiscountError('')
+  }
 
   const handleClassSelect = (classId) => {
     setSelectedClassId(classId)
@@ -249,12 +316,19 @@ function Booking() {
   }
 
   // Formulario listo para enviar (todos los campos obligatorios completos)
-  const isFormValid = selectedTime &&
+  const paymentReady = appliedDiscount
+    ? true
+    : usePackage
+      ? !!selectedPackageId
+      : !!stripeCardData?.isComplete && !!cardholderName?.trim()
+
+  const isFormValid =
+    selectedTime &&
     customerInfo.firstName?.trim() &&
     customerInfo.lastName?.trim() &&
     customerInfo.email?.trim() &&
     customerInfo.phone?.trim() &&
-    (usePackage ? !!selectedPackageId : (!!stripeCardData?.isComplete && !!cardholderName?.trim()))
+    paymentReady
 
   const handleBooking = async () => {
     setFormValidationMessage('')
@@ -280,8 +354,14 @@ function Booking() {
       return
     }
 
-    // Si está usando paquete, no requiere tarjeta
-    if (!usePackage) {
+  const usingDiscount = !!appliedDiscount?.code
+
+    if (usingDiscount) {
+      if (!customerInfo.email?.trim()) {
+        setFormValidationMessage('Ingresa tu correo para usar el código de descuento.')
+        return
+      }
+    } else if (!usePackage) {
       if (!stripeCardData || !stripeCardData.isComplete || !cardholderName) {
         const missing = []
         if (!cardholderName) missing.push('Nombre del titular de la tarjeta')
@@ -298,7 +378,7 @@ function Booking() {
         setFormValidationMessage(`Error en la tarjeta: ${stripeCardData.error.message}`)
         return
       }
-    } else {
+    } else if (usePackage) {
       if (!selectedPackageId) {
         setFormValidationMessage('Por favor selecciona un paquete para usar.')
         return
@@ -342,7 +422,7 @@ function Booking() {
       let stripeError = null
       let paymentIntent = null
       
-      if (!usePackage) {
+      if (!usePackage && !usingDiscount) {
         // Precio de la clase (puedes obtenerlo de bookingInfo si lo tienes)
         const amount = SINGLE_CLASS_AMOUNT_CENTS
         
@@ -358,7 +438,7 @@ function Booking() {
           console.error('Error al crear Payment Intent:', paymentError)
           // Verificar si es un error de conexión
           if (paymentError.message.includes('fetch') || paymentError.message.includes('Failed to fetch')) {
-            alert('⚠️ No se pudo conectar con el servidor de pagos. Por favor verifica que el backend esté corriendo en http://localhost:3002')
+            alert('⚠️ No se pudo conectar con el servidor de pagos. Intenta de nuevo en unos minutos.')
           } else {
             alert(`⚠️ Error al crear el intento de pago: ${paymentError.message}`)
           }
@@ -557,21 +637,31 @@ function Booking() {
           phone: customerInfo.phone,
           fullName: `${customerInfo.firstName} ${customerInfo.lastName}`
         },
-        paymentMethod: usePackage ? 'package' : 'card',
-        packageId: usePackage ? selectedPackageId : null,
-        payment: usePackage ? {
-          method: 'Paquete de Clases',
-          amount: 0,
-          currency: 'MXN',
-          status: 'succeeded'
-        } : {
-          method: 'Tarjeta de Crédito/Débito',
-          amount: SINGLE_CLASS_AMOUNT_CENTS,
-          currency: 'MXN',
-          cardLastFour: stripeCardData?.paymentMethod?.card?.last4 || '****',
-          status: paymentStatus
-        },
-        stripeInfo: usePackage ? null : {
+        paymentMethod: usingDiscount ? 'discount_code' : usePackage ? 'package' : 'card',
+        discountCode: usingDiscount ? appliedDiscount.code : null,
+        packageId: usePackage && !usingDiscount ? selectedPackageId : null,
+        payment: usingDiscount
+          ? {
+              method: 'Código de descuento',
+              amount: 0,
+              currency: 'MXN',
+              status: 'succeeded',
+            }
+          : usePackage
+            ? {
+                method: 'Paquete de Clases',
+                amount: 0,
+                currency: 'MXN',
+                status: 'succeeded',
+              }
+            : {
+                method: 'Tarjeta de Crédito/Débito',
+                amount: SINGLE_CLASS_AMOUNT_CENTS,
+                currency: 'MXN',
+                cardLastFour: stripeCardData?.paymentMethod?.card?.last4 || '****',
+                status: paymentStatus,
+              },
+        stripeInfo: usePackage || usingDiscount ? null : {
           paymentIntentId: paymentIntent?.paymentIntentId,
           clientSecret: paymentIntent?.clientSecret,
           amount: SINGLE_CLASS_AMOUNT_CENTS,
@@ -604,7 +694,9 @@ function Booking() {
           saveError.message.includes('reservaciones') || 
           saveError.message.includes('disponible') ||
           saveError.message.includes('clases disponibles') ||
-          saveError.message.includes('paquete')
+          saveError.message.includes('paquete') ||
+          saveError.message.includes('descuento') ||
+          saveError.message.includes('código')
         )) {
           setIsProcessing(false)
           alert(saveError.message)
@@ -616,7 +708,11 @@ function Booking() {
       trackMetaLead({ content_name: 'reserva_clase', value: bookingData.payment?.amount ? bookingData.payment.amount / 100 : 0, currency: 'MXN' })
 
       const panelMessage = '\n\nPuedes ver tus reservaciones en tu panel de usuario (Mis reservas).'
-      if (usePackage) {
+      if (usingDiscount) {
+        alert(
+          `✅ ¡Reserva confirmada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nClase gratis con código ${appliedDiscount.code}.${panelMessage}`
+        )
+      } else if (usePackage) {
         alert(`✅ ¡Reserva confirmada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}\n\nSe usó una clase de tu paquete.${panelMessage}`)
       } else if (stripeError) {
         const errorMessage = stripeError.message || 'Error desconocido'
@@ -641,7 +737,7 @@ function Booking() {
       let errorMessage = 'Hubo un error al procesar el pago. Por favor intenta de nuevo.'
       
       if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
-        errorMessage = '⚠️ No se pudo conectar con el servidor. Por favor verifica que el backend esté corriendo en http://localhost:3002'
+        errorMessage = '⚠️ No se pudo conectar con el servidor. Intenta de nuevo en unos minutos.'
       } else if (error.message) {
         errorMessage = `Error: ${error.message}`
       }
@@ -661,10 +757,10 @@ function Booking() {
             No se encontró el coach solicitado
           </h2>
           <button
-            onClick={() => navigate('/coaches')}
+            onClick={() => navigate('/classes')}
             className="text-primary hover:text-secondary font-body"
           >
-            Volver a los coaches
+            Volver a las clases
           </button>
         </div>
       </div>
@@ -688,6 +784,52 @@ function Booking() {
       </div>
     )
   }
+  if (type === 'class' && classInfo) {
+    const classTeacher = teachers.find((t) => t.id === classInfo.teacherId) || null
+    return (
+      <BookingClassEditorialView
+        classInfo={classInfo}
+        teacher={classTeacher}
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+        availableDates={availableDates}
+        availableTimes={availableTimes}
+        customerInfo={customerInfo}
+        onCustomerChange={handleCustomerInfoChange}
+        userPackages={userPackages}
+        usePackage={usePackage}
+        setUsePackage={setUsePackage}
+        selectedPackageId={selectedPackageId}
+        setSelectedPackageId={setSelectedPackageId}
+        cardholderName={cardholderName}
+        setCardholderName={setCardholderName}
+        setStripeCardData={setStripeCardData}
+        isAuthenticated={isAuthenticated()}
+        isFormValid={isFormValid}
+        isProcessing={isProcessing}
+        formValidationMessage={formValidationMessage}
+        selectDateError={selectDateError}
+        selectTimeError={selectTimeError}
+        onDateSelect={handleDateSelect}
+        onTimeSelect={handleTimeSelect}
+        onBooking={handleBooking}
+        onClearDate={() => {
+          setSelectedDate(null)
+          setSelectedTime(null)
+        }}
+        onClearTime={() => setSelectedTime(null)}
+        discountCodeInput={discountCodeInput}
+        setDiscountCodeInput={setDiscountCodeInput}
+        appliedDiscount={appliedDiscount}
+        discountError={discountError}
+        discountMessage={discountMessage}
+        isValidatingDiscount={isValidatingDiscount}
+        onApplyDiscountCode={handleApplyDiscountCode}
+        onRemoveDiscountCode={handleRemoveDiscountCode}
+      />
+    )
+  }
+
 
   return (
     <div className="wellness-background">
@@ -713,7 +855,7 @@ function Booking() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-5">
           <button
             type="button"
-            onClick={() => navigate(isCoachBooking ? '/coaches' : '/classes')}
+            onClick={() => navigate('/classes')}
             className="mb-3 text-sm font-body font-medium text-[#B73D37] underline decoration-[#B73D37]/40 underline-offset-4 transition-colors hover:text-[#C76661] hover:decoration-[#C76661] lg:mb-4"
           >
             Volver
@@ -774,7 +916,7 @@ function Booking() {
                   <div className="order-2 flex flex-col justify-start gap-6 px-6 py-8 sm:px-8 sm:py-10 lg:order-1 lg:col-span-5 lg:gap-6 lg:px-9 lg:py-10 xl:px-10 xl:py-11">
                     <button
                       type="button"
-                      onClick={() => navigate('/coaches')}
+                      onClick={() => navigate('/classes')}
                       className="self-start text-sm font-body font-medium text-[#B73D37] underline decoration-[#B73D37]/40 underline-offset-4 transition-colors hover:text-[#C76661] hover:decoration-[#C76661]"
                     >
                       Volver
@@ -942,24 +1084,18 @@ function Booking() {
                               return (
                                 <div className="relative">
                                   <div 
-                                    className="w-full rounded-lg overflow-hidden shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl"
+                                    className="w-full rounded-lg overflow-hidden shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl flex items-center justify-center"
                                     style={{ 
                                       maxHeight: '500px',
-                                      aspectRatio: '16/10'
+                                      aspectRatio: '16/10',
+                                      backgroundColor: 'var(--pn-color-well-tan)',
                                     }}
                                     onClick={images.length > 1 ? nextImage : undefined}
                                   >
                                     <img
                                       src={images[currentImageIndex]}
                                       alt={`${bookingInfo.name} - Imagen ${currentImageIndex + 1}`}
-                                      className="w-full h-full object-cover"
-                                      style={{ 
-                                        objectPosition: bookingInfo.id === 'sound-healing' 
-                                          ? 'center top' 
-                                          : bookingInfo.id === 'meditacion' 
-                                            ? 'center center' 
-                                            : 'center center'
-                                      }}
+                                      className="max-h-[88%] max-w-[76%] w-auto h-auto object-contain"
                                     />
                                   </div>
                                   {images.length > 1 && (
@@ -1115,24 +1251,18 @@ function Booking() {
                               return (
                                 <div className="relative">
                                   <div 
-                                    className="w-full rounded-lg overflow-hidden shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl"
+                                    className="w-full rounded-lg overflow-hidden shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl flex items-center justify-center"
                                     style={{ 
                                       maxHeight: '500px',
-                                      aspectRatio: '16/10'
+                                      aspectRatio: '16/10',
+                                      backgroundColor: 'var(--pn-color-well-tan)',
                                     }}
                                     onClick={images.length > 1 ? nextImage : undefined}
                                   >
                                     <img
                                       src={images[currentImageIndex]}
                                       alt={`${selectedClassInfo.name} - Imagen ${currentImageIndex + 1}`}
-                                      className="w-full h-full object-cover"
-                                      style={{ 
-                                        objectPosition: selectedClassInfo.id === 'sound-healing' 
-                                          ? 'center top' 
-                                          : selectedClassInfo.id === 'meditacion' 
-                                            ? 'center center' 
-                                            : 'center center'
-                                      }}
+                                      className="max-h-[88%] max-w-[76%] w-auto h-auto object-contain"
                                     />
                                   </div>
                                   {images.length > 1 && (
@@ -1473,6 +1603,61 @@ function Booking() {
                          borderColor: '#D48D88',
                          boxShadow: '0 2px 8px rgba(212, 141, 136, 0.08)'
                        }}>
+                    {/* Código de descuento */}
+                    <div className="mb-6">
+                      <label className="block text-body font-body font-medium mb-2">
+                        Código de descuento
+                      </label>
+                      {appliedDiscount ? (
+                        <div
+                          className="rounded-lg p-4 border-2 flex flex-wrap items-center justify-between gap-3"
+                          style={{ borderColor: '#B73D37', backgroundColor: '#FEE2E2' }}
+                        >
+                          <p className="text-sm font-body text-body m-0">
+                            <strong>{appliedDiscount.code}</strong> aplicado — clase gratis
+                          </p>
+                          <button
+                            type="button"
+                            className="text-sm font-body underline"
+                            style={{ color: '#B73D37' }}
+                            onClick={handleRemoveDiscountCode}
+                          >
+                            Quitar
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            value={discountCodeInput}
+                            onChange={(e) => setDiscountCodeInput(e.target.value.toUpperCase())}
+                            placeholder="Ej. BIENVENIDA"
+                            className="flex-1 px-4 py-3 rounded-lg border-2 font-body uppercase"
+                            style={{ borderColor: '#DED5D5' }}
+                          />
+                          <button
+                            type="button"
+                            disabled={isValidatingDiscount}
+                            onClick={handleApplyDiscountCode}
+                            className="px-4 py-3 rounded-lg font-body font-medium border-2"
+                            style={{ borderColor: '#B73D37', color: '#B73D37' }}
+                          >
+                            {isValidatingDiscount ? 'Verificando…' : 'Aplicar'}
+                          </button>
+                        </div>
+                      )}
+                      {discountMessage ? (
+                        <p className="text-sm font-body mt-2" style={{ color: '#B73D37' }}>
+                          {discountMessage}
+                        </p>
+                      ) : null}
+                      {discountError ? (
+                        <p className="text-sm font-body mt-2" style={{ color: '#B73D37' }} role="alert">
+                          {discountError}
+                        </p>
+                      ) : null}
+                    </div>
+
                     {/* Método de pago */}
                     <div className="mb-6">
                       <label className="block text-body font-body font-medium mb-2">
@@ -1480,7 +1665,7 @@ function Booking() {
                       </label>
                       
                       {/* Opción de usar paquete si tiene paquetes activos */}
-                      {userPackages && userPackages.hasActivePackages && (
+                      {!appliedDiscount && userPackages && userPackages.hasActivePackages && (
                         <div className="mb-4 space-y-3">
                           {userPackages.packages.map((pkg) => (
                             <div
@@ -1492,6 +1677,7 @@ function Booking() {
                                 boxShadow: usePackage && selectedPackageId === pkg.id ? '0 2px 8px rgba(183, 61, 55, 0.2)' : 'none'
                               }}
                               onClick={() => {
+                                handleRemoveDiscountCode()
                                 setUsePackage(true)
                                 setSelectedPackageId(pkg.id)
                                 setStripeCardData(null)
@@ -1560,7 +1746,7 @@ function Booking() {
                     </div>
                     
                     {/* Formulario de tarjeta solo si NO está usando paquete */}
-                    {!usePackage && (
+                    {!appliedDiscount && !usePackage && (
                       <>
                         <StripeCardElement
                           onCardReady={setStripeCardData}
@@ -1581,7 +1767,14 @@ function Booking() {
                     )}
                     
                     {/* Mensaje si está usando paquete */}
-                    {usePackage && selectedPackageId && (
+                    {appliedDiscount && (
+                      <div className="mt-4 p-4 rounded-lg bg-green-50 border border-green-200">
+                        <p className="text-sm font-body text-green-800">
+                          ✓ Clase gratis con código {appliedDiscount.code}. No se realizará ningún cargo.
+                        </p>
+                      </div>
+                    )}
+                    {usePackage && selectedPackageId && !appliedDiscount && (
                       <div className="mt-4 p-4 rounded-lg bg-green-50 border border-green-200">
                         <p className="text-sm font-body text-green-800">
                           ✓ Usarás una clase de tu paquete. No se realizará ningún cargo.
@@ -1633,11 +1826,13 @@ function Booking() {
                       }
                     }}
                   >
-                    {isProcessing 
-                      ? 'Procesando...' 
-                      : usePackage 
-                        ? 'Reservar con Paquete' 
-                        : `Pagar ${SINGLE_CLASS_PRICE_LABEL}`}
+                    {isProcessing
+                      ? 'Procesando...'
+                      : appliedDiscount
+                        ? 'Reservar gratis'
+                        : usePackage
+                          ? 'Reservar con Paquete'
+                          : `Pagar ${SINGLE_CLASS_PRICE_LABEL}`}
                   </button>
                   <p className="text-xs text-body font-body text-center mt-2 opacity-75">
                     {isFormValid ? 'Al hacer clic, procesaremos tu pago de forma segura' : 'Completa todos los campos obligatorios para continuar'}
@@ -1648,7 +1843,9 @@ function Booking() {
               {/* Resumen */}
               {selectedDate && selectedTime && 
                customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone &&
-               ((usePackage && selectedPackageId) || (stripeCardData && stripeCardData.isComplete && cardholderName)) && (
+               (appliedDiscount ||
+                (usePackage && selectedPackageId) ||
+                (stripeCardData && stripeCardData.isComplete && cardholderName)) && (
                 <div className="pt-6 border-t"
                      style={{ borderColor: '#E5B3B0' }}>
                   <div className="rounded-lg p-6 border-2"

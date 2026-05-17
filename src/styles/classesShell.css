@@ -6,6 +6,37 @@
   min-height: 100vh;
 }
 
+.cl-page.cl-page--with-site-nav {
+  background: var(--pn-color-page-editorial);
+}
+
+/* Navbar global /classes */
+.cl-page--with-site-nav {
+  padding-top: calc(var(--pn-site-nav-height) + env(safe-area-inset-top, 0px));
+}
+
+.cl-page--with-site-nav .cl-practice-row a.pn-practice-card {
+  scroll-margin-top: 120px;
+}
+
+@media (max-width: 900px) {
+  .cl-page--with-site-nav {
+    padding-top: 92px;
+  }
+
+  .cl-page--with-site-nav .cl-practice-row a.pn-practice-card {
+    scroll-margin-top: 104px;
+  }
+
+  .cl-shell--practices-page .cl-hero--centered {
+    padding: 40px 20px 24px;
+  }
+
+  .cl-shell--practices-page .cl-body--practices-mosaic {
+    padding: 28px 20px 48px;
+  }
+}
+
 .cl-shell {
   --pn-text-h1: 56px;
   --pn-text-h2: 40px;
@@ -347,5 +378,270 @@
 
   .cl-body {
     padding: 40px 24px 64px;
+  }
+}
+
+/* --- /classes (pública) — alinea con mock clases-pagina-completa.html --- */
+.cl-shell--practices-page {
+  background: var(--pn-color-page-editorial);
+  border-left: none;
+  border-right: none;
+}
+
+.cl-shell--practices-page .cl-hero--centered {
+  display: block;
+  text-align: center;
+  padding: 64px 24px 36px;
+  border-bottom: none;
+  background: var(--pn-color-page-editorial);
+}
+
+.cl-shell--practices-page .cl-hero__center {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.cl-shell--practices-page .cl-hero__eyebrow {
+  margin: 0 0 18px;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6b6555;
+  font-family: var(--pn-font-sans);
+}
+
+.cl-shell--practices-page .cl-hero__eyebrow-dot {
+  color: var(--pn-color-primary);
+  margin: 0 10px;
+}
+
+.cl-shell--practices-page .cl-hero__title-mosaic {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', var(--pn-font-serif), serif;
+  font-size: clamp(40px, 6vw, 64px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: #1f2433;
+}
+
+.cl-shell--practices-page .cl-hero__title-mosaic-line {
+  color: #1f2433;
+}
+
+.cl-shell--practices-page .cl-hero__title-mosaic-accent {
+  color: var(--pn-color-primary);
+  font-style: italic;
+  font-weight: inherit;
+}
+
+.cl-shell--practices-page .cl-hero__rule {
+  width: 72px;
+  height: 2px;
+  margin: 28px auto 0;
+  background: var(--pn-color-primary);
+  border-radius: 2px;
+}
+
+.cl-shell--practices-page .cl-body--practices-mosaic {
+  padding: 48px 56px 80px;
+  background: var(--pn-color-page-editorial);
+  border-bottom: none;
+}
+
+.cl-practice-site {
+  max-width: none;
+  margin: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+.cl-practice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  align-items: stretch;
+}
+
+.cl-practice-row .pn-practice-card--mosaic {
+  flex: 0 0 calc(25% - 16.5px);
+  width: calc(25% - 16.5px);
+  max-width: calc(25% - 16.5px);
+  min-width: 0;
+}
+
+.cl-practice-row--last {
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 22px;
+  margin-top: 22px;
+}
+
+.cl-practice-row--last .pn-practice-card--mosaic {
+  flex: 0 0 calc(25% - 16.5px);
+  width: calc(25% - 16.5px);
+  max-width: calc(25% - 16.5px);
+}
+
+.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic {
+  padding: 0;
+  gap: 0;
+  min-height: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--pn-color-card-editorial);
+  border: none;
+  border-top: 3px solid var(--pn-color-primary);
+  box-shadow: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic:hover {
+  transform: translateY(-3px);
+  background: var(--pn-color-card-editorial);
+  box-shadow: 0 8px 24px rgba(182, 67, 47, 0.12);
+  color: inherit;
+}
+
+.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic:focus-visible {
+  outline: 2px solid var(--pn-color-primary);
+  outline-offset: 3px;
+}
+
+.cl-shell--practices-page .cl-pcard__mosaic-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 24px 26px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cl-shell--practices-page .cl-pcard__mosaic-body .cl-pcard__head {
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+
+.cl-shell--practices-page .cl-pcard__title-mosaic {
+  font-family: var(--pn-font-sans);
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: #1f2433;
+  margin: 0;
+}
+
+.cl-shell--practices-page .cl-pcard__meta--mosaic {
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  color: #7a7464;
+  margin: 0 0 14px;
+}
+
+.cl-shell--practices-page .cl-pcard__desc--mosaic {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4a4a45;
+  margin: 0 0 18px;
+}
+
+.cl-shell--practices-page .cl-pcard__mosaic-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(182, 67, 47, 0.18);
+}
+
+.cl-shell--practices-page .cl-pcard__price-mosaic {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--pn-color-primary);
+}
+
+.cl-shell--practices-page .cl-pcard__link-mosaic {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--pn-color-primary);
+  flex-shrink: 0;
+}
+
+.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic:hover .cl-pcard__link-mosaic {
+  color: var(--pn-color-primary-hover);
+}
+
+.cl-shell--practices-page .pn-practice-card__image--mosaic.pn-practice-card__image--class-icon {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+  flex-shrink: 0;
+  /* Mismo tono que el rectángulo interno del PNG — sin marco externo */
+  background: var(--pn-color-card-editorial);
+  overflow: hidden;
+  padding: 0;
+  box-sizing: border-box;
+  filter: none;
+}
+
+.cl-shell--practices-page .pn-practice-card__image--mosaic.pn-practice-card__image--class-icon img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+@media (min-width: 901px) {
+  .cl-shell--practices-page .cl-hero--centered {
+    padding: 64px 24px 36px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .cl-shell--practices-page .cl-body--practices-mosaic {
+    padding: 36px 32px 56px;
+  }
+
+  .cl-practice-row .pn-practice-card--mosaic,
+  .cl-practice-row--last .pn-practice-card--mosaic {
+    flex: 0 0 calc(50% - 11px);
+    width: calc(50% - 11px);
+    max-width: calc(50% - 11px);
+  }
+
+  .cl-practice-row--last {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 639px) {
+  .cl-practice-row .pn-practice-card--mosaic,
+  .cl-practice-row--last .pn-practice-card--mosaic {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .cl-shell--practices-page .cl-body--practices-mosaic {
+    padding: 28px 20px 48px;
   }
 }

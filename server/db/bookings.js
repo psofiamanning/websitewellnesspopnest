@@ -6,6 +6,8 @@
 import { getSupabaseAdmin } from './supabaseClient.js'
 import { adaptBookingRow } from './bookingAdapter.js'
 import { upsertProfileFromCustomer } from './users.js'
+import { assertDiscountEligible, recordDiscountRedemption } from './discountCodes.js'
+import { normalizeDiscountCode } from '../config/discountCodes.js'
 
 const BOOKING_RELATIONS = `
   *,
@@ -157,13 +159,20 @@ function mapDbPaymentMethod(pm) {
   const p = (pm || '').toLowerCase()
   if (p === 'package') return 'package'
   if (p === 'manual') return 'manual'
+  if (p === 'discount_code' || p === 'discount') return 'discount_code'
   return 'card'
 }
 
 function shouldDecrementSpotOnInsert(flat) {
   const st = flat.status || 'pending'
   if (st !== 'confirmed') return false
-  if (flat.paymentMethod === 'package' || flat.paymentMethod === 'manual') return true
+  if (
+    flat.paymentMethod === 'package' ||
+    flat.paymentMethod === 'manual' ||
+    flat.paymentMethod === 'discount_code'
+  ) {
+    return true
+  }
   return flat.payment?.status === 'succeeded'
 }
 
@@ -263,6 +272,66 @@ export async function saveBooking(flat) {
   const status = flat.status || 'pending'
 
   const PAQUETE_20_NOMBRE = 'Paquete de 20 Clases'
+
+  if (paymentMethod === 'discount_code') {
+    const code = normalizeDiscountCode(flat.discountCode)
+    const email = customer.email || ''
+    const discount = await assertDiscountEligible(email, code)
+
+    const { data: booking, error: bErr } = await supabase
+      .from('bookings_new')
+      .insert({
+        customer_id: profile.id,
+        schedule_id: schedule.id,
+        customer_package_id: null,
+        type,
+        status: status === 'pending' ? 'confirmed' : status,
+        payment_method: 'discount_code',
+      })
+      .select(BOOKING_RELATIONS)
+      .single()
+    if (bErr) throw bErr
+
+    const { error: pErr } = await supabase.from('payments_new').insert({
+      booking_id: booking.id,
+      customer_id: profile.id,
+      customer_package_id: null,
+      amount: 0,
+      currency: 'MXN',
+      method: 'discount_code',
+      status: 'succeeded',
+      stripe_payment_intent_id: null,
+      card_last_four: null,
+    })
+    if (pErr) throw pErr
+
+    try {
+      await recordDiscountRedemption({
+        email,
+        code: discount.code,
+        profileId: profile.id,
+        bookingId: booking.id,
+      })
+    } catch (redeemErr) {
+      await supabase.from('bookings_new').delete().eq('id', booking.id)
+      throw redeemErr
+    }
+
+    const decDisc = shouldDecrementSpotOnInsert({
+      ...flat,
+      status: booking.status,
+      paymentMethod: 'discount_code',
+    })
+    if (decDisc) await decrementScheduleSpot(schedule.id, avail)
+
+    const { data: full, error: fErr } = await supabase
+      .from('bookings_new')
+      .select(BOOKING_RELATIONS)
+      .eq('id', booking.id)
+      .single()
+    if (fErr || !full) return adaptBookingRow(booking)
+    return adaptBookingRow(full)
+  }
 
   if (paymentMethod === 'package') {
     const packageId = flat.packageId != null ? Number(flat.packageId) : NaN

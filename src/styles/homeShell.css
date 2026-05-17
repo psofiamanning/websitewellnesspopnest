@@ -85,10 +85,13 @@
   text-underline-offset: 3px;
 }
 
+#inicio,
+#clases,
+#horario,
+#planes,
 #sobre-nosotros,
-#horarios,
 #preguntas-frecuentes {
-  scroll-margin-top: 100px;
+  scroll-margin-top: calc(var(--pn-site-nav-height) + 12px);
 }
 
 a.home-practice-card {
@@ -224,6 +227,146 @@ a.home-practice-card {
   font-size: 15px;
 }
 
+.home-section__lead {
+  max-width: 640px;
+  margin: -12px 0 28px;
+}
+
+.home-section__cta {
+  margin-top: 32px;
+}
+
+.home-class-spotlights {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+a.home-class-spotlight {
+  text-decoration: none;
+  color: inherit;
+  background: var(--pn-color-bg-elevated);
+  border: var(--pn-border-thin);
+  border-top: 3px solid var(--pn-color-primary);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+a.home-class-spotlight:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(182, 67, 47, 0.1);
+}
+
+.home-class-spotlight__img {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  background: var(--pn-color-card-editorial);
+  overflow: hidden;
+}
+
+.home-class-spotlight__img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.home-class-spotlight__body {
+  padding: 18px 20px 20px;
+}
+
+.home-class-spotlight__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.home-class-spotlight__head .pn-h4 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.home-packages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 920px;
+}
+
+a.home-package-card {
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  padding: 32px 28px 26px;
+  background: var(--pn-color-bg-elevated);
+  border: var(--pn-border-thin);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+a.home-package-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--pn-color-primary);
+  box-shadow: 0 8px 24px rgba(182, 67, 47, 0.1);
+}
+
+.home-package-card--popular {
+  border-color: var(--pn-color-primary);
+  box-shadow: 0 4px 16px rgba(182, 67, 47, 0.08);
+}
+
+.home-package-card__badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 8px 12px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--pn-color-primary);
+  color: #fff;
+}
+
+.home-package-card__price {
+  margin: 0;
+  font-size: 15px;
+  color: var(--pn-color-text-soft);
+}
+
+.home-package-card__price strong {
+  font-family: var(--pn-font-serif);
+  font-size: 36px;
+  font-weight: 400;
+  color: var(--pn-color-primary);
+  letter-spacing: -0.02em;
+}
+
+.home-package-card__save {
+  margin: 0;
+  font-size: 12px;
+  color: var(--pn-color-text-muted);
+  text-decoration: line-through;
+}
+
+.home-package-card__desc {
+  margin: 4px 0 0;
+  flex: 1;
+}
+
+.home-package-card__arrow {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--pn-color-primary);
+  font-weight: 500;
+}
+
 /* --- Sobre el estudio (mock: filosofía, espacio, ubicación) --- */
 .home-about-phil,
 .home-about-space {
@@ -294,7 +437,9 @@ a.home-practice-card {
 
 .home-space-slider-wrap {
   position: relative;
-  margin-top: 40px;
+  width: 100%;
+  max-width: min(680px, 72%);
+  margin: 40px auto 0;
   padding-right: 58px;
 }
 
@@ -815,6 +960,8 @@ a.home-about-locate__visual {
   }
 
   .home-practices,
+  .home-class-spotlights,
+  .home-packages,
   .home-classes,
   .home-about-phil__stats,
   .home-about-space__pillars,

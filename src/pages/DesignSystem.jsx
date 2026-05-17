@@ -1,6 +1,7 @@
 import tokensCss from '../styles/tokens.css?raw'
 import baseCss from '../styles/base.css?raw'
 import componentsCss from '../styles/components.css?raw'
+import logoUrl from '../assets/logo.svg?url'
 
 const previewHtml = `<!doctype html>
 <html lang="en">
@@ -84,9 +85,8 @@ const previewHtml = `<!doctype html>
     <main class="preview-shell">
       <section class="preview-hero">
         <div class="pn-container">
-          <div class="pn-nav__logo" style="margin-bottom: 42px;">
-            <span class="pn-serif pn-nav__logo-e" style="font-size: 40px;">e</span>
-            <span class="pn-nav__logo-name" style="font-size: 13px;">studio popnest</span>
+          <div class="pn-nav__logo pn-nav__logo--official" style="margin-bottom: 42px;">
+            <img src="${logoUrl}" alt="Estudio Popnest Wellness" style="height:52px;width:auto;display:block;max-width:260px;object-fit:contain;" />
           </div>
           <div class="pn-eyebrow pn-divider-editorial" style="margin-bottom: 20px;">Design system preview</div>
           <h1 class="pn-display-lg">

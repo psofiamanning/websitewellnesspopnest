@@ -102,19 +102,19 @@ export function getBreadcrumbItems(pathname) {
       items.push({ name: 'Panel coach', url: pathname })
       return items
     }
-    items.push({ name: 'Coaches', url: '/coaches' })
+    items.push({ name: 'Clases', url: '/classes' })
     return items
   }
 
   if (segments[0] === 'teachers') {
-    items.push({ name: 'Coaches', url: '/coaches' })
+    items.push({ name: 'Clases', url: '/classes' })
     if (segments.length > 1) items.push({ name: 'Reservar', url: pathname })
     return items
   }
 
   if (segments[0] === 'booking') {
     if (segments[1] === 'coach' || segments[1] === 'teacher') {
-      items.push({ name: 'Coaches', url: '/coaches' })
+      items.push({ name: 'Clases', url: '/classes' })
     } else {
       items.push({ name: 'Clases', url: '/classes' })
     }
@@ -129,12 +129,12 @@ export function getBreadcrumbItems(pathname) {
 
   const labels = {
     horario: 'Horario',
-    packages: 'Paquetes',
+    packages: 'Planes',
     ubicacion: 'Ubicación',
     privacidad: 'Política de privacidad',
     terminos: 'Términos y condiciones',
     login: 'Iniciar sesión',
-    signup: 'Registro',
+    signup: 'Crear cuenta',
     'mis-reservas': 'Mis reservas'
   }
   const label = labels[segments[0]] || segments[0]
@@ -146,7 +146,7 @@ export function getBreadcrumbItems(pathname) {
 export function getSeoForPath(pathname) {
   const exact = ROUTE_SEO[pathname]
   if (exact) return exact
-  if (pathname === '/teachers') return ROUTE_SEO['/coaches']
+  if (pathname === '/teachers' || pathname === '/coaches') return ROUTE_SEO['/classes']
   if (pathname.startsWith('/booking/class/')) {
     return {
       title: 'Reservar clase | Yoga en Coyoacán | Estudio Popnest Wellness',

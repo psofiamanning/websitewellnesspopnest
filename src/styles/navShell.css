@@ -1,0 +1,228 @@
+/* Menú global unificado — editorial Popnest (crema + links caps + CTA terracota) */
+
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--pn-color-bg-base);
+  border-bottom: var(--pn-border-soft);
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.site-nav__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 40px);
+  min-height: var(--pn-site-nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.site-nav__logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  line-height: 0;
+}
+
+.site-nav__logo img {
+  height: 44px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+  display: block;
+}
+
+.site-nav__desktop {
+  display: none;
+  align-items: center;
+  gap: clamp(16px, 2.5vw, 32px);
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.site-nav__links {
+  display: flex;
+  align-items: center;
+  gap: clamp(18px, 2.5vw, 32px);
+}
+
+.site-nav__link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: var(--pn-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--pn-color-text);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.site-nav__link:hover,
+.site-nav__link--active {
+  color: var(--pn-color-primary);
+}
+
+.site-nav__cta {
+  flex-shrink: 0;
+  border: none;
+  padding: 12px 20px;
+  background: var(--pn-color-primary);
+  color: var(--pn-color-on-dark);
+  font-family: var(--pn-font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.site-nav__cta:hover {
+  background: var(--pn-color-primary-hover);
+}
+
+.site-nav__account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.site-nav__link--muted {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--pn-color-text-muted);
+}
+
+.site-nav__link--muted:hover {
+  color: var(--pn-color-primary);
+}
+
+.site-nav__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border: var(--pn-border-thin);
+  background: var(--pn-color-bg-elevated);
+  font-size: 12px;
+  color: var(--pn-color-text);
+  max-width: 180px;
+}
+
+.site-nav__user-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--pn-color-primary);
+  color: var(--pn-color-on-dark);
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.site-nav__user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-nav__toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: var(--pn-border-thin);
+  background: var(--pn-color-bg-elevated);
+  cursor: pointer;
+}
+
+.site-nav__toggle span {
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  margin: 0 auto;
+  background: var(--pn-color-text);
+}
+
+.site-nav__mobile {
+  display: none;
+  border-top: var(--pn-border-soft);
+  background: var(--pn-color-bg-elevated);
+  padding: 16px clamp(16px, 3vw, 40px) 24px;
+}
+
+.site-nav--open .site-nav__mobile {
+  display: block;
+}
+
+.site-nav__mobile-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.site-nav__mobile .site-nav__link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--pn-color-border-soft);
+}
+
+.site-nav__mobile .site-nav__cta {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.site-nav__mobile-account {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: var(--pn-border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+@media (min-width: 1024px) {
+  .site-nav__desktop {
+    display: flex;
+  }
+
+  .site-nav__toggle {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .site-nav__account {
+    display: none;
+  }
+}
+
+/* Compensación bajo navbar fijo */
+.pn-page-with-site-nav,
+.wellness-background {
+  padding-top: calc(var(--pn-site-nav-height) + env(safe-area-inset-top, 0px));
+}

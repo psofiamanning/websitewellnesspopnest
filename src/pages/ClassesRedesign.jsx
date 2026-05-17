@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { classTypes } from '../data/classes'
 import { SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
 import { dotClassForClassId } from '../utils/redesignScheduleFromData'
+import Logo from '../components/Logo'
 import '../styles/tokens.css'
 import '../styles/base.css'
 import '../styles/components.css'
@@ -27,9 +28,8 @@ function ClassesRedesign() {
     <div className="cl-page">
       <div className="cl-shell">
         <nav className={`cl-nav${navOpen ? ' cl-nav--open' : ''}`}>
-          <Link to="/" className="pn-nav__logo" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <span className="pn-serif pn-nav__logo-e">e</span>
-            <span className="pn-nav__logo-name">studio popnest</span>
+          <Link to="/" className="pn-nav__logo pn-nav__logo--official" style={{ textDecoration: 'none' }}>
+            <Logo height="42px" variant="primary" style={{ maxWidth: '200px' }} />
           </Link>
           <div className="cl-nav__links">
             <Link to="/classes" className="cl-nav__link" onClick={() => setNavOpen(false)}>
@@ -37,9 +37,6 @@ function ClassesRedesign() {
             </Link>
             <Link to="/horario" className="cl-nav__link" onClick={() => setNavOpen(false)}>
               Horario
-            </Link>
-            <Link to="/coaches" className="cl-nav__link" onClick={() => setNavOpen(false)}>
-              Maestras
             </Link>
             <Link to="/classes" className="pn-btn pn-btn--primary pn-btn--sm" onClick={() => setNavOpen(false)}>
               Reservar
@@ -108,7 +105,7 @@ function ClassesRedesign() {
                   to={`/booking/class/${c.id}`}
                   className="pn-practice-card"
                 >
-                  <div className="pn-practice-card__image">
+                  <div className="pn-practice-card__image pn-practice-card__image--class-icon">
                     <img src={c.image} alt="" loading="lazy" decoding="async" />
                   </div>
                   <div className="cl-pcard__head">

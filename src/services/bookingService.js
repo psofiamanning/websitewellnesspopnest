@@ -4,12 +4,30 @@
 const STORAGE_KEY = 'estudio_popnest_bookings'
 
 // Backend URL
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'
+import { BACKEND_URL } from '../config/api.js'
+
+// Validar código de descuento (un uso por correo y por código)
+export const validateDiscountCode = async (email, code) => {
+  const response = await fetch(`${BACKEND_URL}/api/discount-codes/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, code }),
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok || !data.valid) {
+    throw new Error(data.error || 'Código de descuento no válido.')
+  }
+  return data
+}
 
 // Guardar reserva (ahora usa el backend)
 export const saveBooking = async (bookingData) => {
-  // Si es reserva con paquete o el pago fue exitoso, guardar directamente
-  if (bookingData.paymentMethod === 'package' || (bookingData.payment?.status === 'succeeded' && bookingData.stripeInfo?.paymentIntentId)) {
+  // Paquete, código de descuento o pago con tarjeta confirmado
+  if (
+    bookingData.paymentMethod === 'package' ||
+    bookingData.paymentMethod === 'discount_code' ||
+    (bookingData.payment?.status === 'succeeded' && bookingData.stripeInfo?.paymentIntentId)
+  ) {
     // Intentar guardar en el backend primero
     try {
       const response = await fetch(`${BACKEND_URL}/api/bookings`, {
@@ -34,7 +52,9 @@ export const saveBooking = async (bookingData) => {
         error.message.includes('reservaciones') || 
         error.message.includes('disponible') ||
         error.message.includes('clases disponibles') ||
-        error.message.includes('paquete')
+        error.message.includes('paquete') ||
+        error.message.includes('descuento') ||
+        error.message.includes('código')
       )) {
         throw error
       }

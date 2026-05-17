@@ -9,7 +9,6 @@ import CookieConsent from './components/CookieConsent'
 import PageSEO from './components/PageSEO'
 import Home from './pages/Home'
 import Classes from './pages/Classes'
-import Teachers from './pages/Teachers'
 import Schedule from './pages/Schedule'
 import Booking from './pages/Booking'
 import Admin from './pages/Admin'
@@ -73,7 +72,10 @@ function AppContent() {
     pathname === '/previews'
 
   const hideGlobalNavbar =
-    pathname === '/' || pathname === '/home-redesign' || pathname === '/classes-redesign'
+    pathname === '/home-redesign' ||
+    pathname === '/classes-redesign' ||
+    pathname === '/login' ||
+    pathname === '/signup'
 
   return (
     <>
@@ -87,8 +89,8 @@ function AppContent() {
         <Route path="/classes" element={<Classes />} />
         <Route path="/coaches/login" element={<TeacherLogin />} />
         <Route path="/coaches/panel" element={<TeacherDashboard />} />
-        <Route path="/coaches" element={<Teachers />} />
-        <Route path="/teachers" element={<Navigate to="/coaches" replace />} />
+        <Route path="/coaches" element={<Navigate to="/classes" replace />} />
+        <Route path="/teachers" element={<Navigate to="/classes" replace />} />
         <Route path="/horario" element={<Schedule />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/booking/package/:id" element={<PackagePurchase />} />
@@ -102,7 +104,7 @@ function AppContent() {
         <Route path="/admin/reset-password" element={<AdminResetPassword />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/profesores/login" element={<Navigate to="/coaches/login" replace />} />
-        <Route path="/profesores" element={<Navigate to="/coaches" replace />} />
+        <Route path="/profesores" element={<Navigate to="/classes" replace />} />
         <Route path="/ubicacion" element={<Ubicacion />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />

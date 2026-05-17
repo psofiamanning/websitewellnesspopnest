@@ -35,6 +35,7 @@ import {
   resolveProfileIdForPackagePurchase,
 } from './db/packages.js'
 import { getSupabaseAnon } from './db/supabaseClient.js'
+import { validateDiscountCodeForCustomer } from './db/discountCodes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -391,8 +392,12 @@ app.post('/api/confirm-booking', async (req, res) => {
   try {
     const { paymentIntentId, bookingData } = req.body
 
-    // Si es reserva con paquete, no requiere paymentIntentId
-    if (!paymentIntentId && bookingData.paymentMethod !== 'package') {
+    // Si es reserva con paquete o código de descuento, no requiere paymentIntentId
+    if (
+      !paymentIntentId &&
+      bookingData.paymentMethod !== 'package' &&
+      bookingData.paymentMethod !== 'discount_code'
+    ) {
       return res.status(400).json({ error: 'Payment Intent ID is required' })
     }
 
@@ -403,8 +408,15 @@ app.post('/api/confirm-booking', async (req, res) => {
       }
     }
 
-    // Si es reserva con paquete, manejar directamente (cupos y paquete en saveBooking)
-    if (bookingData.paymentMethod === 'package' && bookingData.packageId && bookingData.customer?.email) {
+    // Paquete o código de descuento: sin Stripe (saveBooking valida cupo y canje)
+    if (
+      (bookingData.paymentMethod === 'package' &&
+        bookingData.packageId &&
+        bookingData.customer?.email) ||
+      (bookingData.paymentMethod === 'discount_code' &&
+        bookingData.discountCode &&
+        bookingData.customer?.email)
+    ) {
       const booking = {
         ...bookingData,
         createdAt: new Date().toISOString(),
@@ -491,6 +503,21 @@ app.post('/api/confirm-booking', async (req, res) => {
   }
 })
 
+// Validar código de descuento (un uso por correo y por código)
+app.post('/api/discount-codes/validate', async (req, res) => {
+  try {
+    const { email, code } = req.body || {}
+    const result = await validateDiscountCodeForCustomer(email, code)
+    if (!result.valid) {
+      return res.status(400).json(result)
+    }
+    res.json(result)
+  } catch (error) {
+    console.error('Error validating discount code:', error)
+    res.status(500).json({ valid: false, error: error.message })
+  }
+})
+
 // Endpoint: Guardar reserva directamente (sin confirmar PaymentIntent)
 app.post('/api/bookings', async (req, res) => {
   try {
@@ -510,7 +537,9 @@ app.post('/api/bookings', async (req, res) => {
       ...bookingData,
       createdAt: new Date().toISOString(),
       status:
-        bookingData.payment?.status === 'succeeded' || bookingData.paymentMethod === 'package'
+        bookingData.payment?.status === 'succeeded' ||
+        bookingData.paymentMethod === 'package' ||
+        bookingData.paymentMethod === 'discount_code'
           ? 'confirmed'
           : 'pending',
     }

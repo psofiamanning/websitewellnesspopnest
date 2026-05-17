@@ -1,7 +1,7 @@
 // Servicio de autenticación (token JWT de Supabase Auth vía backend o sesión en cliente)
 import { supabase } from '../lib/supabaseClient.js'
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'
+import { BACKEND_URL } from '../config/api.js'
 
 /** Tras iniciar sesión con paquete activo: sessionStorage para mostrar aviso de clases. */
 export const POST_LOGIN_CLASSES_SESSION_KEY = 'epw_post_login_classes_remaining'

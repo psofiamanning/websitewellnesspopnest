@@ -1,37 +1,34 @@
 /**
- * Logo - el lockup oficial del studio: "e" en serif italic + "STUDIO POPNEST".
+ * Logo oficial (marca) — asset `src/assets/logo.svg`.
  *
- * Tamanos:
- *   - sm: para footer mobile
- *   - base: navegacion standard
- *   - lg: hero / landing
+ * Tamanos: sm · base · lg (altura del glifo)
  */
 
 import React from 'react'
+import logoSrc from '../../assets/logo.svg'
 
-const sizes = {
-  sm: { e: '24px', name: '10px' },
-  base: { e: '30px', name: '11px' },
-  lg: { e: '40px', name: '13px' },
+const heights = {
+  sm: '30px',
+  base: '40px',
+  lg: '52px',
 }
 
 export const Logo = ({ size = 'base', className = '' }) => {
-  const s = sizes[size]
+  const height = heights[size] || heights.base
 
   return (
-    <div className={`pn-nav__logo ${className}`}>
-      <span
-        className="pn-serif pn-nav__logo-e"
-        style={{ fontSize: s.e }}
-      >
-        e
-      </span>
-      <span
-        className="pn-nav__logo-name"
-        style={{ fontSize: s.name }}
-      >
-        studio popnest
-      </span>
+    <div className={`pn-nav__logo pn-nav__logo--official ${className}`}>
+      <img
+        src={logoSrc}
+        alt="Estudio Popnest Wellness"
+        style={{
+          height,
+          width: 'auto',
+          maxWidth: '220px',
+          display: 'block',
+          objectFit: 'contain',
+        }}
+      />
     </div>
   )
 }

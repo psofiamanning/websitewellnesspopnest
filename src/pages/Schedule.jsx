@@ -1,227 +1,192 @@
-import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { DAY_ORDER, buildScheduleSlots } from '../data/scheduleSlots'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { getSlotsByDay } from '../data/scheduleSlots'
+import PracticeDot from '../components/ui/PracticeDot'
+import {
+  SCHEDULE_FILTERS,
+  buildWeekDays,
+  filterSlotsByDay,
+  formatWeekRangeLabel,
+  getWeekMonday,
+  practiceForClassId,
+  shiftWeek,
+} from '../utils/schedulePageUtils'
+import '../styles/tokens.css'
+import '../styles/base.css'
+import '../styles/components.css'
+import '../styles/scheduleShell.css'
 
 function Schedule() {
   const navigate = useNavigate()
-  const [calendarMonth, setCalendarMonth] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState(null)
+  const [filterId, setFilterId] = useState('all')
+  const [weekOffset, setWeekOffset] = useState(0)
 
-  const allSlots = useMemo(() => buildScheduleSlots(), [])
+  const weekMonday = useMemo(() => {
+    const base = getWeekMonday(new Date())
+    return shiftWeek(base, weekOffset)
+  }, [weekOffset])
 
-  const slotsByDay = useMemo(() => {
-    const byDay = {}
-    DAY_ORDER.forEach((d) => (byDay[d] = []))
-    allSlots.forEach((slot) => {
-      if (!byDay[slot.day]) byDay[slot.day] = []
-      byDay[slot.day].push(slot)
-    })
-    return byDay
-  }, [allSlots])
-
-  const selectedDayName = selectedDate
-    ? format(selectedDate, 'EEEE', { locale: es })
-    : null
-  const selectedDayNameCapitalized = selectedDayName
-    ? selectedDayName.charAt(0).toUpperCase() + selectedDayName.slice(1)
-    : null
-  const slotsForSelectedDay = selectedDayNameCapitalized ? (slotsByDay[selectedDayNameCapitalized] || []) : []
-
-  const monthStart = startOfMonth(calendarMonth)
-  const monthEnd = endOfMonth(calendarMonth)
-  const calStart = startOfWeek(monthStart, { weekStartsOn: 1 })
-  const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
-  const daysInMonth = eachDayOfInterval({ start: calStart, end: calEnd })
-
-  const weekDaysShort = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+  const slotsByDay = useMemo(() => getSlotsByDay(), [])
+  const filteredByDay = useMemo(() => filterSlotsByDay(slotsByDay, filterId), [slotsByDay, filterId])
+  const weekDays = useMemo(() => buildWeekDays(weekMonday), [weekMonday])
+  const weekRangeLabel = useMemo(() => formatWeekRangeLabel(weekMonday), [weekMonday])
 
   const handleSlotClick = (classId) => {
     navigate(`/booking/class/${classId}`)
   }
 
   return (
-    <div className="min-h-screen pt-28 pb-16" style={{ backgroundColor: '#f5f0ef' }}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <h1 className="text-3xl font-heading font-bold text-center mb-2" style={{ color: '#1F2937' }}>
-          Horario
-        </h1>
-        <p className="text-body font-body text-center mb-10" style={{ color: '#6B7280' }}>
-          Revisa los horarios por día o elige una fecha en el calendario para ver las clases y reservar
-        </p>
+    <div className="sc-page sc-page--with-site-nav">
+      <div className="sc-shell">
+        <header className="sc-hero">
+          <div className="sc-hero__main">
+            <p className="sc-hero__eyebrow">
+              <span className="sc-hero__eyebrow-line" aria-hidden />
+              02 · PROGRAMA
+            </p>
+            <h1 className="sc-hero__title">
+              Esta <em className="pn-serif">semana.</em>
+            </h1>
+          </div>
+          <div className="sc-hero__aside">
+            <p className="sc-hero__copy">
+              Todas las clases duran 60 minutos y se imparten en grupos pequeños, con atención cercana.
+            </p>
+            <p className="sc-hero__copy">
+              Haz clic en una clase para ver detalles y reservar tu lugar en línea.
+            </p>
+          </div>
+        </header>
 
-        {/* Vista rápida por día de la semana */}
-        <section className="mb-14">
-          <h2 className="text-xl font-heading font-semibold mb-6" style={{ color: '#B73D37' }}>
-            Vista por día de la semana
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {DAY_ORDER.map((day) => {
-              const slots = slotsByDay[day] || []
-              if (slots.length === 0) return null
-              return (
-                <div
-                  key={day}
-                  className="bg-white rounded-xl border-2 p-4 shadow-sm"
-                  style={{ borderColor: '#E5B3B0' }}
+
+        <section className="sc-toolbar" aria-label="Filtros y semana">
+          <div className="sc-toolbar__filters">
+            <span className="sc-toolbar__label">
+              <span className="sc-toolbar__label-line" aria-hidden />
+              Filtrar
+            </span>
+            <div className="sc-filter-pills">
+              {SCHEDULE_FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  className={`sc-filter-pill${filterId === f.id ? ' sc-filter-pill--active' : ''}`}
+                  onClick={() => setFilterId(f.id)}
+                  aria-pressed={filterId === f.id}
                 >
-                  <h3 className="font-heading font-semibold mb-3" style={{ color: '#1F2937' }}>
-                    {day}
-                  </h3>
-                  <ul className="space-y-2">
-                    {slots.map((slot, idx) => (
-                      <li key={`${slot.classId}-${slot.time}-${idx}`}>
-                        <button
-                          type="button"
-                          onClick={() => handleSlotClick(slot.classId)}
-                          className="w-full text-left px-3 py-2 rounded-lg font-body text-sm transition-all hover:scale-[1.02]"
-                          style={{
-                            backgroundColor: '#fefcfb',
-                            border: '1px solid #E5B3B0',
-                            color: '#1F2937'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.backgroundColor = '#E5B3B0'
-                            e.target.style.color = '#fff'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.backgroundColor = '#fefcfb'
-                            e.target.style.color = '#1F2937'
-                          }}
-                        >
-                          <span className="font-semibold" style={{ color: 'inherit' }}>
-                            {slot.time}
-                          </span>
-                          <span className="block truncate mt-0.5" style={{ color: 'inherit', opacity: 0.95 }}>
-                            {slot.className}
-                          </span>
-                          <span className="block text-xs mt-0.5 opacity-80">Con {slot.teacher}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                  {f.practice ? <PracticeDot practice={f.practice} size={7} /> : null}
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="sc-toolbar__week">
+            <button
+              type="button"
+              className="sc-week-btn"
+              onClick={() => setWeekOffset((w) => w - 1)}
+              aria-label="Semana anterior"
+            >
+              ←
+            </button>
+            <span className="sc-toolbar__week-range">{weekRangeLabel}</span>
+            <button
+              type="button"
+              className="sc-week-btn"
+              onClick={() => setWeekOffset((w) => w + 1)}
+              aria-label="Semana siguiente"
+            >
+              →
+            </button>
+          </div>
+        </section>
+
+        <section className="sc-board-wrap" aria-label="Horario semanal">
+          <div className="sc-board">
+            {weekDays.map(({ dayName, shortLabel, dayNum, monthLabel, isToday }) => {
+              const slots = filteredByDay[dayName] || []
+              return (
+                <article
+                  key={dayName}
+                  className={`sc-day-col${isToday ? ' sc-day-col--today' : ''}`}
+                >
+                  <header className="sc-day-col__head">
+                    {isToday ? (
+                      <p className="sc-day-col__today">• Hoy · {shortLabel}</p>
+                    ) : null}
+                    <p className="sc-day-col__dow">{shortLabel}</p>
+                    <p className="sc-day-col__num">{dayNum}</p>
+                    <p className="sc-day-col__month">{monthLabel}</p>
+                    <span className="sc-day-col__rule" aria-hidden />
+                  </header>
+                  <div className="sc-day-col__body">
+                    {slots.length === 0 ? (
+                      <p className="sc-day-col__empty">Sin clases</p>
+                    ) : (
+                      slots.map((slot, idx) => {
+                        const practice = practiceForClassId(slot.classId)
+                        return (
+                          <button
+                            key={`${slot.classId}-${slot.time}-${idx}`}
+                            type="button"
+                            className="sc-class"
+                            onClick={() => handleSlotClick(slot.classId)}
+                          >
+                            <div className="sc-class__top">
+                              <span className="sc-class__time">{slot.time}</span>
+                              <span className="sc-class__duration">{slot.durationMinutes} min</span>
+                            </div>
+                            <div className="sc-class__name">
+                              <PracticeDot practice={practice} size={7} />
+                              {slot.className}
+                            </div>
+                            <p className="sc-class__teacher">Con {slot.teacher}</p>
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+                </article>
               )
             })}
           </div>
         </section>
 
-        {/* Calendario + Clases del día seleccionado */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <h2 className="text-xl font-heading font-semibold mb-4" style={{ color: '#B73D37' }}>
-              Calendario
-            </h2>
-            <div
-              className="bg-white rounded-xl border-2 p-4 shadow-sm"
-              style={{ borderColor: '#E5B3B0' }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  type="button"
-                  onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  style={{ color: '#B73D37' }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <span className="font-heading font-semibold capitalize" style={{ color: '#1F2937' }}>
-                  {format(calendarMonth, 'MMMM yyyy', { locale: es })}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  style={{ color: '#B73D37' }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-              <div className="grid grid-cols-7 gap-1 text-center text-xs font-body mb-2" style={{ color: '#6B7280' }}>
-                {weekDaysShort.map((d) => (
-                  <span key={d}>{d}</span>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-1">
-                {daysInMonth.map((date) => {
-                  const isCurrentMonth = isSameMonth(date, calendarMonth)
-                  const isSelected = selectedDate && isSameDay(date, selectedDate)
-                  return (
-                    <button
-                      key={date.toISOString()}
-                      type="button"
-                      onClick={() => setSelectedDate(date)}
-                      className="aspect-square flex items-center justify-center rounded-lg text-sm font-body transition-all"
-                      style={{
-                        backgroundColor: isSelected ? '#B73D37' : isCurrentMonth ? '#fefcfb' : '#f3f4f6',
-                        color: isSelected ? '#fff' : isCurrentMonth ? '#1F2937' : '#9ca3af',
-                        border: isSelected ? '2px solid #B73D37' : `1px solid ${isCurrentMonth ? '#E5B3B0' : 'transparent'}`
-                      }}
-                    >
-                      {format(date, 'd')}
-                    </button>
-                  )
-                })}
-              </div>
+        <section className="sc-policies" aria-labelledby="sc-policies-heading">
+          <p id="sc-policies-heading" className="sc-policies__title">
+            Reservas
+          </p>
+          <div className="sc-policies__grid">
+            <div className="sc-policy">
+              <p className="sc-policy__label">
+                <span className="sc-policy__line" aria-hidden />
+                Anticipación
+              </p>
+              <p className="sc-policy__text">
+                Reserva con al menos 24 horas de anticipación para asegurar tu lugar.
+              </p>
             </div>
-          </div>
-
-          <div className="lg:col-span-2">
-            <h2 className="text-xl font-heading font-semibold mb-4" style={{ color: '#B73D37' }}>
-              {selectedDate
-                ? `Clases del ${selectedDayNameCapitalized} ${format(selectedDate, "d 'de' MMMM", { locale: es })}`
-                : 'Elige un día en el calendario'}
-            </h2>
-            {selectedDate && (
-              <div className="space-y-3">
-                {slotsForSelectedDay.length === 0 ? (
-                  <p className="font-body text-body" style={{ color: '#6B7280' }}>
-                    No hay clases programadas este día.
-                  </p>
-                ) : (
-                  slotsForSelectedDay.map((slot, idx) => (
-                    <button
-                      key={`${slot.classId}-${slot.time}-${idx}`}
-                      type="button"
-                      onClick={() => handleSlotClick(slot.classId)}
-                      className="w-full bg-white rounded-xl border-2 p-4 text-left shadow-sm transition-all hover:scale-[1.01] flex flex-wrap items-center gap-3"
-                      style={{ borderColor: '#E5B3B0' }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#B73D37'
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(183, 61, 55, 0.2)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#E5B3B0'
-                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'
-                      }}
-                    >
-                      <span
-                        className="font-heading font-bold text-lg shrink-0"
-                        style={{ color: '#B73D37', minWidth: '4rem' }}
-                      >
-                        {slot.time}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-heading font-semibold block" style={{ color: '#1F2937' }}>
-                          {slot.className}
-                        </span>
-                        <span className="text-sm font-body" style={{ color: '#6B7280' }}>
-                          {slot.teacher}
-                        </span>
-                      </div>
-                      <span className="ml-auto text-sm font-body shrink-0" style={{ color: '#B73D37' }}>
-                        Reservar →
-                      </span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
+            <div className="sc-policy">
+              <p className="sc-policy__label">
+                <span className="sc-policy__line" aria-hidden />
+                Cupo limitado
+              </p>
+              <p className="sc-policy__text">
+                Máximo 8 personas por sesión para mantener grupos contenidos y atención cercana.
+              </p>
+            </div>
+            <div className="sc-policy">
+              <p className="sc-policy__label">
+                <span className="sc-policy__line" aria-hidden />
+                Cancelación
+              </p>
+              <p className="sc-policy__text">
+                Cancela o cambia tu reserva con al menos 4 horas de anticipación desde Mis reservas.
+              </p>
+            </div>
+            <Link to="/packages" className="sc-policies__cta">
+              Ver planes →
+            </Link>
           </div>
         </section>
       </div>

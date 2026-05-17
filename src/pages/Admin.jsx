@@ -4,7 +4,7 @@ import { getBookings } from '../services/bookingService'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'
+import { BACKEND_URL } from '../config/api.js'
 
 // Verificar si el usuario es administrador
 const isAdminAuthenticated = () => {

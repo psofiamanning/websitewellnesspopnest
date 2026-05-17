@@ -40,7 +40,11 @@ export function adaptBookingRow(row) {
       currency: (payment?.currency || 'MXN').toString().toUpperCase(),
       status:
         payment?.status ??
-        (row.payment_method === 'package' || row.payment_method === 'manual' ? 'succeeded' : 'pending'),
+        (row.payment_method === 'package' ||
+        row.payment_method === 'manual' ||
+        row.payment_method === 'discount_code'
+          ? 'succeeded'
+          : 'pending'),
       method: payment?.method ?? row.payment_method ?? '',
       cardLastFour: payment?.card_last_four ?? null,
     },
@@ -62,7 +66,11 @@ export function adaptBookingRow(row) {
   const pi = payment?.stripe_payment_intent_id ?? null
   flat.paymentIntentId = pi
   flat.stripeInfo = pi ? { paymentIntentId: pi } : null
-  flat.paymentStatus = payment?.status ?? (row.payment_method === 'package' ? 'succeeded' : flat.payment.status)
+  flat.paymentStatus =
+    payment?.status ??
+    (row.payment_method === 'package' || row.payment_method === 'discount_code'
+      ? 'succeeded'
+      : flat.payment.status)
   if (flat.packageInfo) {
     flat.packageId = flat.packageInfo.packageId
   }

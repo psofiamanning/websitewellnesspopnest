@@ -61,6 +61,23 @@
   color: var(--pn-color-text);
 }
 
+/* Outline terracota — CTAs secundarios sobre fondos claros (coaches, horario, etc.) */
+.pn-btn--outline-primary {
+  background: transparent;
+  color: var(--pn-color-primary);
+  border: 2px solid var(--pn-color-primary);
+  padding: 12px 20px;
+}
+
+.pn-btn--outline-primary:hover {
+  background: color-mix(in srgb, var(--pn-color-primary) 8%, transparent);
+  color: var(--pn-color-primary);
+}
+
+.pn-btn--outline-primary.pn-btn--sm {
+  padding: 10px 16px;
+}
+
 /* Tamanos */
 .pn-btn--sm {
   padding: 10px 18px;
@@ -115,6 +132,13 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
+}
+
+/* Logo oficial (SVG): alinear al centro; el lockup tipográfico usa baseline arriba */
+.pn-nav__logo--official {
+  align-items: center;
+  gap: 0;
+  line-height: 0;
 }
 
 .pn-nav__logo-e {
@@ -545,6 +569,25 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.pn-practice-card__image--class-icon {
+  filter: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 148px;
+  padding: 12px;
+  box-sizing: border-box;
+  background: var(--pn-color-well-tan);
+}
+
+.pn-practice-card__image--class-icon img {
+  width: auto;
+  height: auto;
+  max-width: 72%;
+  max-height: 88%;
+  object-fit: contain;
 }
 
 .pn-practice-card__arrow {

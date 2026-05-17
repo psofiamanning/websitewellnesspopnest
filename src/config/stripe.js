@@ -2,14 +2,11 @@
 // IMPORTANTE: Configura tu clave pública en el archivo .env
 // Ver STRIPE_SETUP.md para instrucciones
 
+import { BACKEND_URL } from './api.js'
+
 export const stripeConfig = {
-  // Clave pública de Stripe (publishable key)
-  // Se obtiene de la variable de entorno VITE_STRIPE_PUBLISHABLE_KEY
   publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
-  
-  // URL del backend para crear Payment Intent (opcional)
-  // En producción, apunta a tu servidor backend
-  backendUrl: import.meta.env.VITE_BACKEND_URL || '',
+  backendUrl: BACKEND_URL,
 }
 
 // Inicializar Stripe (carga dinámica para evitar errores si no está instalado)

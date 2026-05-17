@@ -38,11 +38,10 @@ const liveSiteItems = [
   { to: '/', title: 'Inicio', note: 'Landing principal' },
   { to: '/classes', title: 'Prácticas', note: 'Disciplinas y reserva por tipo de clase' },
   { to: '/horario', title: 'Horario', note: 'Semana, filtros y reserva por horario' },
-  { to: '/packages', title: 'Paquetes', note: 'Precios y compra de paquetes' },
-  { to: '/coaches', title: 'Maestras', note: 'Equipo (/coaches)' },
+  { to: '/packages', title: 'Planes', note: 'Precios y compra de paquetes' },
   { to: '/ubicacion', title: 'Ubicación', note: 'Cómo llegar' },
   { to: '/login', title: 'Iniciar sesión', note: 'Cuenta cliente' },
-  { to: '/signup', title: 'Registro', note: 'Alta de cuenta' },
+  { to: '/signup', title: 'Crear cuenta', note: 'Alta de cuenta' },
   { to: '/forgot-password', title: 'Olvidé mi contraseña', note: 'Recuperación' },
   {
     to: '/mis-reservas',

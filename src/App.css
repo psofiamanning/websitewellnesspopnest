@@ -493,11 +493,4 @@
   }
 }
 
-/* Estilos para el Navbar */
-.navbar {
-  transition: all 0.3s ease;
-}
-
-.navbar.scrolled {
-  box-shadow: 0 4px 20px rgba(183, 61, 55, 0.1);
-}
+/* Navbar global: ver src/styles/navShell.css (.site-nav) */

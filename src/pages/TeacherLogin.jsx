@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3002'
+import { BACKEND_URL } from '../config/api.js'
 
 function TeacherLogin() {
   const navigate = useNavigate()

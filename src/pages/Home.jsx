@@ -4,7 +4,9 @@ import studioPhoto1 from '../assets/studio-photo-1.png'
 import studioPhoto2 from '../assets/studio-photo-2.png'
 import studioPhoto3 from '../assets/studio-photo-3.png'
 import studioPhoto4 from '../assets/studio-photo-4.png'
-import { buildRedesignScheduleSnippets } from '../utils/redesignScheduleFromData'
+import { classTypes } from '../data/classes'
+import { PACKAGE_OFFERS } from '../data/packageOffers'
+import { buildRedesignScheduleSnippets, dotClassForClassId } from '../utils/redesignScheduleFromData'
 import '../styles/tokens.css'
 import '../styles/base.css'
 import '../styles/components.css'
@@ -24,7 +26,6 @@ const SPACE_SLIDES = [
 
 function Home() {
   const location = useLocation()
-  const [navOpen, setNavOpen] = useState(false)
   const sliderRef = useRef(null)
   const nextBtnRef = useRef(null)
 
@@ -41,10 +42,6 @@ function Home() {
       }
     }
   }, [location.hash, location.pathname])
-
-  useEffect(() => {
-    setNavOpen(false)
-  }, [location.pathname])
 
   useEffect(() => {
     const track = sliderRef.current
@@ -65,44 +62,11 @@ function Home() {
   }, [])
 
   return (
-    <div className="home-page">
+    <div className="home-page pn-page-with-site-nav">
       <div className="home-shell">
-        <nav className={`home-nav${navOpen ? ' home-nav--open' : ''}`}>
-          <Link to="/" className="pn-nav__logo" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <span className="pn-serif pn-nav__logo-e">e</span>
-            <span className="pn-nav__logo-name">studio popnest</span>
-          </Link>
-          <div className="home-nav__links">
-            <Link to="/classes" className="home-nav__link" onClick={() => setNavOpen(false)}>
-              Prácticas
-            </Link>
-            <Link to="/horario" className="home-nav__link" onClick={() => setNavOpen(false)}>
-              Horario
-            </Link>
-            <Link to="/coaches" className="home-nav__link" onClick={() => setNavOpen(false)}>
-              Maestras
-            </Link>
-            <Link to="/ubicacion" className="home-nav__link" onClick={() => setNavOpen(false)}>
-              Contacto
-            </Link>
-            <Link to="/classes" className="pn-btn pn-btn--primary pn-btn--sm" onClick={() => setNavOpen(false)}>
-              Reservar
-            </Link>
-          </div>
-          <button
-            type="button"
-            className="home-menu"
-            aria-label={navOpen ? 'Cerrar menú' : 'Menú'}
-            aria-expanded={navOpen}
-            onClick={() => setNavOpen((o) => !o)}
-          >
-            <span />
-            <span />
-          </button>
-        </nav>
 
         <main>
-          <section className="home-hero">
+          <section id="inicio" className="home-hero">
             <div className="home-hero__copy">
               <div className="pn-eyebrow" style={{ marginBottom: 20 }}>
                 Estudio de bienestar en Coyoacán
@@ -124,9 +88,9 @@ function Home() {
                 <Link to="/classes" className="pn-btn pn-btn--primary">
                   Reservar una clase
                 </Link>
-                <Link to="/classes" className="pn-btn pn-btn--ghost">
-                  Explorar prácticas
-                </Link>
+                <a href="#clases" className="pn-btn pn-btn--ghost">
+                  Ver clases
+                </a>
               </div>
             </div>
 
@@ -136,54 +100,110 @@ function Home() {
             />
           </section>
 
-          <section className="home-section pn-section--bg-secondary">
+          <section id="clases" className="home-section pn-section--bg-secondary">
             <div className="home-section__head">
               <div>
                 <div className="pn-eyebrow" style={{ marginBottom: 16 }}>
-                  Lo que practicamos
+                  01 · Clases
                 </div>
                 <h2 className="pn-h1">
-                  Nuestras <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>prácticas.</span>
+                  Elige tu <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>práctica.</span>
                 </h2>
               </div>
               <p className="pn-text">
-                Cada práctica propone una manera distinta de habitar el cuerpo: fuerza, pausa, respiración, escucha y
-                presencia.
+                Yoga, pilates, meditación, sound healing y tai chi. Sesiones de 60 minutos en grupos reducidos.
               </p>
             </div>
 
-            <div className="home-practices">
-              <Link to="/horario" className="home-practice-card">
-                <div className="home-practice-card__top">
-                  <span className="pn-dot pn-dot--yoga" />
-                  <h3 className="pn-h4">Yoga</h3>
-                </div>
-                <p className="pn-text-sm">Hatha, Vinyasa y prácticas suaves para respirar mejor.</p>
-                <span className="home-practice-card__arrow">Ver horarios →</span>
+            <div className="home-class-spotlights">
+              {classTypes.map((c) => {
+                const dot = dotClassForClassId(c.id)
+                return (
+                  <Link key={c.id} to={`/booking/class/${c.id}`} className="home-class-spotlight">
+                    <div className="home-class-spotlight__img">
+                      <img src={c.image} alt="" loading="lazy" decoding="async" />
+                    </div>
+                    <div className="home-class-spotlight__body">
+                      <div className="home-class-spotlight__head">
+                        <span className={`pn-dot pn-dot--${dot}`} aria-hidden />
+                        <h3 className="pn-h4">{c.name}</h3>
+                      </div>
+                      <p className="pn-text-sm">
+                        {c.teacher} · {c.duration} min
+                      </p>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+            <div className="home-section__cta">
+              <Link to="/classes" className="pn-btn pn-btn--ghost">
+                Ver todas las clases
               </Link>
-              <Link to="/horario" className="home-practice-card">
-                <div className="home-practice-card__top">
-                  <span className="pn-dot pn-dot--pilates" />
-                  <h3 className="pn-h4">Pilates</h3>
+            </div>
+          </section>
+
+          <section id="horario" className="home-section">
+            <div className="home-section__head">
+              <div>
+                <div className="pn-eyebrow" style={{ marginBottom: 16 }}>
+                  02 · Horario
                 </div>
-                <p className="pn-text-sm">Fuerza, centro y movilidad con atención precisa.</p>
-                <span className="home-practice-card__arrow">Ver horarios →</span>
-              </Link>
-              <Link to="/horario" className="home-practice-card">
-                <div className="home-practice-card__top">
-                  <span className="pn-dot pn-dot--meditation" />
-                  <h3 className="pn-h4">Meditación</h3>
+                <h2 className="pn-h1">
+                  Esta <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>semana.</span>
+                </h2>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <Link to="/horario" className="pn-btn pn-btn--ghost">
+                  Ver horario completo
+                </Link>
+              </div>
+            </div>
+            <p className="pn-text home-section__lead">
+              Vista rápida del programa. Consulta el horario completo para reservar fecha y hora.
+            </p>
+            <div className="home-classes" dangerouslySetInnerHTML={{ __html: scheduleSnippets.homeWeekStrip }} />
+          </section>
+
+          <section id="planes" className="home-section pn-section--bg-secondary">
+            <div className="home-section__head">
+              <div>
+                <div className="pn-eyebrow" style={{ marginBottom: 16 }}>
+                  03 · Planes
                 </div>
-                <p className="pn-text-sm">Espacios para bajar el ritmo y volver al presente.</p>
-                <span className="home-practice-card__arrow">Ver horarios →</span>
-              </Link>
-              <Link to="/horario" className="home-practice-card">
-                <div className="home-practice-card__top">
-                  <span className="pn-dot pn-dot--sound" />
-                  <h3 className="pn-h4">Sound Healing</h3>
-                </div>
-                <p className="pn-text-sm">Sesiones sonoras para descansar el sistema nervioso.</p>
-                <span className="home-practice-card__arrow">Ver horarios →</span>
+                <h2 className="pn-h1">
+                  Paquetes de <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>clases.</span>
+                </h2>
+              </div>
+              <p className="pn-text">
+                Ahorra comprando varias sesiones. Usa tus clases cuando quieras, para cualquier práctica del estudio.
+              </p>
+            </div>
+            <div className="home-packages">
+              {PACKAGE_OFFERS.map((pkg) => (
+                <Link
+                  key={pkg.id}
+                  to="/packages"
+                  className={`home-package-card${pkg.popular ? ' home-package-card--popular' : ''}`}
+                >
+                  {pkg.popular ? <span className="home-package-card__badge">Más popular</span> : null}
+                  <h3 className="pn-h4">{pkg.name}</h3>
+                  <p className="home-package-card__price">
+                    <strong>${pkg.price.toLocaleString('es-MX')}</strong> MXN
+                  </p>
+                  {pkg.originalPrice ? (
+                    <p className="home-package-card__save">
+                      Antes ${pkg.originalPrice.toLocaleString('es-MX')} MXN
+                    </p>
+                  ) : null}
+                  <p className="pn-text-sm home-package-card__desc">{pkg.description}</p>
+                  <span className="home-package-card__arrow">Ver planes →</span>
+                </Link>
+              ))}
+            </div>
+            <div className="home-section__cta">
+              <Link to="/packages" className="pn-btn pn-btn--primary">
+                Comprar paquete
               </Link>
             </div>
           </section>
@@ -333,25 +353,6 @@ function Home() {
                 </dd>
               </div>
             </dl>
-          </section>
-
-          <section id="horarios" className="home-section">
-            <div className="home-section__head">
-              <div>
-                <div className="pn-eyebrow" style={{ marginBottom: 16 }}>
-                  Programa semanal
-                </div>
-                <h2 className="pn-h1">
-                  Próximas <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>clases.</span>
-                </h2>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <Link to="/horario" className="pn-btn pn-btn--ghost">
-                  Ver horario completo
-                </Link>
-              </div>
-            </div>
-            <div className="home-classes" dangerouslySetInnerHTML={{ __html: scheduleSnippets.homeWeekStrip }} />
           </section>
 
           <section id="preguntas-frecuentes" className="home-section home-faq pn-section--bg-secondary">

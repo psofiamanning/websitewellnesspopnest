@@ -34,6 +34,7 @@ import PackagesRedesign from './pages/PackagesRedesign'
 import MyBookingsRedesign from './pages/MyBookingsRedesign'
 import ClassesRedesign from './pages/ClassesRedesign'
 import Previews from './pages/Previews'
+import DevOnlyRoute from './components/DevOnlyRoute'
 import './App.css'
 
 /** Solo inicializa y hace tracking con Meta Pixel si el usuario aceptó cookies de marketing. */
@@ -109,13 +110,13 @@ function AppContent() {
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />
         <Route path="/mis-reservas" element={<MyBookings />} />
-        <Route path="/design-system" element={<DesignSystem />} />
-        <Route path="/home-redesign" element={<HomeRedesign />} />
-        <Route path="/schedule-redesign" element={<ScheduleRedesign />} />
-        <Route path="/packages-redesign" element={<PackagesRedesign />} />
-        <Route path="/mis-reservas-redesign" element={<MyBookingsRedesign />} />
-        <Route path="/classes-redesign" element={<ClassesRedesign />} />
-        <Route path="/previews" element={<Previews />} />
+        <Route path="/design-system" element={<DevOnlyRoute><DesignSystem /></DevOnlyRoute>} />
+        <Route path="/home-redesign" element={<DevOnlyRoute><HomeRedesign /></DevOnlyRoute>} />
+        <Route path="/schedule-redesign" element={<DevOnlyRoute><ScheduleRedesign /></DevOnlyRoute>} />
+        <Route path="/packages-redesign" element={<DevOnlyRoute><PackagesRedesign /></DevOnlyRoute>} />
+        <Route path="/mis-reservas-redesign" element={<DevOnlyRoute><MyBookingsRedesign /></DevOnlyRoute>} />
+        <Route path="/classes-redesign" element={<DevOnlyRoute><ClassesRedesign /></DevOnlyRoute>} />
+        <Route path="/previews" element={<DevOnlyRoute><Previews /></DevOnlyRoute>} />
       </Routes>
       {!isStandalonePreview && <Footer />}
       {!isStandalonePreview && <CookieConsent />}

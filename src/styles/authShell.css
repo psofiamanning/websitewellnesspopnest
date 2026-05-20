@@ -1,4 +1,4 @@
-/* Auth (/login, /signup) — editorial Popnest */
+/* Auth (/login, /signup, /forgot-password, /reset-password) — editorial Popnest */
 
 .auth-page {
   min-height: 100vh;
@@ -239,6 +239,13 @@
 .auth-submit:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+a.auth-submit.auth-submit--link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
 .auth-divider {

@@ -76,7 +76,9 @@ function AppContent() {
     pathname === '/home-redesign' ||
     pathname === '/classes-redesign' ||
     pathname === '/login' ||
-    pathname === '/signup'
+    pathname === '/signup' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password'
 
   return (
     <>

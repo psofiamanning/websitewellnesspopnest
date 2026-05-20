@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Logo from './Logo'
-import { isAuthenticated, getCurrentUser, logout } from '../services/authService'
-import { getUserPackagesAll } from '../services/bookingService'
+import {
+  isAuthenticated,
+  getCurrentUser,
+  logout,
+  POST_LOGIN_CLASSES_SESSION_KEY,
+} from '../services/authService'
+import { getUserPackages, getUserPackagesAll } from '../services/bookingService'
 import '../styles/navShell.css'
 
 const MENU_ITEMS = [
@@ -17,7 +22,7 @@ function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
-  const [hasPurchasedPackages, setHasPurchasedPackages] = useState(false)
+  const [showMyPackages, setShowMyPackages] = useState(false)
 
   const isHome = location.pathname === '/'
 
@@ -29,15 +34,53 @@ function Navbar() {
 
   useEffect(() => {
     if (!authenticated || !currentUser?.email) {
-      setHasPurchasedPackages(false)
+      setShowMyPackages(false)
       return
     }
+
     let cancelled = false
-    getUserPackagesAll(currentUser.email).then((data) => {
-      if (!cancelled) setHasPurchasedPackages(Boolean(data?.hasPurchasedPackages))
-    })
+
+    const readSessionPackageHint = () => {
+      try {
+        const raw = sessionStorage.getItem(POST_LOGIN_CLASSES_SESSION_KEY)
+        if (raw == null || raw === '') return false
+        const n = parseInt(raw, 10)
+        return Number.isFinite(n) && n >= 1
+      } catch {
+        return false
+      }
+    }
+
+    const resolve = async () => {
+      if (readSessionPackageHint()) {
+        if (!cancelled) setShowMyPackages(true)
+      }
+      try {
+        const [allData, activeData] = await Promise.all([
+          getUserPackagesAll(currentUser.email),
+          getUserPackages(currentUser.email),
+        ])
+        if (cancelled) return
+        const show =
+          Boolean(allData?.hasPurchasedPackages) ||
+          Boolean(allData?.hasActivePackages) ||
+          Boolean(activeData?.hasActivePackages) ||
+          (activeData?.packages?.length ?? 0) > 0 ||
+          readSessionPackageHint()
+        setShowMyPackages(show)
+      } catch {
+        if (!cancelled) setShowMyPackages(readSessionPackageHint())
+      }
+    }
+
+    resolve()
+    const onLoginClasses = () => {
+      if (!cancelled) setShowMyPackages(true)
+    }
+    window.addEventListener('epw-post-login-classes', onLoginClasses)
     return () => {
       cancelled = true
+      window.removeEventListener('epw-post-login-classes', onLoginClasses)
     }
   }, [authenticated, currentUser?.email])
 
@@ -86,7 +129,7 @@ function Navbar() {
           >
             Mis reservas
           </Link>
-          {hasPurchasedPackages ? (
+          {showMyPackages ? (
             <Link
               to="/mis-paquetes"
               className={`${linkClass}${location.pathname.startsWith('/mis-paquetes') ? ' site-nav__link--active' : ''}`}

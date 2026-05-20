@@ -242,16 +242,33 @@ export const getUserPackages = async (email) => {
   }
 }
 
-/** Paquetes activos + historial de compras */
-export const getUserPackagesAll = async (email) => {
-  const empty = {
-    activePackages: [],
+const EMPTY_PACKAGES_ALL = {
+  activePackages: [],
+  historyPackages: [],
+  allPackages: [],
+  totalClassesRemaining: 0,
+  hasActivePackages: false,
+  hasPurchasedPackages: false,
+}
+
+function packagesAllFromActiveOnly(activeData) {
+  const packages = activeData?.packages ?? []
+  const totalClassesRemaining =
+    typeof activeData?.totalClassesRemaining === 'number'
+      ? activeData.totalClassesRemaining
+      : packages.reduce((sum, p) => sum + (Number(p.classesRemaining) || 0), 0)
+  return {
+    activePackages: packages,
     historyPackages: [],
-    allPackages: [],
-    totalClassesRemaining: 0,
-    hasActivePackages: false,
-    hasPurchasedPackages: false,
+    allPackages: packages,
+    totalClassesRemaining,
+    hasActivePackages: Boolean(activeData?.hasActivePackages) || packages.length > 0,
+    hasPurchasedPackages: packages.length > 0,
   }
+}
+
+/** Paquetes activos + historial de compras (fallback a activos si /all no existe aún) */
+export const getUserPackagesAll = async (email) => {
   try {
     const response = await fetch(
       `${BACKEND_URL}/api/packages/user/${encodeURIComponent(email)}/all`,
@@ -259,10 +276,19 @@ export const getUserPackagesAll = async (email) => {
     if (response.ok) {
       return await response.json()
     }
-    return empty
+    if (response.status === 404 || response.status === 501) {
+      const active = await getUserPackages(email)
+      return packagesAllFromActiveOnly(active)
+    }
+    return { ...EMPTY_PACKAGES_ALL }
   } catch (error) {
     console.warn('Error getting user packages (all):', error)
-    return empty
+    try {
+      const active = await getUserPackages(email)
+      return packagesAllFromActiveOnly(active)
+    } catch {
+      return { ...EMPTY_PACKAGES_ALL }
+    }
   }
 }
 

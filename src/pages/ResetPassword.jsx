@@ -2,9 +2,45 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { resetPassword } from '../services/authService'
 import { supabase } from '../lib/supabaseClient.js'
+import AuthEditorialLayout from '../components/auth/AuthEditorialLayout'
+import AuthPasswordField from '../components/auth/AuthPasswordField'
+import '../styles/authShell.css'
+
+function ResetPasswordAside() {
+  return (
+    <>
+      <p className="auth-aside__eyebrow">— Nueva contraseña</p>
+      <h2 className="auth-aside__title">
+        Vuelve a tu <em>cuenta.</em>
+      </h2>
+      <ol className="auth-list">
+        <li>
+          <span className="auth-list__num">i</span>
+          <span className="auth-list__label">Mínimo 6 caracteres</span>
+          <span className="auth-list__value">Segura</span>
+        </li>
+        <li>
+          <span className="auth-list__num">ii</span>
+          <span className="auth-list__label">Confirma la misma</span>
+          <span className="auth-list__value">2 campos</span>
+        </li>
+        <li>
+          <span className="auth-list__num">iii</span>
+          <span className="auth-list__label">Inicia sesión</span>
+          <span className="auth-list__value">Listo</span>
+        </li>
+      </ol>
+      <blockquote className="auth-quote">
+        Un acceso claro te devuelve al estudio sin <em>fricción.</em>
+        <cite>— Estudio Popnest</cite>
+      </blockquote>
+    </>
+  )
+}
 
 function ResetPassword() {
   const navigate = useNavigate()
+  const search = typeof window !== 'undefined' ? window.location.search : ''
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -12,26 +48,30 @@ function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [sessionReady, setSessionReady] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
 
   useEffect(() => {
     let cancelled = false
     const run = async () => {
       if (!supabase) {
         setError('Falta configurar Supabase en el frontend (VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY).')
+        setCheckingSession(false)
         return
       }
       const { data: { session } } = await supabase.auth.getSession()
       if (cancelled) return
       if (!session) {
         setError(
-          'Abre esta página desde el enlace de recuperación que envió Supabase por correo (debe cargarse en esta misma ventana).'
+          'Abre esta página desde el enlace de recuperación que envió Supabase por correo (debe cargarse en esta misma ventana).',
         )
+        setCheckingSession(false)
         return
       }
       setSessionReady(true)
       if (session.access_token) {
         localStorage.setItem('auth_token', session.access_token)
       }
+      setCheckingSession(false)
     }
     run()
     return () => {
@@ -66,141 +106,92 @@ function ResetPassword() {
     }
   }
 
-  if (!sessionReady && !error) {
+  const layoutProps = {
+    eyebrow: '03 Nueva contraseña',
+    title: (
+      <>
+        Elige tu <em>contraseña.</em>
+      </>
+    ),
+    lead: 'Mínimo 6 caracteres. Después podrás iniciar sesión con tu correo y esta contraseña nueva.',
+    aside: <ResetPasswordAside />,
+    switchPrompt: '¿Ya tienes acceso?',
+    switchLinkText: 'Iniciar sesión',
+    switchTo: '/login',
+  }
+
+  if (checkingSession) {
     return (
-      <div className="wellness-background min-h-screen flex items-center justify-center py-20">
-        <p className="font-body text-body">Cargando…</p>
-      </div>
+      <AuthEditorialLayout {...layoutProps} lead="Verificando tu enlace de recuperación…">
+        <p className="auth-lead" style={{ marginBottom: 0 }}>
+          Un momento…
+        </p>
+      </AuthEditorialLayout>
     )
   }
 
   if (error && !sessionReady) {
     return (
-      <div className="wellness-background min-h-screen flex items-center justify-center py-20">
-        <div className="wellness-shapes">
-          <div className="wellness-shape shape-1"></div>
-          <div className="wellness-shape shape-2"></div>
-          <div className="wellness-shape shape-3"></div>
+      <AuthEditorialLayout
+        {...layoutProps}
+        lead="No pudimos validar el enlace. Solicita uno nuevo o vuelve al inicio de sesión."
+        switchPrompt={null}
+        switchTo={null}
+      >
+        <div className="auth-alert" role="alert">
+          {error}
         </div>
-        <div className="wellness-content relative z-10 w-full max-w-md mx-auto px-4">
-          <div className="bg-white rounded-lg p-8 shadow-xl border-2" style={{ borderColor: '#E5B3B0' }}>
-            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
-              <p className="text-sm font-body text-red-800">{error}</p>
-            </div>
-            <Link to="/forgot-password" className="text-center block font-body hover:underline" style={{ color: '#B73D37' }}>
-              Solicitar nuevo enlace
-            </Link>
-            <Link to="/login" className="mt-4 text-center block text-sm font-body hover:underline" style={{ color: '#6B7280' }}>
-              Volver al inicio de sesión
-            </Link>
-          </div>
-        </div>
-      </div>
+        <Link to={`/forgot-password${search}`} className="auth-submit auth-submit--link" style={{ marginTop: 12 }}>
+          Solicitar nuevo enlace →
+        </Link>
+        <p style={{ marginTop: 20, fontSize: 'var(--pn-text-sm)' }}>
+          <Link to={`/login${search}`} className="auth-field__link">
+            Volver al inicio de sesión
+          </Link>
+        </p>
+      </AuthEditorialLayout>
     )
   }
 
   return (
-    <div className="wellness-background min-h-screen flex items-center justify-center py-20">
-      <div className="wellness-shapes">
-        <div className="wellness-shape shape-1"></div>
-        <div className="wellness-shape shape-2"></div>
-        <div className="wellness-shape shape-3"></div>
-      </div>
-
-      <div className="wellness-content relative z-10 w-full max-w-md mx-auto px-4">
-        <div className="bg-white rounded-lg p-8 shadow-xl border-2" style={{ borderColor: '#E5B3B0' }}>
-          <h1 className="text-3xl font-heading font-bold mb-2 text-center" style={{ color: '#1F2937' }}>
-            Nueva contraseña
-          </h1>
-          <p className="text-body font-body text-center mb-8" style={{ color: '#6B7280' }}>
-            Elige una contraseña de al menos 6 caracteres
-          </p>
-
-          {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
-              <p className="text-sm font-body text-red-800">{error}</p>
-            </div>
-          )}
-
-          {success ? (
-            <div className="mb-6 p-6 rounded-lg border-2" style={{ backgroundColor: '#f0fdf4', borderColor: '#86efac' }}>
-              <p className="text-sm font-body text-gray-800">Contraseña actualizada. Redirigiendo al inicio de sesión...</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="password" className="block text-sm font-body font-medium mb-2" style={{ color: '#1F2937' }}>
-                  Nueva contraseña
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none font-body transition-all duration-300"
-                  style={{ borderColor: '#DED5D5', backgroundColor: '#FFFFFF' }}
-                  onFocus={(e) => (e.target.style.borderColor = '#B73D37')}
-                  onBlur={(e) => (e.target.style.borderColor = '#DED5D5')}
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-body font-medium mb-2" style={{ color: '#1F2937' }}>
-                  Confirmar contraseña
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none font-body transition-all duration-300"
-                  style={{ borderColor: '#DED5D5', backgroundColor: '#FFFFFF' }}
-                  onFocus={(e) => (e.target.style.borderColor = '#B73D37')}
-                  onBlur={(e) => (e.target.style.borderColor = '#DED5D5')}
-                  placeholder="Repite tu contraseña"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-4 rounded-lg font-heading font-semibold text-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: '#B73D37',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  boxShadow: '0 4px 12px rgba(183, 61, 55, 0.3)',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isLoading) {
-                    e.target.style.backgroundColor = '#C76661'
-                    e.target.style.boxShadow = '0 6px 16px rgba(183, 61, 55, 0.4)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isLoading) {
-                    e.target.style.backgroundColor = '#B73D37'
-                    e.target.style.boxShadow = '0 4px 12px rgba(183, 61, 55, 0.3)'
-                  }
-                }}
-              >
-                {isLoading ? 'Guardando...' : 'Restablecer contraseña'}
-              </button>
-            </form>
-          )}
-
-          <div className="mt-6 text-center">
-            <Link to="/login" className="text-sm font-body hover:underline" style={{ color: '#B73D37' }}>
-              Volver al inicio de sesión
-            </Link>
-          </div>
+    <AuthEditorialLayout {...layoutProps}>
+      {error ? (
+        <div className="auth-alert" role="alert">
+          {error}
         </div>
-      </div>
-    </div>
+      ) : null}
+
+      {success ? (
+        <div className="auth-alert auth-alert--ok" role="status">
+          <p style={{ margin: 0 }}>Contraseña actualizada. Redirigiendo al inicio de sesión…</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <AuthPasswordField
+            id="password"
+            name="password"
+            label="Nueva contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={6}
+            hint="Mínimo 6 caracteres"
+            placeholder="Mínimo 6 caracteres"
+          />
+          <AuthPasswordField
+            id="confirmPassword"
+            name="confirmPassword"
+            label="Confirmar contraseña"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            minLength={6}
+            placeholder="Repite tu contraseña"
+          />
+          <button type="submit" className="auth-submit" disabled={isLoading}>
+            {isLoading ? 'Guardando…' : 'Restablecer contraseña →'}
+          </button>
+        </form>
+      )}
+    </AuthEditorialLayout>
   )
 }
 

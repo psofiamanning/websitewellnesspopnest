@@ -17,6 +17,16 @@ Ejecutar en **Supabase → SQL Editor**, en orden. Si un script ya se aplicó, S
 
 Scripts **solo datos/horarios**: 7–10. Ajusta según lo que ya tengas en producción.
 
+## Permitir varios paquetes del mismo tipo por cliente
+
+Si al comprar un **segundo** “Paquete de 10 Clases” falla con `customer_packages_customer_id_package_id_key` o `customer_packages_unique_active`, ejecutar **una vez**:
+
+`drop_customer_packages_one_per_catalog.sql` (elimina **ambas** restricciones)
+
+Sin este script, el panel **Otorgar paquete** y las compras repetidas del mismo catálogo fallan con error de clave duplicada.
+
+| — | `add_customer_packages_admin_granted.sql` | Créditos **«Clases otorgadas — Administración»** (sin Stripe; el cliente elige fecha al reservar) |
+
 ## Obligatorio para funciones nuevas del frontend
 
 - **`add_discount_code_redemptions.sql`** — reservas con código gratis (`BIENVENIDA`, `POPNEST`, etc.).

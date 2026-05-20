@@ -49,7 +49,7 @@ function PackageCard({ pkg, showReserve }) {
             status === 'active' ? 'mp-card__badge--active' : 'mp-card__badge--history'
           }`}
         >
-          {STATUS_LABEL[status]}
+          {pkg.adminGranted ? 'Crédito del estudio' : STATUS_LABEL[status]}
         </span>
       </div>
 
@@ -89,7 +89,11 @@ function PackageCard({ pkg, showReserve }) {
         ) : null}
         <li>
           <span>Pago</span>
-          <span>{formatMxn(pkg.payment?.amount)}</span>
+          <span>
+            {pkg.adminGranted
+              ? 'Otorgado por el estudio (sin pago en línea)'
+              : formatMxn(pkg.payment?.amount)}
+          </span>
         </li>
       </ul>
 

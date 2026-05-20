@@ -53,6 +53,19 @@ function Admin() {
   const [addBookingCustomerPhone, setAddBookingCustomerPhone] = useState('')
   const [addBookingError, setAddBookingError] = useState('')
   const [addBookingSuccess, setAddBookingSuccess] = useState('')
+  const [showGrantPackage, setShowGrantPackage] = useState(false)
+  const [grantMode, setGrantMode] = useState('credits') // 'credits' | 'new'
+  const [grantEmail, setGrantEmail] = useState('')
+  const [grantPackageName, setGrantPackageName] = useState('Paquete de 10 Clases')
+  const [grantClassesRemaining, setGrantClassesRemaining] = useState('10')
+  const [grantValidityDays, setGrantValidityDays] = useState('60')
+  const [grantAmountPaid, setGrantAmountPaid] = useState('')
+  const [grantStripePi, setGrantStripePi] = useState('')
+  const [grantCreditsCount, setGrantCreditsCount] = useState('10')
+  const [grantNote, setGrantNote] = useState('')
+  const [grantLookupPackages, setGrantLookupPackages] = useState([])
+  const [grantError, setGrantError] = useState('')
+  const [grantSuccess, setGrantSuccess] = useState('')
 
   useEffect(() => {
     if (isAdminAuthenticated()) {
@@ -295,6 +308,111 @@ function Admin() {
     }
   }
 
+  const adminAuthHeaders = () => {
+    const token = localStorage.getItem('admin_token')
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    }
+  }
+
+  const handleLookupCustomerPackages = async () => {
+    setGrantError('')
+    setGrantSuccess('')
+    if (!canViewRevenue()) {
+      setGrantError('Solo un administrador principal puede consultar paquetes para otorgar.')
+      return
+    }
+    const email = grantEmail.trim().toLowerCase()
+    if (!email) {
+      setGrantError('Escribe el correo del cliente.')
+      return
+    }
+    try {
+      const res = await fetch(
+        `${BACKEND_URL}/api/admin/customer-packages?email=${encodeURIComponent(email)}`,
+        { headers: adminAuthHeaders() },
+      )
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setGrantError(data.error || 'No se pudieron cargar los paquetes')
+        setGrantLookupPackages([])
+        return
+      }
+      setGrantLookupPackages(data.packages || [])
+      if ((data.packages || []).length === 0) {
+        setGrantSuccess('Este cliente no tiene paquetes registrados aún.')
+      }
+    } catch (err) {
+      setGrantError(err.message || 'Error de conexión')
+    }
+  }
+
+  const handleGrantPackage = async (e) => {
+    e.preventDefault()
+    setGrantError('')
+    setGrantSuccess('')
+    if (!canViewRevenue()) {
+      setGrantError('Solo un administrador principal puede otorgar paquetes o clases.')
+      return
+    }
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      setGrantError('Sesión expirada. Vuelve a iniciar sesión.')
+      return
+    }
+    try {
+      if (grantMode === 'credits') {
+        const res = await fetch(`${BACKEND_URL}/api/admin/customer-packages/grant-credits`, {
+          method: 'POST',
+          headers: adminAuthHeaders(),
+          body: JSON.stringify({
+            token,
+            email: grantEmail.trim().toLowerCase(),
+            classes: Number(grantCreditsCount) || 0,
+            validityDays: grantValidityDays !== '' ? Number(grantValidityDays) : 60,
+            note: grantNote.trim() || undefined,
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          setGrantError(data.error || 'Error al otorgar clases')
+          return
+        }
+        setGrantSuccess(
+          `«Clases otorgadas — Administración»: ${data.purchase?.classesRemaining} disponibles. El cliente elige fecha al reservar en popnest.app.`,
+        )
+      } else {
+        const res = await fetch(`${BACKEND_URL}/api/admin/customer-packages/grant`, {
+          method: 'POST',
+          headers: adminAuthHeaders(),
+          body: JSON.stringify({
+            token,
+            email: grantEmail.trim().toLowerCase(),
+            packageName: grantPackageName.trim(),
+            classesRemaining: grantClassesRemaining !== '' ? Number(grantClassesRemaining) : undefined,
+            validityDays: grantValidityDays !== '' ? Number(grantValidityDays) : undefined,
+            amountPaid: grantAmountPaid !== '' ? Number(grantAmountPaid) : 0,
+            stripePaymentIntentId: grantStripePi.trim() || undefined,
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          setGrantError(data.error || 'Error al otorgar paquete')
+          return
+        }
+        setGrantSuccess(
+          `Paquete creado (id ${data.purchase?.id}). ${data.purchase?.classesRemaining} clases disponibles. Las reservas anteriores no se modifican.`,
+        )
+        setGrantStripePi('')
+      }
+      loadPackages()
+      if (grantEmail.trim()) handleLookupCustomerPackages()
+    } catch (err) {
+      setGrantError(err.message || 'Error de conexión')
+    }
+  }
+
   // No mostrar nada del panel sin estar autenticado (evita que /admin sea público)
   if (!isAdminAuthenticated()) {
     return <Navigate to="/admin/login" replace />
@@ -324,13 +442,38 @@ function Admin() {
                 </p>
               </div>
               <div className="flex flex-shrink-0 items-center gap-2 flex-wrap">
+                {canViewRevenue() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowGrantPackage(!showGrantPackage)
+                      setGrantError('')
+                      setGrantSuccess('')
+                      if (!showGrantPackage) {
+                        setShowAddBooking(false)
+                        setAddBookingError('')
+                        setAddBookingSuccess('')
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg font-body font-medium transition-all duration-300 border-2 whitespace-nowrap text-white"
+                    style={{ backgroundColor: '#B73D37', borderColor: '#B73D37' }}
+                  >
+                    {showGrantPackage ? 'Ocultar otorgar clases' : 'Otorgar clases (sin fecha)'}
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => { setShowAddBooking(!showAddBooking); setAddBookingError(''); setAddBookingSuccess(''); setActiveTab('bookings'); }}
+                  onClick={() => {
+                    setShowAddBooking(!showAddBooking)
+                    setAddBookingError('')
+                    setAddBookingSuccess('')
+                    setActiveTab('bookings')
+                    if (!showAddBooking) setShowGrantPackage(false)
+                  }}
                   className="px-4 py-2 rounded-lg font-body transition-all duration-300 border-2 whitespace-nowrap"
                   style={{ borderColor: '#B73D37', color: '#B73D37' }}
                 >
-                  {showAddBooking ? 'Ocultar añadir reserva' : 'Añadir reserva manual'}
+                  {showAddBooking ? 'Ocultar reserva manual' : 'Reserva manual (con fecha)'}
                 </button>
                 {canViewRevenue() && (
                   <button
@@ -491,8 +634,16 @@ function Admin() {
             {activeTab === 'bookings' && showAddBooking && (
               <div className="mb-6">
                 <div className="mt-4 p-6 rounded-lg border-2 bg-quaternary/30" style={{ borderColor: '#E5B3B0' }}>
-                    <h2 className="text-h3 font-heading text-body mb-2">Añadir reserva manual</h2>
-                    <p className="text-body font-body text-sm mb-4">Crea una reserva para que aparezca en la lista (útil cuando el servidor no tiene aún el archivo de reservas).</p>
+                    <h2 className="text-h3 font-heading text-body mb-2">Reserva manual (con fecha y hora)</h2>
+                    <p className="text-body font-body text-sm mb-2">
+                      Solo para registrar una clase en un día concreto. <strong>No suma clases al paquete.</strong>
+                    </p>
+                    {canViewRevenue() && (
+                      <p className="text-body font-body text-sm mb-4 p-3 rounded-lg" style={{ backgroundColor: '#FEE2E2', color: '#991B1B' }}>
+                        Para dar clases sin elegir fecha: usa el botón rojo <strong>«Otorgar clases (sin fecha)»</strong> arriba (email + cantidad de clases).
+                      </p>
+                    )}
+                    <p className="text-body font-body text-sm mb-4 text-neutral-600">Útil cuando ya asistió y quieres dejar constancia en la lista.</p>
                     {addBookingError && (
                       <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm font-body">{addBookingError}</div>
                     )}
@@ -535,6 +686,172 @@ function Admin() {
                       </div>
                     </form>
                   </div>
+              </div>
+            )}
+
+            {canViewRevenue() && showGrantPackage && (
+              <div className="mb-6">
+                <div className="mt-4 p-6 rounded-lg border-2 bg-quaternary/30" style={{ borderColor: '#E5B3B0' }}>
+                  <h2 className="text-h3 font-heading text-body mb-2">Otorgar clases (sin fecha)</h2>
+                  <p className="text-body font-body text-sm mb-4">
+                    Crea créditos <strong>«Clases otorgadas — Administración»</strong>: sin Stripe y sin reservar día/hora.
+                    La clienta entra a popnest.app, elige clase, fecha y hora, y paga con ese saldo.
+                  </p>
+                  {grantError && (
+                    <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm font-body">{grantError}</div>
+                  )}
+                  {grantSuccess && (
+                    <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm font-body">{grantSuccess}</div>
+                  )}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setGrantMode('credits')}
+                      className={`px-3 py-1 rounded-lg font-body text-sm border-2 ${grantMode === 'credits' ? 'text-white' : ''}`}
+                      style={grantMode === 'credits' ? { backgroundColor: '#B73D37', borderColor: '#B73D37' } : { borderColor: '#E5B3B0' }}
+                    >
+                      Otorgar clases (recomendado)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGrantMode('new')}
+                      className={`px-3 py-1 rounded-lg font-body text-sm border-2 ${grantMode === 'new' ? 'text-white' : ''}`}
+                      style={grantMode === 'new' ? { backgroundColor: '#B73D37', borderColor: '#B73D37' } : { borderColor: '#E5B3B0' }}
+                    >
+                      Registrar compra Stripe (avanzado)
+                    </button>
+                  </div>
+                  <form onSubmit={handleGrantPackage} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
+                    <div className="md:col-span-2">
+                      <label className="block text-body font-body font-medium mb-1">Email del cliente *</label>
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          type="email"
+                          value={grantEmail}
+                          onChange={(e) => setGrantEmail(e.target.value)}
+                          className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={handleLookupCustomerPackages}
+                          className="px-4 py-2 rounded-lg font-body border-2"
+                          style={{ borderColor: '#B73D37', color: '#B73D37' }}
+                        >
+                          Ver paquetes del cliente
+                        </button>
+                      </div>
+                    </div>
+                    {grantLookupPackages.length > 0 && (
+                      <div className="md:col-span-2 text-sm font-body border-2 border-neutral rounded-lg p-3 max-h-40 overflow-y-auto">
+                        <p className="font-medium mb-2">Paquetes del cliente:</p>
+                        <ul className="space-y-1">
+                          {grantLookupPackages.map((p) => (
+                            <li key={p.id}>
+                              #{p.id} — {p.packageName}
+                              {p.adminGranted ? ' (admin)' : ''} — {p.classesRemaining} disponibles
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {grantMode === 'new' ? (
+                      <>
+                        <div className="md:col-span-2">
+                          <label className="block text-body font-body font-medium mb-1">Nombre del paquete (catálogo) *</label>
+                          <input
+                            type="text"
+                            value={grantPackageName}
+                            onChange={(e) => setGrantPackageName(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-body font-body font-medium mb-1">Clases disponibles</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={grantClassesRemaining}
+                            onChange={(e) => setGrantClassesRemaining(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-body font-body font-medium mb-1">Vigencia (días)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={grantValidityDays}
+                            onChange={(e) => setGrantValidityDays(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-body font-body font-medium mb-1">Monto pagado (centavos MXN)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="180000 = $1,800"
+                            value={grantAmountPaid}
+                            onChange={(e) => setGrantAmountPaid(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-body font-body font-medium mb-1">Stripe Payment Intent (opcional)</label>
+                          <input
+                            type="text"
+                            placeholder="pi_..."
+                            value={grantStripePi}
+                            onChange={(e) => setGrantStripePi(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <label className="block text-body font-body font-medium mb-1">Clases a otorgar *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={grantCreditsCount}
+                            onChange={(e) => setGrantCreditsCount(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-body font-body font-medium mb-1">Vigencia (días) *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={grantValidityDays}
+                            onChange={(e) => setGrantValidityDays(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                            required
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-body font-body font-medium mb-1">Nota interna (opcional)</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. Ajuste abril 2026"
+                            value={grantNote}
+                            onChange={(e) => setGrantNote(e.target.value)}
+                            className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body"
+                          />
+                        </div>
+                      </>
+                    )}
+                    <div className="md:col-span-2">
+                      <button type="submit" className="px-4 py-2 rounded-lg font-body font-medium text-white" style={{ backgroundColor: '#B73D37' }}>
+                        {grantMode === 'new' ? 'Registrar compra Stripe' : 'Otorgar clases al cliente'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
 

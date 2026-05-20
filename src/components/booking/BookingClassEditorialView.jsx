@@ -63,7 +63,8 @@ function BookingClassEditorialView({
 
   const formatPackageAvailability = (pkg) => {
     const remaining = Number(pkg?.classesRemaining ?? pkg?.classes ?? 0)
-    return `${remaining} ${remaining === 1 ? 'clase disponible' : 'clases disponibles'}`
+    const count = `${remaining} ${remaining === 1 ? 'clase disponible' : 'clases disponibles'}`
+    return pkg?.adminGranted ? `${count} · otorgadas por el estudio` : count
   }
 
   const selectedPackage =
@@ -425,7 +426,8 @@ function BookingClassEditorialView({
                               setSelectedPackageId(pkg.id)
                             }}
                           />
-                          {pkg.packageName} ({formatPackageAvailability(pkg)})
+                          {pkg.packageName}
+                          {pkg.adminGranted ? ' ★' : ''} ({formatPackageAvailability(pkg)})
                         </label>
                       ))}
                       <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>

@@ -33,6 +33,10 @@ import {
   getUserAllPackagesByEmail,
   getUserActivePackagesByProfileId,
   insertCustomerPackageAfterPayment,
+  grantCustomerPackageManual,
+  grantAdminClassCredits,
+  addClassesToCustomerPackage,
+  listCustomerPackagesByEmail,
   resolveProfileIdForPackagePurchase,
 } from './db/packages.js'
 import { getSupabaseAnon } from './db/supabaseClient.js'
@@ -1054,6 +1058,130 @@ app.post('/api/auth/admin/add-operator', (req, res) => {
   } catch (error) {
     console.error('Error in add-operator:', error)
     res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
+  }
+})
+
+// Endpoint: Listar paquetes de un cliente por email (solo super_admin)
+app.get('/api/admin/customer-packages', async (req, res) => {
+  try {
+    const payload = parseAdminToken(req)
+    if (!payload) {
+      return res.status(401).json({ success: false, error: 'Debes iniciar sesión como administrador.' })
+    }
+    if (payload.role !== 'super_admin') {
+      return res.status(403).json({ success: false, error: 'Solo un administrador principal puede otorgar paquetes o clases.' })
+    }
+    const email = String(req.query.email || '').trim().toLowerCase()
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Query email es requerido.' })
+    }
+    const list = await listCustomerPackagesByEmail(email)
+    res.json({ success: true, email, packages: list })
+  } catch (error) {
+    console.error('Error listing customer packages:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// Endpoint: Otorgar créditos de clase (admin, sin fecha ni Stripe) — el cliente reserva después
+app.post('/api/admin/customer-packages/grant-credits', async (req, res) => {
+  try {
+    const payload = parseAdminToken(req)
+    if (!payload) {
+      return res.status(401).json({ success: false, error: 'Debes iniciar sesión como administrador.' })
+    }
+    if (payload.role !== 'super_admin') {
+      return res.status(403).json({ success: false, error: 'Solo un administrador principal puede otorgar clases.' })
+    }
+    const { email, classes, validityDays, note } = req.body || {}
+    if (!email?.trim()) {
+      return res.status(400).json({ success: false, error: 'El correo del cliente es requerido.' })
+    }
+    const purchase = await grantAdminClassCredits({
+      email,
+      classes,
+      validityDays,
+      note,
+    })
+    console.log(
+      '✅ Créditos admin otorgados:',
+      purchase.id,
+      purchase.customer?.email,
+      purchase.classesRemaining,
+      'disponibles',
+    )
+    res.json({ success: true, purchase })
+  } catch (error) {
+    console.error('Error granting admin class credits:', error)
+    res.status(400).json({ success: false, error: error.message })
+  }
+})
+
+// Endpoint: Otorgar un paquete NUEVO al cliente (solo super_admin; no altera reservas ni paquetes anteriores)
+app.post('/api/admin/customer-packages/grant', async (req, res) => {
+  try {
+    const payload = parseAdminToken(req)
+    if (!payload) {
+      return res.status(401).json({ success: false, error: 'Debes iniciar sesión como administrador.' })
+    }
+    if (payload.role !== 'super_admin') {
+      return res.status(403).json({ success: false, error: 'Solo un administrador principal puede otorgar paquetes o clases.' })
+    }
+    const {
+      email,
+      profileId,
+      packageName,
+      classesRemaining,
+      classesTotal,
+      validityDays,
+      expiresAt,
+      amountPaid,
+      stripePaymentIntentId,
+    } = req.body || {}
+
+    const purchase = await grantCustomerPackageManual({
+      email,
+      profileId,
+      packageName,
+      classesRemaining,
+      classesTotal,
+      validityDays,
+      expiresAt,
+      amountPaid,
+      stripePaymentIntentId: stripePaymentIntentId || null,
+    })
+
+    console.log('✅ Paquete otorgado por admin:', purchase.id, purchase.packageName, purchase.customer?.email)
+    res.json({ success: true, purchase })
+  } catch (error) {
+    console.error('Error granting package:', error)
+    res.status(400).json({ success: false, error: error.message })
+  }
+})
+
+// Endpoint: Añadir clases al saldo de un paquete existente (solo super_admin)
+app.post('/api/admin/customer-packages/add-classes', async (req, res) => {
+  try {
+    const payload = parseAdminToken(req)
+    if (!payload) {
+      return res.status(401).json({ success: false, error: 'Debes iniciar sesión como administrador.' })
+    }
+    if (payload.role !== 'super_admin') {
+      return res.status(403).json({ success: false, error: 'Solo un administrador principal puede otorgar paquetes o clases.' })
+    }
+    const { customerPackageId, addClasses, extendValidityDays } = req.body || {}
+    if (!customerPackageId) {
+      return res.status(400).json({ success: false, error: 'customerPackageId es requerido.' })
+    }
+    const purchase = await addClassesToCustomerPackage(customerPackageId, {
+      addClasses,
+      extendValidityDays,
+    })
+    console.log('✅ Clases añadidas al paquete', customerPackageId, '→', purchase.classesRemaining, 'disponibles')
+    res.json({ success: true, purchase })
+  } catch (error) {
+    console.error('Error adding classes to package:', error)
+    res.status(400).json({ success: false, error: error.message })
   }
 })
 

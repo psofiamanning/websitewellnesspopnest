@@ -26,6 +26,7 @@ import TeacherDashboard from './pages/TeacherDashboard'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import MyBookings from './pages/MyBookings'
+import MyPackages from './pages/MyPackages'
 import Ubicacion from './pages/Ubicacion'
 import DesignSystem from './pages/DesignSystem'
 import HomeRedesign from './pages/HomeRedesign'
@@ -112,6 +113,7 @@ function AppContent() {
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />
         <Route path="/mis-reservas" element={<MyBookings />} />
+        <Route path="/mis-paquetes" element={<MyPackages />} />
         <Route path="/design-system" element={<DevOnlyRoute><DesignSystem /></DevOnlyRoute>} />
         <Route path="/home-redesign" element={<DevOnlyRoute><HomeRedesign /></DevOnlyRoute>} />
         <Route path="/schedule-redesign" element={<DevOnlyRoute><ScheduleRedesign /></DevOnlyRoute>} />

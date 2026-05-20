@@ -242,6 +242,30 @@ export const getUserPackages = async (email) => {
   }
 }
 
+/** Paquetes activos + historial de compras */
+export const getUserPackagesAll = async (email) => {
+  const empty = {
+    activePackages: [],
+    historyPackages: [],
+    allPackages: [],
+    totalClassesRemaining: 0,
+    hasActivePackages: false,
+    hasPurchasedPackages: false,
+  }
+  try {
+    const response = await fetch(
+      `${BACKEND_URL}/api/packages/user/${encodeURIComponent(email)}/all`,
+    )
+    if (response.ok) {
+      return await response.json()
+    }
+    return empty
+  } catch (error) {
+    console.warn('Error getting user packages (all):', error)
+    return empty
+  }
+}
+
 // Confirmar reserva después del pago exitoso
 export const confirmBooking = async (paymentIntentId, bookingData) => {
   try {

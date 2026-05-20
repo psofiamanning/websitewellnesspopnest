@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Logo from './Logo'
 import { isAuthenticated, getCurrentUser, logout } from '../services/authService'
+import { getUserPackagesAll } from '../services/bookingService'
 import '../styles/navShell.css'
 
 const MENU_ITEMS = [
@@ -16,6 +17,7 @@ function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
+  const [hasPurchasedPackages, setHasPurchasedPackages] = useState(false)
 
   const isHome = location.pathname === '/'
 
@@ -24,6 +26,20 @@ function Navbar() {
     setCurrentUser(getCurrentUser())
     setIsMenuOpen(false)
   }, [location.pathname, location.hash])
+
+  useEffect(() => {
+    if (!authenticated || !currentUser?.email) {
+      setHasPurchasedPackages(false)
+      return
+    }
+    let cancelled = false
+    getUserPackagesAll(currentUser.email).then((data) => {
+      if (!cancelled) setHasPurchasedPackages(Boolean(data?.hasPurchasedPackages))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [authenticated, currentUser?.email])
 
   const handleLogout = () => {
     logout()
@@ -70,6 +86,15 @@ function Navbar() {
           >
             Mis reservas
           </Link>
+          {hasPurchasedPackages ? (
+            <Link
+              to="/mis-paquetes"
+              className={`${linkClass}${location.pathname.startsWith('/mis-paquetes') ? ' site-nav__link--active' : ''}`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Mis paquetes
+            </Link>
+          ) : null}
           {!mobile ? (
             <span className="site-nav__user" title={currentUser?.email || ''}>
               <span className="site-nav__user-initials" aria-hidden>

@@ -63,6 +63,10 @@ export const ROUTE_SEO = {
   '/mis-reservas': {
     title: 'Mis Reservas | Estudio Popnest Wellness',
     description: 'Consulta y gestiona tus reservas de clases en Estudio Popnest Wellness, Coyoacán.'
+  },
+  '/mis-paquetes': {
+    title: 'Mis Paquetes | Estudio Popnest Wellness',
+    description: 'Consulta tus paquetes de clases activos, clases disponibles e historial de compras en Estudio Popnest Wellness.'
   }
 }
 
@@ -135,7 +139,8 @@ export function getBreadcrumbItems(pathname) {
     terminos: 'Términos y condiciones',
     login: 'Iniciar sesión',
     signup: 'Crear cuenta',
-    'mis-reservas': 'Mis reservas'
+    'mis-reservas': 'Mis reservas',
+    'mis-paquetes': 'Mis paquetes'
   }
   const label = labels[segments[0]] || segments[0]
   items.push({ name: label, url: pathname })

@@ -30,6 +30,7 @@ import {
 import {
   listAllPackagePurchases,
   getUserActivePackagesByEmail,
+  getUserAllPackagesByEmail,
   getUserActivePackagesByProfileId,
   insertCustomerPackageAfterPayment,
   resolveProfileIdForPackagePurchase,
@@ -1480,6 +1481,18 @@ app.get('/api/packages/user/:email', async (req, res) => {
     })
   } catch (error) {
     console.error('Error getting user packages:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Endpoint: Paquetes activos + historial de compras del usuario
+app.get('/api/packages/user/:email/all', async (req, res) => {
+  try {
+    const { email } = req.params
+    const data = await getUserAllPackagesByEmail(decodeURIComponent(email))
+    res.json(data)
+  } catch (error) {
+    console.error('Error getting user packages (all):', error)
     res.status(500).json({ error: error.message })
   }
 })

@@ -115,6 +115,61 @@ export async function getUserActivePackagesByEmail(email) {
   return fetchActivePackagesForCustomerId(profile.id)
 }
 
+async function fetchAllPurchasedPackagesForCustomerId(customerId) {
+  if (!customerId) return []
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('customer_packages')
+    .select(CUSTOMER_PACKAGE_SELECT)
+    .eq('customer_id', customerId)
+    .eq('payment_status', 'succeeded')
+    .order('created_at', { ascending: false })
+  if (error) {
+    console.error('fetchAllPurchasedPackagesForCustomerId:', error.message)
+    return []
+  }
+  return mapPackagesWithBookingCounts(data || [])
+}
+
+function isPackageActive(pkg, now = new Date()) {
+  if (!pkg) return false
+  const remaining = Number(pkg.classesRemaining ?? 0)
+  if (remaining <= 0) return false
+  if (pkg.expiresAt && new Date(pkg.expiresAt) <= now) return false
+  return true
+}
+
+/** Todos los paquetes comprados del usuario, separados en activos e historial. */
+export async function getUserAllPackagesByEmail(email) {
+  const profile = await getProfileByEmail(email)
+  if (!profile) {
+    return {
+      activePackages: [],
+      historyPackages: [],
+      allPackages: [],
+      totalClassesRemaining: 0,
+      hasActivePackages: false,
+      hasPurchasedPackages: false,
+    }
+  }
+  const all = (await fetchAllPurchasedPackagesForCustomerId(profile.id)).filter(Boolean)
+  const now = new Date()
+  const activePackages = all.filter((p) => isPackageActive(p, now))
+  const historyPackages = all.filter((p) => !isPackageActive(p, now))
+  const totalClassesRemaining = activePackages.reduce(
+    (sum, pkg) => sum + (Number(pkg.classesRemaining) || 0),
+    0,
+  )
+  return {
+    activePackages,
+    historyPackages,
+    allPackages: all,
+    totalClassesRemaining,
+    hasActivePackages: activePackages.length > 0,
+    hasPurchasedPackages: all.length > 0,
+  }
+}
+
 /**
  * Insert customer_packages after Stripe (Stripe calls stay in server.js).
  */

@@ -89,6 +89,26 @@ Webhook de Stripe para eventos de pago (configurar en Stripe Dashboard).
 ### GET `/api/health`
 Health check del servidor.
 
+### GET `/api/packages/user/:email`
+Paquetes **activos** del usuario (para reservar con paquete).
+
+### GET `/api/packages/user/:email/all`
+Paquetes activos + **historial** (página Mis paquetes).
+
+### POST `/api/discount-codes/validate`
+Valida un código de descuento (body: `{ "email", "code" }`).
+
+### POST `/api/packages/purchase`
+Compra de paquete tras pago Stripe.
+
+## Supabase
+
+Migraciones SQL: ver [`sql/README.md`](sql/README.md). Producción: ejecutar al menos `add_discount_code_redemptions.sql` y `add_booking_package_credit_deducted.sql` si aún no están aplicadas.
+
+## Producción
+
+Guía paso a paso: [`../DEPLOY_PRODUCCION_COMPLETO.md`](../DEPLOY_PRODUCCION_COMPLETO.md).
+
 ## Webhooks de Stripe
 
 Para recibir eventos de Stripe en producción:

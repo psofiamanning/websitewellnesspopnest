@@ -61,10 +61,19 @@ function BookingClassEditorialView({
   const stepTime = selectedDate ? (selectedTime ? 'done' : 'active') : ''
   const stepConfirm = selectedTime ? 'active' : ''
 
-  const packageLabel =
+  const formatPackageAvailability = (pkg) => {
+    const remaining = Number(pkg?.classesRemaining ?? pkg?.classes ?? 0)
+    return `${remaining} ${remaining === 1 ? 'clase disponible' : 'clases disponibles'}`
+  }
+
+  const selectedPackage =
     usePackage && selectedPackageId
-      ? userPackages?.packages?.find((p) => p.id === selectedPackageId)?.packageName
+      ? userPackages?.packages?.find((p) => p.id === selectedPackageId)
       : null
+
+  const packageLabel = selectedPackage
+    ? `${selectedPackage.packageName} (${formatPackageAvailability(selectedPackage)})`
+    : null
 
   const paymentSummary = appliedDiscount
     ? `Gratis · código ${appliedDiscount.code}`
@@ -416,7 +425,7 @@ function BookingClassEditorialView({
                               setSelectedPackageId(pkg.id)
                             }}
                           />
-                          {pkg.packageName} ({pkg.classesRemaining ?? pkg.classes} clases)
+                          {pkg.packageName} ({formatPackageAvailability(pkg)})
                         </label>
                       ))}
                       <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>

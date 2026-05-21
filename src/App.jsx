@@ -64,7 +64,7 @@ function ScrollToTop() {
   return null
 }
 
-function AppContent() {
+export function AppContent() {
   const { pathname } = useLocation()
   const isStandalonePreview =
     pathname === '/design-system' ||

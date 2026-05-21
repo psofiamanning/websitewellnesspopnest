@@ -4,6 +4,23 @@
  */
 export const SITE_URL = 'https://popnest.app'
 
+/** Rutas públicas que se pre-renderizan en build (HTML estático para crawlers). */
+export const PRERENDER_ROUTES = [
+  '/',
+  '/classes',
+  '/horario',
+  '/packages',
+  '/ubicacion',
+  '/privacidad',
+  '/terminos'
+]
+
+export function getCanonicalUrl(pathname) {
+  const path = pathname === '/' ? '' : pathname
+  const href = `${SITE_URL}${path}`.replace(/\/$/, '')
+  return href || `${SITE_URL}/`
+}
+
 const DEFAULT_TITLE = 'Yoga y Bienestar en Coyoacán | Estudio Popnest Wellness'
 const DEFAULT_DESCRIPTION = 'Clases de yoga, meditación y sound healing en Coyoacán. Reserva en línea en Estudio Popnest Wellness. Estudio boutique en el corazón de la ciudad.'
 

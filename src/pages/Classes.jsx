@@ -4,6 +4,7 @@ import { getLandingSlugForClassId } from '../data/classLandings'
 import { getLandingNavItems } from '../data/classLandingRoutes'
 import { dotClassForClassId } from '../utils/redesignScheduleFromData'
 import { SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
+import { getClassImageAlt } from '../utils/seo'
 import '../styles/tokens.css'
 import '../styles/base.css'
 import '../styles/components.css'
@@ -16,7 +17,7 @@ function PracticeCard({ c }) {
     <article id={`cl-class-${c.id}`} className="pn-practice-card pn-practice-card--mosaic">
       <Link to={`/booking/class/${c.id}`} className="cl-pcard__mosaic-link">
         <div className="pn-practice-card__image pn-practice-card__image--mosaic pn-practice-card__image--class-icon">
-          <img src={c.image} alt="" loading="lazy" decoding="async" />
+          <img src={c.image} alt={getClassImageAlt(c.name)} loading="lazy" decoding="async" />
         </div>
         <div className="cl-pcard__mosaic-body">
           <div className="cl-pcard__head">

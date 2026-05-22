@@ -128,7 +128,7 @@ function ClassLanding() {
           <aside className="clp-aside">
             <div className="clp-card">
               <div className="clp-card__image">
-                <img src={data.image} alt="" loading="lazy" decoding="async" />
+                <img src={data.image} alt={data.imageAlt} loading="lazy" decoding="async" />
               </div>
               <p className="pn-h4 clp-card__name">{data.name}</p>
               <p className="pn-text-sm clp-muted">

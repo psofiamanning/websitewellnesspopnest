@@ -10,6 +10,11 @@ import {
  */
 export const SITE_URL = 'https://popnest.app'
 
+/** Texto alt para iconos de clase en páginas públicas. */
+export function getClassImageAlt(className) {
+  return `Clase de ${className} en Coyoacán — Estudio Popnest Wellness`
+}
+
 const PUBLIC_STATIC_ROUTES = [
   '/',
   '/classes',

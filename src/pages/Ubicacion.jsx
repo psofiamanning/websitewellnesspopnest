@@ -19,9 +19,21 @@ function Ubicacion() {
           <h1 className="text-3xl md:text-4xl font-heading font-light mb-2" style={{ color: '#1F2937' }}>
             Ubicación — Estudio de yoga en Coyoacán
           </h1>
-          <p className="text-base font-body mb-8" style={{ color: '#6B7280' }}>
+          <p className="text-base font-body mb-6" style={{ color: '#6B7280' }}>
             Encuéntranos en Del Carmen, Coyoacán, Ciudad de México.
           </p>
+
+          <div
+            className="mb-8 p-4 rounded-lg text-sm leading-relaxed"
+            style={{ backgroundColor: '#FEF3F2', border: '1px solid #FECACA', color: '#4B5563' }}
+            role="note"
+          >
+            <strong style={{ color: '#1F2937' }}>Estudio de yoga y bienestar.</strong>{' '}
+            Estudio Popnest Wellness es el salón de clases en Londres 105 (al fondo del inmueble).
+            En el mismo edificio pueden aparecer otras actividades — cafetería, coworking, galería — con
+            perfiles distintos en Google Maps y redes sociales. Para reservar yoga, meditación o sound healing,
+            usa solo <strong>popnest.app</strong>.
+          </div>
 
           <div className="space-y-8 font-body text-base leading-relaxed" style={{ color: '#4B5563' }}>
             <section>

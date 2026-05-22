@@ -51,6 +51,7 @@ export function getClassLandingData(slug) {
     teacher: c.teacher,
     duration: c.duration,
     image: c.image,
+    imageAlt: `Clase de ${c.name} en Coyoacán — Estudio Popnest Wellness`,
     intro: c.description,
     paragraphs,
     scheduleSummary: formatScheduleSummary(classId),

@@ -124,7 +124,7 @@ function Home() {
                   <article key={c.id} className="home-class-spotlight">
                     <Link to={`/booking/class/${c.id}`} className="home-class-spotlight__link">
                       <div className="home-class-spotlight__img">
-                        <img src={c.image} alt="" loading="lazy" decoding="async" />
+                        <img src={c.image} alt={`Clase de ${c.name} en Coyoacán — Estudio Popnest Wellness`} loading="lazy" decoding="async" />
                       </div>
                       <div className="home-class-spotlight__body">
                         <div className="home-class-spotlight__head">

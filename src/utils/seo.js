@@ -1,11 +1,16 @@
+import {
+  CLASS_LANDING_PATHS,
+  getClassLandingLabel,
+  getClassLandingSeo
+} from '../data/classLandingRoutes.js'
+
 /**
  * Títulos y meta descriptions por ruta para SEO local (Coyoacán).
  * Base URL para canonical y OG.
  */
 export const SITE_URL = 'https://popnest.app'
 
-/** Rutas públicas que se pre-renderizan en build (HTML estático para crawlers). */
-export const PRERENDER_ROUTES = [
+const PUBLIC_STATIC_ROUTES = [
   '/',
   '/classes',
   '/horario',
@@ -14,6 +19,9 @@ export const PRERENDER_ROUTES = [
   '/privacidad',
   '/terminos'
 ]
+
+/** Rutas públicas que se pre-renderizan en build (HTML estático para crawlers). */
+export const PRERENDER_ROUTES = [...PUBLIC_STATIC_ROUTES, ...CLASS_LANDING_PATHS]
 
 /** Mismas rutas que el sitemap (sin login, reservas ni áreas privadas). */
 export const SITEMAP_ROUTES = PRERENDER_ROUTES
@@ -30,6 +38,9 @@ const SITEMAP_META_BY_ROUTE = {
 
 /** Meta sitemap (changefreq, priority) por ruta pública. */
 export function getSitemapMeta(pathname) {
+  if (pathname.startsWith('/clases/')) {
+    return { changefreq: 'monthly', priority: 0.7 }
+  }
   return SITEMAP_META_BY_ROUTE[pathname] ?? { changefreq: 'monthly', priority: 0.5 }
 }
 
@@ -161,6 +172,12 @@ export function getBreadcrumbItems(pathname) {
     return items
   }
 
+  if (segments[0] === 'clases' && segments[1]) {
+    items.push({ name: 'Clases', url: '/classes' })
+    items.push({ name: getClassLandingLabel(segments[1]), url: pathname })
+    return items
+  }
+
   if (segments[0] === 'coaches') {
     if (segments[1] === 'login') {
       items.push({ name: 'Acceso coaches', url: pathname })
@@ -215,6 +232,10 @@ export function getBreadcrumbItems(pathname) {
 export function getSeoForPath(pathname) {
   const exact = ROUTE_SEO[pathname]
   if (exact) return exact
+  if (pathname.startsWith('/clases/')) {
+    const landingSeo = getClassLandingSeo(pathname)
+    if (landingSeo) return landingSeo
+  }
   if (pathname === '/teachers' || pathname === '/coaches') return ROUTE_SEO['/classes']
   if (pathname.startsWith('/booking/class/')) {
     return {

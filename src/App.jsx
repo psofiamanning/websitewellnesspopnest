@@ -28,6 +28,7 @@ import TermsAndConditions from './pages/TermsAndConditions'
 import MyBookings from './pages/MyBookings'
 import MyPackages from './pages/MyPackages'
 import Ubicacion from './pages/Ubicacion'
+import ClassLanding from './pages/ClassLanding'
 import DesignSystem from './pages/DesignSystem'
 import HomeRedesign from './pages/HomeRedesign'
 import ScheduleRedesign from './pages/ScheduleRedesign'
@@ -91,6 +92,7 @@ export function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<Classes />} />
+        <Route path="/clases/:slug" element={<ClassLanding />} />
         <Route path="/coaches/login" element={<TeacherLogin />} />
         <Route path="/coaches/panel" element={<TeacherDashboard />} />
         <Route path="/coaches" element={<Navigate to="/classes" replace />} />

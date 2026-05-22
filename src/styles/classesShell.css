@@ -486,7 +486,8 @@
   max-width: calc(25% - 16.5px);
 }
 
-.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic {
+.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic,
+.cl-shell--practices-page .cl-practice-row article.pn-practice-card--mosaic {
   padding: 0;
   gap: 0;
   min-height: 0;
@@ -502,16 +503,42 @@
   height: 100%;
 }
 
-.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic:hover {
+.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic:hover,
+.cl-shell--practices-page .cl-practice-row article.pn-practice-card--mosaic:hover {
   transform: translateY(-3px);
   background: var(--pn-color-card-editorial);
   box-shadow: 0 8px 24px rgba(182, 67, 47, 0.12);
   color: inherit;
 }
 
-.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic:focus-visible {
+.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic:focus-visible,
+.cl-shell--practices-page .cl-practice-row article.pn-practice-card--mosaic:focus-within {
   outline: 2px solid var(--pn-color-primary);
   outline-offset: 3px;
+}
+
+.cl-shell--practices-page .cl-pcard__mosaic-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.cl-shell--practices-page .cl-pcard__guide-link {
+  display: block;
+  padding: 12px 26px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pn-color-primary);
+  text-decoration: none;
+  border-top: 1px solid rgba(182, 67, 47, 0.12);
+}
+
+.cl-shell--practices-page .cl-pcard__guide-link:hover {
+  color: var(--pn-color-primary-hover);
+  text-decoration: underline;
 }
 
 .cl-shell--practices-page .cl-pcard__mosaic-body {
@@ -578,7 +605,8 @@
   flex-shrink: 0;
 }
 
-.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic:hover .cl-pcard__link-mosaic {
+.cl-shell--practices-page .cl-practice-row a.pn-practice-card--mosaic:hover .cl-pcard__link-mosaic,
+.cl-shell--practices-page .cl-practice-row article.pn-practice-card--mosaic:hover .cl-pcard__link-mosaic {
   color: var(--pn-color-primary-hover);
 }
 

@@ -1,0 +1,148 @@
+.clp-page {
+  background: var(--pn-color-bg-base);
+  min-height: 100vh;
+}
+
+.clp-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: calc(var(--pn-site-nav-height) + 32px) 24px 64px;
+}
+
+.clp-hero {
+  max-width: 720px;
+  margin-bottom: 48px;
+}
+
+.clp-hero__eyebrow {
+  margin-bottom: 16px;
+}
+
+.clp-hero__title {
+  font-family: var(--pn-font-heading);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--pn-color-text);
+  margin: 0 0 20px;
+}
+
+.clp-hero__intro {
+  margin-bottom: 16px;
+  color: var(--pn-color-text-muted);
+}
+
+.clp-hero__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  color: var(--pn-color-text-muted);
+}
+
+.clp-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.clp-layout {
+  display: grid;
+  gap: 40px;
+}
+
+@media (min-width: 900px) {
+  .clp-layout {
+    grid-template-columns: 1fr 300px;
+    align-items: start;
+  }
+}
+
+.clp-section + .clp-section {
+  margin-top: 36px;
+}
+
+.clp-prose p + p {
+  margin-top: 16px;
+}
+
+.clp-muted {
+  color: var(--pn-color-text-muted);
+}
+
+.clp-section a {
+  color: var(--pn-color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.clp-card {
+  background: var(--pn-color-bg-secondary);
+  border: var(--pn-border-soft);
+  padding: 24px;
+  position: sticky;
+  top: calc(var(--pn-site-nav-height) + 16px);
+}
+
+.clp-card__image {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  background: var(--pn-color-bg-base);
+}
+
+.clp-card__image img {
+  max-width: 85%;
+  max-height: 85%;
+  object-fit: contain;
+}
+
+.clp-card__name {
+  margin: 0 0 8px;
+}
+
+.clp-card__price {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 16px 0 20px;
+  color: var(--pn-color-text);
+}
+
+.clp-card__price span {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--pn-color-text-muted);
+}
+
+.clp-card__cta {
+  width: 100%;
+  justify-content: center;
+}
+
+.clp-related {
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: var(--pn-border-soft);
+}
+
+.clp-related__list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+
+.clp-related__list a {
+  color: var(--pn-color-primary);
+  text-decoration: none;
+  font-size: 0.9375rem;
+}
+
+.clp-related__list a:hover {
+  text-decoration: underline;
+}

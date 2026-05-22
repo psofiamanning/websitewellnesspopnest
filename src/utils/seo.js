@@ -15,10 +15,57 @@ export const PRERENDER_ROUTES = [
   '/terminos'
 ]
 
+/** Mismas rutas que el sitemap (sin login, reservas ni áreas privadas). */
+export const SITEMAP_ROUTES = PRERENDER_ROUTES
+
+const SITEMAP_META_BY_ROUTE = {
+  '/': { changefreq: 'weekly', priority: 1.0 },
+  '/classes': { changefreq: 'weekly', priority: 0.9 },
+  '/horario': { changefreq: 'weekly', priority: 0.8 },
+  '/packages': { changefreq: 'monthly', priority: 0.8 },
+  '/ubicacion': { changefreq: 'monthly', priority: 0.8 },
+  '/privacidad': { changefreq: 'yearly', priority: 0.4 },
+  '/terminos': { changefreq: 'yearly', priority: 0.4 }
+}
+
+/** Meta sitemap (changefreq, priority) por ruta pública. */
+export function getSitemapMeta(pathname) {
+  return SITEMAP_META_BY_ROUTE[pathname] ?? { changefreq: 'monthly', priority: 0.5 }
+}
+
+const NOINDEX_PREFIXES = [
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/mis-reservas',
+  '/mis-paquetes',
+  '/admin',
+  '/coaches/login',
+  '/coaches/panel',
+  '/booking',
+  '/design-system',
+  '/home-redesign',
+  '/schedule-redesign',
+  '/packages-redesign',
+  '/mis-reservas-redesign',
+  '/classes-redesign',
+  '/previews'
+]
+
+/** Rutas de cuenta, reserva, admin y previews: no indexar en buscadores. */
+export function shouldNoindex(pathname) {
+  if (!pathname) return false
+  if (SITEMAP_ROUTES.includes(pathname)) return false
+  if (pathname === '/teachers' || pathname === '/coaches') return true
+  return NOINDEX_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  )
+}
+
 export function getCanonicalUrl(pathname) {
-  const path = pathname === '/' ? '' : pathname
-  const href = `${SITE_URL}${path}`.replace(/\/$/, '')
-  return href || `${SITE_URL}/`
+  if (!pathname || pathname === '/') return `${SITE_URL}/`
+  return `${SITE_URL}${pathname}`.replace(/\/$/, '') || `${SITE_URL}/`
 }
 
 const DEFAULT_TITLE = 'Yoga y Bienestar en Coyoacán | Estudio Popnest Wellness'

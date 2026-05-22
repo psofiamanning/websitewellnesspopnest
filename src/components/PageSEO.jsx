@@ -1,15 +1,37 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { getSeoForPath, getBreadcrumbItems, SITE_URL } from '../utils/seo'
+import {
+  getSeoForPath,
+  getBreadcrumbItems,
+  getCanonicalUrl,
+  shouldNoindex,
+  SITE_URL
+} from '../utils/seo'
 
 const BREADCRUMB_SCRIPT_ID = 'breadcrumb-schema'
+const ROBOTS_META_NAME = 'robots'
+
+function setRobotsMeta(noindex) {
+  let meta = document.querySelector(`meta[name="${ROBOTS_META_NAME}"]`)
+  if (noindex) {
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = ROBOTS_META_NAME
+      document.head.appendChild(meta)
+    }
+    meta.setAttribute('content', 'noindex, nofollow')
+  } else if (meta) {
+    meta.remove()
+  }
+}
 
 /**
- * Actualiza title, meta description, canonical y BreadcrumbList (Schema) según la ruta.
+ * Actualiza title, meta description, canonical, robots y BreadcrumbList según la ruta.
  */
 function PageSEO() {
   const { pathname } = useLocation()
   const { title, description } = getSeoForPath(pathname)
+  const noindex = shouldNoindex(pathname)
 
   useEffect(() => {
     document.title = title
@@ -17,8 +39,10 @@ function PageSEO() {
     let meta = document.querySelector('meta[name="description"]')
     if (meta) meta.setAttribute('content', description)
 
+    setRobotsMeta(noindex)
+
+    const href = getCanonicalUrl(pathname)
     let canonical = document.querySelector('link[rel="canonical"]')
-    const href = `${SITE_URL}${pathname === '/' ? '' : pathname}`.replace(/\/$/, '') || SITE_URL + '/'
     if (canonical) {
       canonical.setAttribute('href', href)
     } else {
@@ -28,7 +52,6 @@ function PageSEO() {
       document.head.appendChild(link)
     }
 
-    // BreadcrumbList (Schema.org) para el snippet en Google
     const items = getBreadcrumbItems(pathname)
     const itemListElement = items.map((item, index) => ({
       '@type': 'ListItem',
@@ -48,7 +71,7 @@ function PageSEO() {
     script.type = 'application/ld+json'
     script.textContent = JSON.stringify(breadcrumbJson)
     document.head.appendChild(script)
-  }, [pathname, title, description])
+  }, [pathname, title, description, noindex])
 
   return null
 }

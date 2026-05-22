@@ -7,9 +7,12 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import {
   PRERENDER_ROUTES,
+  SITEMAP_ROUTES,
   getSeoForPath,
   getCanonicalUrl,
   getBreadcrumbItems,
+  getSitemapMeta,
+  shouldNoindex,
   SITE_URL
 } from '../src/utils/seo.js'
 
@@ -84,6 +87,19 @@ function applyRouteHead(html, pathname) {
   const breadcrumbScript = `<script id="breadcrumb-schema" type="application/ld+json">${JSON.stringify(breadcrumbJson)}</script>`
   out = out.replace('</head>', `    ${breadcrumbScript}\n  </head>`)
 
+  if (shouldNoindex(pathname)) {
+    out = replaceTag(
+      out,
+      /<meta name="robots" content="[^"]*"\s*\/?>/,
+      '<meta name="robots" content="noindex, nofollow" />'
+    )
+    if (!out.includes('name="robots"')) {
+      out = out.replace('</head>', '    <meta name="robots" content="noindex, nofollow" />\n  </head>')
+    }
+  } else {
+    out = out.replace(/\s*<meta name="robots" content="[^"]*"\s*\/?>\n?/i, '\n')
+  }
+
   return out
 }
 
@@ -101,6 +117,38 @@ function outputPathForRoute(route) {
   return path.join(distDir, segment, 'index.html')
 }
 
+/** Fecha del build en formato W3C (YYYY-MM-DD) para lastmod del sitemap. */
+function buildLastmodDate() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function buildSitemapXml(lastmod) {
+  const urls = SITEMAP_ROUTES.map((route) => {
+    const loc = getCanonicalUrl(route)
+    const { changefreq, priority } = getSitemapMeta(route)
+    return `  <url>
+    <loc>${loc}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority.toFixed(1)}</priority>
+  </url>`
+  })
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join('\n')}
+</urlset>
+`
+}
+
+async function writeSitemap(lastmod) {
+  const xml = buildSitemapXml(lastmod)
+  const distPath = path.join(distDir, 'sitemap.xml')
+  const publicPath = path.join(rootDir, 'public', 'sitemap.xml')
+  await fs.writeFile(distPath, xml, 'utf8')
+  await fs.writeFile(publicPath, xml, 'utf8')
+  console.log(`prerender: sitemap.xml (${SITEMAP_ROUTES.length} URLs, lastmod ${lastmod})`)
+}
+
 async function main() {
   try {
     await fs.access(templatePath)
@@ -112,6 +160,7 @@ async function main() {
 
   const template = await fs.readFile(templatePath, 'utf8')
   const { render } = await import(pathToFileURL(ssrEntry).href)
+  const lastmod = buildLastmodDate()
 
   for (const route of PRERENDER_ROUTES) {
     const { html: appHtml } = await render(route)
@@ -123,6 +172,7 @@ async function main() {
     console.log(`prerender: ${route} → ${path.relative(rootDir, outPath)}`)
   }
 
+  await writeSitemap(lastmod)
   console.log(`prerender: ${PRERENDER_ROUTES.length} rutas listas.`)
 }
 

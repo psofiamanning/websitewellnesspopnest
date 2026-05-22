@@ -3,6 +3,7 @@ import {
   LANDING_SLUG_TO_CLASS_ID,
   CLASS_LANDING_PATHS,
   LANDING_H1_PREFIX,
+  LANDING_FAQ_BY_CLASS_ID,
   getClassIdFromLandingSlug,
   getLandingSlugForClassId
 } from './classLandingRoutes.js'
@@ -55,6 +56,7 @@ export function getClassLandingData(slug) {
     scheduleSummary: formatScheduleSummary(classId),
     bookingPath: `/booking/class/${classId}`,
     horarioPath: '/horario',
+    faqs: LANDING_FAQ_BY_CLASS_ID[classId] ?? [],
     otherLandings: Object.entries(LANDING_SLUG_TO_CLASS_ID)
       .filter(([s]) => s !== slug)
       .map(([s, id]) => {

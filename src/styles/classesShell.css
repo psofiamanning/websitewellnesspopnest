@@ -401,6 +401,20 @@
   margin: 0 auto;
 }
 
+.cl-shell--practices-page .cl-hero__guides {
+  max-width: 920px;
+  margin: 20px auto 0;
+  text-align: center;
+  line-height: 1.6;
+  color: #6b6555;
+}
+
+.cl-shell--practices-page .cl-hero__guides a {
+  color: var(--pn-color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .cl-shell--practices-page .cl-hero__eyebrow {
   margin: 0 0 18px;
   font-size: 13px;

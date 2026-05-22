@@ -242,9 +242,7 @@ a.home-practice-card {
   gap: 14px;
 }
 
-a.home-class-spotlight {
-  text-decoration: none;
-  color: inherit;
+.home-class-spotlight {
   background: var(--pn-color-bg-elevated);
   border: var(--pn-border-thin);
   border-top: 3px solid var(--pn-color-primary);
@@ -254,9 +252,31 @@ a.home-class-spotlight {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-a.home-class-spotlight:hover {
+.home-class-spotlight:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(182, 67, 47, 0.1);
+}
+
+a.home-class-spotlight__link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.home-class-spotlight__guide {
+  display: block;
+  padding: 10px 16px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pn-color-primary);
+  text-decoration: none;
+  border-top: 1px solid rgba(182, 67, 47, 0.12);
+}
+
+.home-class-spotlight__guide:hover {
+  text-decoration: underline;
 }
 
 .home-class-spotlight__img {

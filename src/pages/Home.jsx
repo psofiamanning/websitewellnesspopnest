@@ -5,6 +5,7 @@ import studioPhoto2 from '../assets/studio-photo-2.png'
 import studioPhoto3 from '../assets/studio-photo-3.png'
 import studioPhoto4 from '../assets/studio-photo-4.png'
 import { classTypes } from '../data/classes'
+import { getLandingSlugForClassId } from '../data/classLandings'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
 import { buildRedesignScheduleSnippets, dotClassForClassId } from '../utils/redesignScheduleFromData'
 import '../styles/tokens.css'
@@ -118,21 +119,29 @@ function Home() {
             <div className="home-class-spotlights">
               {classTypes.map((c) => {
                 const dot = dotClassForClassId(c.id)
+                const landingSlug = getLandingSlugForClassId(c.id)
                 return (
-                  <Link key={c.id} to={`/booking/class/${c.id}`} className="home-class-spotlight">
-                    <div className="home-class-spotlight__img">
-                      <img src={c.image} alt="" loading="lazy" decoding="async" />
-                    </div>
-                    <div className="home-class-spotlight__body">
-                      <div className="home-class-spotlight__head">
-                        <span className={`pn-dot pn-dot--${dot}`} aria-hidden />
-                        <h3 className="pn-h4">{c.name}</h3>
+                  <article key={c.id} className="home-class-spotlight">
+                    <Link to={`/booking/class/${c.id}`} className="home-class-spotlight__link">
+                      <div className="home-class-spotlight__img">
+                        <img src={c.image} alt="" loading="lazy" decoding="async" />
                       </div>
-                      <p className="pn-text-sm">
-                        {c.teacher} · {c.duration} min
-                      </p>
-                    </div>
-                  </Link>
+                      <div className="home-class-spotlight__body">
+                        <div className="home-class-spotlight__head">
+                          <span className={`pn-dot pn-dot--${dot}`} aria-hidden />
+                          <h3 className="pn-h4">{c.name}</h3>
+                        </div>
+                        <p className="pn-text-sm">
+                          {c.teacher} · {c.duration} min
+                        </p>
+                      </div>
+                    </Link>
+                    {landingSlug ? (
+                      <Link to={`/clases/${landingSlug}`} className="home-class-spotlight__guide">
+                        Guía · {c.name} en Coyoacán
+                      </Link>
+                    ) : null}
+                  </article>
                 )
               })}
             </div>

@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { getClassLandingData } from '../data/classLandings'
+import { buildCourseSchemaForLanding } from '../data/classLandingRoutes'
 import { SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
 import PracticeDot from '../components/ui/PracticeDot'
 import { dotClassForClassId } from '../utils/redesignScheduleFromData'
@@ -11,6 +13,26 @@ import '../styles/classLandingShell.css'
 function ClassLanding() {
   const { slug } = useParams()
   const data = getClassLandingData(slug)
+
+  useEffect(() => {
+    const id = 'course-schema'
+    const json = slug ? buildCourseSchemaForLanding(`/clases/${slug}`) : null
+    let script = document.getElementById(id)
+    if (json) {
+      if (!script) {
+        script = document.createElement('script')
+        script.id = id
+        script.type = 'application/ld+json'
+        document.head.appendChild(script)
+      }
+      script.textContent = JSON.stringify(json)
+    } else if (script) {
+      script.remove()
+    }
+    return () => {
+      document.getElementById(id)?.remove()
+    }
+  }, [slug])
 
   if (!data) {
     return <Navigate to="/classes" replace />
@@ -71,6 +93,20 @@ function ClassLanding() {
                   El horario puede variar. Consulta fechas disponibles al reservar o en{' '}
                   <Link to={data.horarioPath}>Horario semanal</Link>.
                 </p>
+              </section>
+            )}
+
+            {data.faqs.length > 0 && (
+              <section className="clp-section clp-faq">
+                <h2 className="pn-h3">Preguntas frecuentes</h2>
+                <dl className="clp-faq__list">
+                  {data.faqs.map((item) => (
+                    <div key={item.q} className="clp-faq__row">
+                      <dt>{item.q}</dt>
+                      <dd>{item.a}</dd>
+                    </div>
+                  ))}
+                </dl>
               </section>
             )}
 

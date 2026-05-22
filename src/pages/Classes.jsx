@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { classTypes } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
+import { getLandingNavItems } from '../data/classLandingRoutes'
 import { dotClassForClassId } from '../utils/redesignScheduleFromData'
 import { SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
 import '../styles/tokens.css'
@@ -63,6 +64,15 @@ function Classes() {
             </h1>
             <div className="cl-hero__rule" aria-hidden />
           </div>
+          <p className="cl-hero__guides pn-text-sm">
+            Guías por práctica en Coyoacán:{' '}
+            {getLandingNavItems().map((item, i) => (
+              <span key={item.slug}>
+                {i > 0 ? ' · ' : null}
+                <Link to={item.path}>{item.name}</Link>
+              </span>
+            ))}
+          </p>
         </header>
 
         <main className="cl-body cl-body--practices-mosaic">

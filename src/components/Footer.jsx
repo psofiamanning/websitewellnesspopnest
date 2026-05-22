@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
 import { COOKIE_CONSENT_SHOW_EVENT } from '../utils/cookieConsent'
+import { getLandingNavItems } from '../data/classLandingRoutes'
 
 function Footer() {
+  const practiceGuides = getLandingNavItems()
+
   return (
     <footer 
       className="w-full py-12 px-6 sm:px-8 lg:px-12"
@@ -12,7 +15,7 @@ function Footer() {
     >
       <div className="max-w-7xl mx-auto">
         {/* Contenido principal del footer */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-10 mb-8">
           
           {/* Logo y descripción */}
           <div className="lg:col-span-1">
@@ -101,6 +104,25 @@ function Footer() {
             </ul>
           </div>
           
+          {/* Guías SEO por práctica */}
+          <div>
+            <h3 className="text-white font-heading font-semibold mb-4 text-base">
+              Prácticas en Coyoacán
+            </h3>
+            <ul className="space-y-2">
+              {practiceGuides.map((item) => (
+                <li key={item.slug}>
+                  <Link
+                    to={item.path}
+                    className="text-white/90 font-body text-sm hover:text-white transition-colors duration-200"
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Información */}
           <div>
             <h3 className="text-white font-heading font-semibold mb-4 text-base">

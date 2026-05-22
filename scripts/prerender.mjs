@@ -15,6 +15,7 @@ import {
   shouldNoindex,
   SITE_URL
 } from '../src/utils/seo.js'
+import { buildCourseSchemaForLanding } from '../src/data/classLandingRoutes.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.join(__dirname, '..')
@@ -85,7 +86,16 @@ function applyRouteHead(html, pathname) {
     itemListElement
   }
   const breadcrumbScript = `<script id="breadcrumb-schema" type="application/ld+json">${JSON.stringify(breadcrumbJson)}</script>`
+  out = out.replace(/<script id="course-schema"[\s\S]*?<\/script>\s*/gi, '')
   out = out.replace('</head>', `    ${breadcrumbScript}\n  </head>`)
+
+  if (pathname.startsWith('/clases/')) {
+    const course = buildCourseSchemaForLanding(pathname, SITE_URL)
+    if (course) {
+      const courseScript = `<script id="course-schema" type="application/ld+json">${JSON.stringify(course)}</script>`
+      out = out.replace('</head>', `    ${courseScript}\n  </head>`)
+    }
+  }
 
   if (shouldNoindex(pathname)) {
     out = replaceTag(

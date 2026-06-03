@@ -6,6 +6,7 @@ import Footer from './components/Footer'
 import { initMetaPixel, trackMetaPageView } from './utils/metaPixel'
 import { canUseMarketingCookies } from './utils/cookieConsent'
 import CookieConsent from './components/CookieConsent'
+import FreeClassPopup from './components/FreeClassPopup'
 import PageSEO from './components/PageSEO'
 import Home from './pages/Home'
 import Classes from './pages/Classes'
@@ -82,6 +83,16 @@ export function AppContent() {
     pathname === '/forgot-password' ||
     pathname === '/reset-password'
 
+  // El popup de clase gratis solo se muestra en páginas públicas de marketing,
+  // no en flujos de reserva, pago, login ni paneles privados.
+  const isMarketingRoute =
+    pathname === '/' ||
+    pathname === '/classes' ||
+    pathname.startsWith('/clases/') ||
+    pathname === '/horario' ||
+    pathname === '/packages' ||
+    pathname === '/ubicacion'
+
   return (
     <>
       <MetaPixelRouter />
@@ -126,6 +137,7 @@ export function AppContent() {
       </Routes>
       {!isStandalonePreview && <Footer />}
       {!isStandalonePreview && <CookieConsent />}
+      {!isStandalonePreview && isMarketingRoute && <FreeClassPopup />}
     </>
   )
 }

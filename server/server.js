@@ -41,6 +41,7 @@ import {
 } from './db/packages.js'
 import { getSupabaseAnon } from './db/supabaseClient.js'
 import { validateDiscountCodeForCustomer } from './db/discountCodes.js'
+import { saveLeadEmail } from './db/leads.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -520,6 +521,21 @@ app.post('/api/discount-codes/validate', async (req, res) => {
   } catch (error) {
     console.error('Error validating discount code:', error)
     res.status(500).json({ valid: false, error: error.message })
+  }
+})
+
+// Endpoint: Captura de correo del popup de clase gratis (cuenta regresiva)
+app.post('/api/leads', async (req, res) => {
+  try {
+    const { email, source, offer } = req.body || {}
+    const result = await saveLeadEmail({ email, source, offer })
+    if (!result.ok) {
+      return res.status(400).json(result)
+    }
+    res.json(result)
+  } catch (error) {
+    console.error('Error saving lead email:', error)
+    res.status(500).json({ ok: false, error: error.message })
   }
 })
 

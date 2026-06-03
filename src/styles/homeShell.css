@@ -166,9 +166,39 @@ a.home-practice-card {
   margin-top: 30px;
 }
 
+.home-hero__visual {
+  margin: 0;
+  align-self: stretch;
+  min-height: 380px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--pn-color-bg-elevated);
+}
+
+.home-hero__visual img {
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  object-fit: cover;
+  display: block;
+}
+
 .home-today {
   border-left: var(--pn-border-soft);
   padding-left: 42px;
+}
+
+.home-today--inline {
+  border-left: none;
+  padding: 22px 26px;
+  margin: -4px 0 28px;
+  border: var(--pn-border-thin);
+  background: var(--pn-color-bg-elevated);
+}
+
+.home-today--inline .home-today__row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .home-today__row {
@@ -959,12 +989,28 @@ a.home-about-locate__visual {
     flex-direction: column;
   }
 
+  .home-hero__visual {
+    margin-top: 36px;
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+
+  .home-hero__visual img {
+    min-height: 0;
+  }
+
   .home-today {
     margin-top: 42px;
     padding-left: 0;
     border-left: none;
     border-top: var(--pn-border-soft);
     padding-top: 20px;
+  }
+
+  .home-today--inline {
+    margin-top: 0;
+    border: var(--pn-border-thin);
+    padding: 18px 18px;
   }
 
   .home-section {

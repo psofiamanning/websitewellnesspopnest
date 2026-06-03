@@ -4,6 +4,7 @@ import studioPhoto1 from '../assets/studio-photo-1.png'
 import studioPhoto2 from '../assets/studio-photo-2.png'
 import studioPhoto3 from '../assets/studio-photo-3.png'
 import studioPhoto4 from '../assets/studio-photo-4.png'
+import studioHeroMirrors from '../assets/studio-hero-mirrors.jpg'
 import { classTypes } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
@@ -95,10 +96,14 @@ function Home() {
               </div>
             </div>
 
-            <aside
-              className="home-today"
-              dangerouslySetInnerHTML={{ __html: scheduleSnippets.homeTodayAside }}
-            />
+            <figure className="home-hero__visual">
+              <img
+                src={studioHeroMirrors}
+                alt="Salón del Estudio Popnest en Coyoacán: espejos de piso a techo, iluminación cálida y concreto pulido"
+                loading="eager"
+                decoding="async"
+              />
+            </figure>
           </section>
 
           <section id="clases" className="home-section pn-section--bg-secondary">
@@ -171,6 +176,10 @@ function Home() {
             <p className="pn-text home-section__lead">
               Vista rápida del programa. Consulta el horario completo para reservar fecha y hora.
             </p>
+            <div
+              className="home-today home-today--inline"
+              dangerouslySetInnerHTML={{ __html: scheduleSnippets.homeTodayAside }}
+            />
             <div className="home-classes" dangerouslySetInnerHTML={{ __html: scheduleSnippets.homeWeekStrip }} />
           </section>
 

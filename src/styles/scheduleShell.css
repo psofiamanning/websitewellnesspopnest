@@ -425,6 +425,8 @@
   }
 
   .sc-toolbar__filters {
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     flex-wrap: nowrap;
     padding-bottom: 4px;

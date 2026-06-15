@@ -218,7 +218,7 @@ function Footer() {
             <p className="text-white/80 font-body text-xs">
               © {new Date().getFullYear()} Estudio Popnest Wellness. Todos los derechos reservados.
             </p>
-            <div className="flex gap-6">
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 md:justify-end">
               <Link 
                 to="/admin" 
                 className="text-white/80 font-body text-xs hover:text-white transition-colors duration-200"

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { teachers, classTypes, classSchedules } from '../data/classes'
 import Calendar from '../components/Calendar'
 import TimeSlotSelector from '../components/TimeSlotSelector'
@@ -73,6 +73,10 @@ const loadStripe = async () => {
 function Booking() {
   const { type, id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  // Deep-link desde /horario: fecha (yyyy-MM-dd) y hora (HH:mm) ya elegidas.
+  const desiredDateParam = searchParams.get('date')
+  const desiredTimeParam = searchParams.get('time')
   /** Rutas legadas `/booking/teacher/:id` y actuales `/booking/coach/:id`. */
   const isCoachBooking = type === 'teacher' || type === 'coach'
   const [selectedDate, setSelectedDate] = useState(null)
@@ -154,6 +158,44 @@ function Booking() {
     setAvailableDates(dates)
     setAvailableTimes(schedule.times || [])
   }, [type, id, selectedClassId])
+
+  // Preselecciona una fecha en reservas por clase para que los horarios
+  // aparezcan de inmediato y se reserve en menos pasos. Si venimos del horario
+  // con una fecha (deep-link) y sigue disponible, usamos esa; si no, la más
+  // próxima. Solo una vez: si el usuario elige "Cambiar", no la volvemos a forzar.
+  const didPreselectDateRef = useRef(false)
+  useEffect(() => {
+    if (type !== 'class') return
+    if (didPreselectDateRef.current) return
+    if (availableDates.length === 0) return
+    didPreselectDateRef.current = true
+
+    if (desiredDateParam) {
+      const match = availableDates.find(
+        (d) => format(d, 'yyyy-MM-dd') === desiredDateParam
+      )
+      if (match) {
+        setSelectedDate(match)
+        return
+      }
+    }
+    setSelectedDate(availableDates[0])
+  }, [type, availableDates, desiredDateParam])
+
+  // Si venimos del horario con una hora (deep-link), la preseleccionamos una vez
+  // que la fecha tocada esté activa y ese horario exista para ese día. Así el
+  // usuario aterriza con fecha + hora listas y solo confirma.
+  const didPreselectTimeRef = useRef(false)
+  useEffect(() => {
+    if (type !== 'class') return
+    if (!desiredTimeParam || !desiredDateParam) return
+    if (didPreselectTimeRef.current) return
+    if (!selectedDate) return
+    if (format(selectedDate, 'yyyy-MM-dd') !== desiredDateParam) return
+    if (!availableTimes.includes(desiredTimeParam)) return
+    didPreselectTimeRef.current = true
+    setSelectedTime(desiredTimeParam)
+  }, [type, selectedDate, availableTimes, desiredTimeParam, desiredDateParam])
 
   // Horarios por día (ej. Sound Healing: sábado solo 10:00)
   useEffect(() => {

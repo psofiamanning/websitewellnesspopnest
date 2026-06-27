@@ -1113,3 +1113,75 @@ a.home-about-locate__visual {
     justify-content: flex-start;
   }
 }
+
+/* En móvil, la sección "Elige tu práctica" del home se vuelve una lista
+   compacta de texto (sin las imágenes grandes y cuadradas) para ver todas las
+   clases sin scroll largo — igual que la página /classes. */
+@media (max-width: 639px) {
+  /* Encabezado compacto para que la lista de TODAS las prácticas quepa junta. */
+  #clases.home-section {
+    padding-top: 24px;
+    padding-bottom: 30px;
+  }
+
+  #clases .home-section__head {
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+
+  #clases .pn-h1 {
+    font-size: 30px;
+  }
+
+  /* La descripción se oculta en móvil para que entren TODAS las clases en una
+     sola pantalla; los nombres de la lista ya dicen las prácticas. */
+  #clases > .pn-text {
+    display: none;
+  }
+
+  .home-class-spotlights {
+    gap: 8px;
+  }
+
+  .home-class-spotlight__img {
+    display: none;
+  }
+
+  a.home-class-spotlight__link {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  a.home-class-spotlight__link::after {
+    content: 'Reservar →';
+    flex-shrink: 0;
+    padding-right: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--pn-color-primary);
+  }
+
+  .home-class-spotlight__body {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 16px;
+  }
+
+  .home-class-spotlight__head {
+    margin-bottom: 0;
+  }
+
+  .home-class-spotlight__head .pn-h4 {
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Descripción y enlace de guía fuera de la vista en móvil (siguen en el DOM) */
+  .home-class-spotlight__body .pn-text-sm,
+  .home-class-spotlight__guide {
+    display: none;
+  }
+}

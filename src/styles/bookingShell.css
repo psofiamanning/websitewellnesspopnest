@@ -417,6 +417,26 @@
   color: var(--pn-color-primary);
 }
 
+/* Aviso + botón de iniciar sesión dentro de la reserva (objetivo táctil claro,
+   no un enlace de texto diminuto). */
+.bk-login-cue {
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--pn-color-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--pn-color-primary) 6%, transparent);
+}
+
+.bk-login-cue__text {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--pn-color-text);
+}
+
+.bk-login-cue__btn {
+  text-decoration: none;
+}
+
 .bk-aside {
   position: sticky;
   top: 108px;
@@ -521,19 +541,118 @@
     grid-template-columns: 1fr;
   }
 
+  /* En una sola columna, el calendario (flow) va primero para poder reservar
+     sin scroll; la descripción editorial (aside) baja debajo. */
+  .bk-flow {
+    order: 1;
+  }
+
   .bk-aside {
     position: static;
-    order: -1;
+    order: 2;
   }
 }
 
 @media (max-width: 640px) {
+  /* Compactar la parte superior para que el calendario quede sobre la línea
+     de scroll en móvil. */
+  .bk-top {
+    padding: 14px 0 14px;
+    gap: 10px;
+  }
+
+  .bk-hero {
+    padding: 18px 0 18px;
+    gap: 14px;
+  }
+
+  .bk-hero__title {
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  /* Los datos (disciplina/horario/duración) se repiten en el resumen y en las
+     specs del aside; se ocultan aquí para subir el calendario. */
+  .bk-hero__meta {
+    display: none;
+  }
+
+  .bk-layout {
+    padding-top: 22px;
+    gap: 32px;
+  }
+
+  .bk-block__head {
+    margin-bottom: 16px;
+  }
+
   .bk-form-grid {
     grid-template-columns: 1fr;
   }
 
   .bk-confirm-row {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 6px;
+    padding: 16px 18px;
+  }
+
+  /* --- Legibilidad en móvil: tipografía más grande y mayor contraste --- */
+
+  .bk-block__title {
+    font-size: 15px;
+  }
+
+  /* Etiquetas del resumen (MAESTRA, LUGAR, PAQUETE…): menos "tan", más legibles */
+  .bk-confirm-row dt {
+    font-size: 12.5px;
+    color: var(--pn-color-text-muted);
+  }
+
+  .bk-confirm-row dd {
+    font-size: 17px;
+    margin-top: 4px;
+    color: var(--pn-color-text);
+  }
+
+  .bk-confirm-change {
+    font-size: 12.5px;
+  }
+
+  /* Etiquetas e inputs del formulario. 16px en inputs evita el zoom de iOS. */
+  .bk-field label {
+    font-size: 14px;
+    color: var(--pn-color-text-soft);
+  }
+
+  .bk-field input,
+  .bk-discount-row input,
+  .bk-discount label {
+    font-size: 16px;
+  }
+
+  .bk-field input,
+  .bk-discount-row input {
+    padding: 14px 16px;
+  }
+
+  .bk-time-slot__time {
+    font-size: 20px;
+  }
+
+  .bk-time-slot__label {
+    font-size: 14px;
+  }
+
+  .bk-alert {
+    font-size: 15px;
+  }
+
+  .bk-login-cue__text {
+    font-size: 15px;
+  }
+
+  .bk-login-cue__btn {
+    padding: 16px 20px;
+    font-size: 13px;
   }
 }

@@ -298,12 +298,18 @@ function BookingClassEditorialView({
                 ) : null}
 
                 {!isAuthenticated && (
-                  <p className="bk-alert">
-                    <Link to={`/login?from=${encodeURIComponent(`/booking/class/${classInfo.id}`)}`}>
-                      Inicia sesión
-                    </Link>{' '}
-                    para usar un paquete de clases.
-                  </p>
+                  <div className="bk-login-cue">
+                    <p className="bk-login-cue__text">
+                      ¿Ya tienes cuenta o un paquete de clases? Inicia sesión para usarlo
+                      (opcional: también puedes pagar con tarjeta sin cuenta).
+                    </p>
+                    <Link
+                      to={`/login?from=${encodeURIComponent(`/booking/class/${classInfo.id}`)}`}
+                      className="pn-btn pn-btn--outline-primary pn-btn--block bk-login-cue__btn"
+                    >
+                      Iniciar sesión →
+                    </Link>
+                  </div>
                 )}
 
                 <div className="bk-form-panel">
@@ -312,7 +318,10 @@ function BookingClassEditorialView({
                       <label htmlFor="bk-first">Nombre *</label>
                       <input
                         id="bk-first"
+                        name="given-name"
                         type="text"
+                        autoComplete="given-name"
+                        autoCapitalize="words"
                         value={customerInfo.firstName}
                         onChange={(e) => onCustomerChange('firstName', e.target.value)}
                         required
@@ -322,7 +331,10 @@ function BookingClassEditorialView({
                       <label htmlFor="bk-last">Apellido *</label>
                       <input
                         id="bk-last"
+                        name="family-name"
                         type="text"
+                        autoComplete="family-name"
+                        autoCapitalize="words"
                         value={customerInfo.lastName}
                         onChange={(e) => onCustomerChange('lastName', e.target.value)}
                         required
@@ -332,7 +344,12 @@ function BookingClassEditorialView({
                       <label htmlFor="bk-email">Correo *</label>
                       <input
                         id="bk-email"
+                        name="email"
                         type="email"
+                        autoComplete="email"
+                        inputMode="email"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         value={customerInfo.email}
                         onChange={(e) => onCustomerChange('email', e.target.value)}
                         required
@@ -342,7 +359,10 @@ function BookingClassEditorialView({
                       <label htmlFor="bk-phone">Teléfono *</label>
                       <input
                         id="bk-phone"
+                        name="tel"
                         type="tel"
+                        autoComplete="tel"
+                        inputMode="tel"
                         value={customerInfo.phone}
                         onChange={(e) =>
                           onCustomerChange('phone', e.target.value.replace(/[^0-9+-\s]/gi, ''))

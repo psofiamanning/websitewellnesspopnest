@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { format } from 'date-fns'
 import { getSlotsByDay } from '../data/scheduleSlots'
 import PracticeDot from '../components/ui/PracticeDot'
 import {
@@ -31,8 +32,14 @@ function Schedule() {
   const weekDays = useMemo(() => buildWeekDays(weekMonday), [weekMonday])
   const weekRangeLabel = useMemo(() => formatWeekRangeLabel(weekMonday), [weekMonday])
 
-  const handleSlotClick = (classId) => {
-    navigate(`/booking/class/${classId}`)
+  // Lleva el día y la hora tocados a la reserva para llegar al paso de
+  // confirmar sin volver a elegir fecha ni horario.
+  const handleSlotClick = (classId, date, time) => {
+    const params = new URLSearchParams()
+    if (date) params.set('date', format(date, 'yyyy-MM-dd'))
+    if (time) params.set('time', time)
+    const qs = params.toString()
+    navigate(`/booking/class/${classId}${qs ? `?${qs}` : ''}`)
   }
 
   return (
@@ -103,7 +110,7 @@ function Schedule() {
 
         <section className="sc-board-wrap" aria-label="Horario semanal">
           <div className="sc-board">
-            {weekDays.map(({ dayName, shortLabel, dayNum, monthLabel, isToday }) => {
+            {weekDays.map(({ dayName, date, shortLabel, dayNum, monthLabel, isToday }) => {
               const slots = filteredByDay[dayName] || []
               return (
                 <article
@@ -130,7 +137,7 @@ function Schedule() {
                             key={`${slot.classId}-${slot.time}-${idx}`}
                             type="button"
                             className="sc-class"
-                            onClick={() => handleSlotClick(slot.classId)}
+                            onClick={() => handleSlotClick(slot.classId, date, slot.time)}
                           >
                             <div className="sc-class__top">
                               <span className="sc-class__time">{slot.time}</span>

@@ -683,7 +683,104 @@
     max-width: 100%;
   }
 
+  /* --- Lista compacta de texto: todas las prácticas visibles sin scroll --- */
+
+  /* Hero más bajo para dejar sitio a la lista */
+  .cl-shell--practices-page .cl-hero--centered {
+    padding: 26px 20px 16px;
+  }
+
+  .cl-shell--practices-page .cl-hero__eyebrow {
+    margin-bottom: 10px;
+    font-size: 11px;
+  }
+
+  .cl-shell--practices-page .cl-hero__title-mosaic {
+    font-size: 30px;
+  }
+
+  .cl-shell--practices-page .cl-hero__rule {
+    margin-top: 14px;
+  }
+
+  /* Enlaces de guías (secundarios) — fuera de la vista en móvil, siguen en el
+     DOM para SEO. */
+  .cl-shell--practices-page .cl-hero__guides {
+    display: none;
+  }
+
   .cl-shell--practices-page .cl-body--practices-mosaic {
-    padding: 28px 20px 48px;
+    padding: 18px 20px 40px;
+  }
+
+  /* Filas pegadas, como un menú */
+  .cl-practice-row,
+  .cl-practice-row--last {
+    gap: 10px;
+  }
+
+  .cl-practice-row--last {
+    margin-top: 10px;
+  }
+
+  /* Cada tarjeta = una fila horizontal: • Nombre .......... $ / Reservar → */
+  .cl-shell--practices-page .cl-pcard__mosaic-link {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .cl-shell--practices-page
+    .pn-practice-card__image--mosaic.pn-practice-card__image--class-icon {
+    display: none;
+  }
+
+  .cl-shell--practices-page .cl-pcard__mosaic-body {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    width: 100%;
+  }
+
+  .cl-shell--practices-page .cl-pcard__mosaic-body .cl-pcard__head {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .cl-shell--practices-page .cl-pcard__title-mosaic {
+    font-size: 17px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Texto descriptivo y maestra fuera en móvil; se ven al entrar a reservar */
+  .cl-shell--practices-page .cl-pcard__meta--mosaic,
+  .cl-shell--practices-page .cl-pcard__desc--mosaic {
+    display: none;
+  }
+
+  .cl-shell--practices-page .cl-pcard__mosaic-footer {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    border-top: none;
+  }
+
+  .cl-shell--practices-page .cl-pcard__price-mosaic {
+    font-size: 11px;
+  }
+
+  .cl-shell--practices-page .cl-pcard__link-mosaic {
+    font-size: 14px;
+  }
+
+  /* Enlace de guía por tarjeta — oculto en móvil, permanece en el DOM */
+  .cl-shell--practices-page .cl-pcard__guide-link {
+    display: none;
   }
 }

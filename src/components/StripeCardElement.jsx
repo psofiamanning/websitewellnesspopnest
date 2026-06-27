@@ -61,6 +61,9 @@ function CardForm({ onCardReady, cardholderName, setCardholderName }) {
         </label>
         <input
           type="text"
+          name="ccname"
+          autoComplete="cc-name"
+          autoCapitalize="characters"
           placeholder="Nombre como aparece en la tarjeta"
           value={cardholderName}
           onChange={(e) => setCardholderName(e.target.value.toUpperCase())}

@@ -15,14 +15,21 @@
   padding: 0 clamp(20px, 4vw, 76px) var(--pn-space-14);
 }
 
+/* Barra flotante: el indicador de pasos (y el volver) permanecen fijos bajo el
+   navbar durante todo el recorrido para que el usuario siempre vea su avance. */
 .bk-top {
+  position: sticky;
+  top: calc(var(--pn-site-nav-height) + env(safe-area-inset-top, 0px));
+  z-index: 40;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 20px 0 28px;
+  padding: 16px 0;
+  background: var(--pn-color-bg-base);
   border-bottom: var(--pn-border-soft);
+  box-shadow: 0 6px 16px -10px rgba(45, 46, 53, 0.25);
 }
 
 .bk-back {
@@ -38,17 +45,57 @@
   color: var(--pn-color-primary-hover);
 }
 
+/* Indicador de progreso: badge numerado por paso + conector. El paso activo se
+   resalta en terracota; los completados se marcan con ✓ en oscuro. */
 .bk-steps {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .bk-step {
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--pn-color-text-faint);
+  white-space: nowrap;
+}
+
+/* Conector entre pasos */
+.bk-step::after {
+  content: '';
+  flex: none;
+  width: clamp(14px, 4vw, 34px);
+  height: 1.5px;
+  margin: 0 10px;
+  background: var(--pn-color-border);
+}
+
+.bk-step:last-child::after {
+  display: none;
+}
+
+.bk-step__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--pn-color-border-strong);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--pn-color-text-faint);
+  flex-shrink: 0;
 }
 
 .bk-step--active {
@@ -56,8 +103,25 @@
   font-weight: 600;
 }
 
+.bk-step--active .bk-step__badge {
+  border-color: var(--pn-color-primary);
+  background: var(--pn-color-primary);
+  color: var(--pn-color-on-dark);
+}
+
 .bk-step--done {
   color: var(--pn-color-text-muted);
+}
+
+.bk-step--done .bk-step__badge {
+  border-color: var(--pn-color-bg-dark);
+  background: var(--pn-color-bg-dark);
+  color: var(--pn-color-on-dark);
+}
+
+/* El tramo ya recorrido (después de un paso completado) se ve oscuro */
+.bk-step--done::after {
+  background: var(--pn-color-bg-dark);
 }
 
 .bk-hero {
@@ -127,7 +191,7 @@
 }
 
 .bk-block {
-  scroll-margin-top: 108px;
+  scroll-margin-top: 150px;
   padding-bottom: clamp(36px, 4vw, 48px);
   margin-bottom: clamp(36px, 4vw, 48px);
   border-bottom: var(--pn-border-soft);
@@ -211,31 +275,45 @@
   font-weight: 500;
 }
 
+.bk-times-hint {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--pn-color-text-muted);
+}
+
 .bk-times {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
+/* El slot ES el botón de reserva: borde marcado, acento lateral y una acción
+   explícita ("Reservar →") para que se lea como botón, no como dato. */
 .bk-time-slot {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 16px;
   align-items: center;
   width: 100%;
-  padding: 18px 22px;
-  border: var(--pn-border-thin);
+  padding: 20px 22px;
+  border: 1.5px solid var(--pn-color-border-strong);
+  border-left: 4px solid var(--pn-color-primary);
   background: var(--pn-color-bg-elevated);
   text-align: left;
   cursor: pointer;
   font-family: var(--pn-font-sans);
+  box-shadow: 0 2px 10px rgba(45, 46, 53, 0.06);
   transition:
     background-color var(--pn-transition-base),
-    border-color var(--pn-transition-base);
+    border-color var(--pn-transition-base),
+    box-shadow var(--pn-transition-base),
+    transform var(--pn-transition-base);
 }
 
 .bk-time-slot:hover {
-  border-color: var(--pn-color-border-strong);
+  border-color: var(--pn-color-primary);
+  box-shadow: 0 6px 18px rgba(183, 61, 55, 0.16);
+  transform: translateY(-1px);
 }
 
 .bk-time-slot--active {
@@ -245,23 +323,38 @@
 }
 
 .bk-time-slot__time {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .bk-time-slot__label {
   margin-top: 4px;
-  font-size: 13px;
+  font-size: 14px;
   opacity: 0.85;
 }
 
-.bk-time-slot__spots {
-  font-size: 10px;
-  letter-spacing: 0.12em;
+/* Chip de acción tipo botón primario */
+.bk-time-slot__cta {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  opacity: 0.75;
-  text-align: right;
+  color: var(--pn-color-on-dark);
+  background: var(--pn-color-primary);
+}
+
+.bk-time-slot:hover .bk-time-slot__cta {
+  background: var(--pn-color-primary-hover);
+}
+
+.bk-time-slot--active .bk-time-slot__cta {
+  background: var(--pn-color-on-dark);
+  color: var(--pn-color-bg-dark);
 }
 
 .bk-confirm-list {
@@ -417,6 +510,34 @@
   color: var(--pn-color-primary);
 }
 
+/* Botón de confirmar: estado de carga con spinner para evitar toques repetidos. */
+.bk-confirm-btn--loading {
+  opacity: 0.8;
+  cursor: progress;
+}
+
+.bk-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, #fff 35%, transparent);
+  border-top-color: #fff;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: bk-spin 0.7s linear infinite;
+}
+
+@keyframes bk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bk-spinner {
+    animation-duration: 1.6s;
+  }
+}
+
 /* Aviso + botón de iniciar sesión dentro de la reserva (objetivo táctil claro,
    no un enlace de texto diminuto). */
 .bk-login-cue {
@@ -439,7 +560,7 @@
 
 .bk-aside {
   position: sticky;
-  top: 108px;
+  top: 150px;
 }
 
 .bk-aside__title {
@@ -462,6 +583,16 @@
   font-size: 18px;
   line-height: 1.45;
   color: var(--pn-color-text-soft);
+}
+
+/* Botón "Leer más sobre la clase". Oculto en escritorio (la columna lateral
+   muestra todo); aparece solo en móvil para no enterrar el botón de reserva. */
+.bk-aside__toggle {
+  display: none;
+}
+
+.bk-aside__more {
+  display: block;
 }
 
 .bk-aside__section {
@@ -551,14 +682,64 @@
     position: static;
     order: 2;
   }
+
+  /* En móvil, la descripción de la clase se colapsa tras un botón claro para
+     que no compita con el botón de reservar (que queda arriba, en el flow). */
+  .bk-aside__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    padding: 14px 22px;
+    border: 1.5px solid var(--pn-color-primary);
+    background: transparent;
+    color: var(--pn-color-primary);
+    font-family: var(--pn-font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .bk-aside__more {
+    display: none;
+    margin-top: 26px;
+  }
+
+  .bk-aside__more--open {
+    display: block;
+  }
 }
 
 @media (max-width: 640px) {
   /* Compactar la parte superior para que el calendario quede sobre la línea
      de scroll en móvil. */
+  /* Barra flotante delgada en móvil: el "volver" se reduce a la flecha y los
+     pasos quedan en la misma fila, sin apilar, para no comerse el calendario. */
   .bk-top {
-    padding: 14px 0 14px;
-    gap: 10px;
+    flex-wrap: nowrap;
+    padding: 11px 0;
+    gap: 12px;
+  }
+
+  .bk-back__text {
+    display: none;
+  }
+
+  /* Pasos compactos: solo badges como puntos de progreso; la etiqueta se
+     muestra únicamente en el paso activo para que quepa la fila. */
+  .bk-step__label {
+    display: none;
+  }
+
+  .bk-step--active .bk-step__label {
+    display: inline;
+  }
+
+  .bk-step::after {
+    width: clamp(10px, 5vw, 22px);
+    margin: 0 6px;
   }
 
   .bk-hero {

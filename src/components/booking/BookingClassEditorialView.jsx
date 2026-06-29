@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -7,7 +7,9 @@ import StripeCardElement from '../StripeCardElement'
 import { SINGLE_CLASS_PRICE_MXN } from '../../config/pricing'
 
 const SINGLE_CLASS_PRICE_LABEL = `$${SINGLE_CLASS_PRICE_MXN.toFixed(2)} MXN`
-const BOOKING_NAV_SCROLL_OFFSET_PX = 104
+// Navbar fijo (88px) + barra de pasos flotante (~56px) para no tapar el
+// encabezado al saltar de un paso al siguiente.
+const BOOKING_NAV_SCROLL_OFFSET_PX = 150
 
 function scrollBelowFixedNav(el, offsetPx = BOOKING_NAV_SCROLL_OFFSET_PX) {
   if (!el || typeof window === 'undefined') return
@@ -57,9 +59,12 @@ function BookingClassEditorialView({
     .split('\n\n')
     .filter(Boolean)
 
-  const stepDate = selectedDate ? 'done' : 'active'
-  const stepTime = selectedDate ? (selectedTime ? 'done' : 'active') : ''
-  const stepConfirm = selectedTime ? 'active' : ''
+  const bookingSteps = [
+    { n: 1, label: 'Práctica', state: 'done' },
+    { n: 2, label: 'Fecha', state: selectedDate ? 'done' : 'active' },
+    { n: 3, label: 'Horario', state: selectedDate ? (selectedTime ? 'done' : 'active') : 'todo' },
+    { n: 4, label: 'Confirmar', state: selectedTime ? 'active' : 'todo' },
+  ]
 
   const formatPackageAvailability = (pkg) => {
     const remaining = Number(pkg?.classesRemaining ?? pkg?.classes ?? 0)
@@ -81,6 +86,8 @@ function BookingClassEditorialView({
     : packageLabel
       ? packageLabel
       : `Pago con tarjeta · ${SINGLE_CLASS_PRICE_LABEL}`
+
+  const [showClassInfo, setShowClassInfo] = useState(false)
 
   const timeSectionRef = useRef(null)
   const confirmSectionRef = useRef(null)
@@ -122,14 +129,23 @@ function BookingClassEditorialView({
       <div className="bk-shell">
         <div className="bk-top">
           <Link to="/horario" className="bk-back">
-            ← Volver al horario
+            <span aria-hidden>←</span>
+            <span className="bk-back__text"> Volver al horario</span>
           </Link>
-          <div className="bk-steps" aria-label="Pasos de reserva">
-            <span className="bk-step bk-step--done">1. Práctica</span>
-            <span className={`bk-step${stepDate ? ` bk-step--${stepDate}` : ''}`}>2. Fecha</span>
-            <span className={`bk-step${stepTime ? ` bk-step--${stepTime}` : ''}`}>3. Horario</span>
-            <span className={`bk-step${stepConfirm ? ` bk-step--${stepConfirm}` : ''}`}>4. Confirmar</span>
-          </div>
+          <ol className="bk-steps" aria-label="Pasos de reserva">
+            {bookingSteps.map((s) => (
+              <li
+                key={s.n}
+                className={`bk-step bk-step--${s.state}`}
+                aria-current={s.state === 'active' ? 'step' : undefined}
+              >
+                <span className="bk-step__badge" aria-hidden>
+                  {s.state === 'done' ? '✓' : s.n}
+                </span>
+                <span className="bk-step__label">{s.label}</span>
+              </li>
+            ))}
+          </ol>
         </div>
 
         <header className="bk-hero">
@@ -193,6 +209,8 @@ function BookingClassEditorialView({
                   </h2>
                 </div>
                 {availableTimes.length > 0 ? (
+                  <>
+                  <p className="bk-times-hint">Toca un horario para continuar con tu reserva.</p>
                   <div className="bk-times">
                     {availableTimes.map((time) => {
                       const active = selectedTime === time
@@ -204,15 +222,18 @@ function BookingClassEditorialView({
                           onClick={() => handleTimeSelect(time)}
                           aria-pressed={active}
                         >
-                          <div>
+                          <div className="bk-time-slot__info">
                             <div className="bk-time-slot__time">{time}</div>
                             <p className="bk-time-slot__label">{classInfo.name}</p>
                           </div>
-                          <span className="bk-time-slot__spots">Reserva en línea</span>
+                          <span className="bk-time-slot__cta" aria-hidden>
+                            {active ? '✓ Seleccionado' : 'Reservar →'}
+                          </span>
                         </button>
                       )
                     })}
                   </div>
+                  </>
                 ) : (
                   <p className="pn-text-sm" style={{ color: 'var(--pn-color-text-muted)' }}>
                     No hay horarios para esta fecha. Elige otro día.
@@ -484,17 +505,25 @@ function BookingClassEditorialView({
 
                 <button
                   type="button"
-                  className="pn-btn pn-btn--primary pn-btn--block"
+                  className={`pn-btn pn-btn--primary pn-btn--block bk-confirm-btn${
+                    isProcessing ? ' bk-confirm-btn--loading' : ''
+                  }`}
                   disabled={isProcessing}
+                  aria-busy={isProcessing}
                   onClick={onBooking}
                 >
-                  {isProcessing
-                    ? 'Procesando…'
-                    : appliedDiscount
-                      ? 'Confirmar reserva gratis →'
-                      : usePackage
-                        ? 'Confirmar reserva →'
-                        : `Confirmar reserva · ${SINGLE_CLASS_PRICE_LABEL} →`}
+                  {isProcessing ? (
+                    <>
+                      <span className="bk-spinner" aria-hidden />
+                      Procesando tu reserva…
+                    </>
+                  ) : appliedDiscount ? (
+                    'Confirmar reserva gratis →'
+                  ) : usePackage ? (
+                    'Confirmar reserva →'
+                  ) : (
+                    `Confirmar reserva · ${SINGLE_CLASS_PRICE_LABEL} →`
+                  )}
                 </button>
               </section>
             ) : null}
@@ -508,6 +537,20 @@ function BookingClassEditorialView({
             {descParagraphs[0] ? (
               <p className="bk-aside__quote">&ldquo;{descParagraphs[0].trim().slice(0, 120)}…&rdquo;</p>
             ) : null}
+
+            {descParagraphs[0] || descParagraphs[1] ? (
+              <button
+                type="button"
+                className="bk-aside__toggle"
+                aria-expanded={showClassInfo}
+                onClick={() => setShowClassInfo((v) => !v)}
+              >
+                {showClassInfo ? 'Ocultar información' : 'Leer más sobre la clase'}
+                <span aria-hidden>{showClassInfo ? ' ↑' : ' ↓'}</span>
+              </button>
+            ) : null}
+
+            <div className={`bk-aside__more${showClassInfo ? ' bk-aside__more--open' : ''}`}>
             {descParagraphs[0] ? (
               <div className="bk-aside__section">
                 <h3>Al método</h3>
@@ -553,6 +596,7 @@ function BookingClassEditorialView({
                 <dd>Español</dd>
               </div>
             </dl>
+            </div>
           </aside>
         </div>
       </div>

@@ -16,9 +16,11 @@ dist-ssr
 .env
 .env.local
 .env.production
+.env.*.backup
 
 # Backend
 server/.env
+server/.env.*.backup
 server/bookings.json
 server/users.json
 server/admins.json

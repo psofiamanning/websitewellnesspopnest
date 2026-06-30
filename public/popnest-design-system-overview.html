@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<!-- Overview v1. El archivo «popnest_design_system_overview.html» desde Downloads contenía código script malicioso antes de <head>; no lo uses. Esta copia sólo incluye CSS + contenido de referencia. -->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Popnest — Sistema de diseño v1</title>
+<style>
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/dm-sans/400.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/dm-sans/500.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/instrument-serif/400.css');
+@import url('https://cdn.jsdelivr.net/npm/@fontsource/instrument-serif/400-italic.css');
+.pn{font-family:'DM Sans',system-ui,sans-serif;background:#f4ede2;color:#2d2e35;border-radius:12px;overflow:hidden;border:0.5px solid #c9bda6;font-size:13px;line-height:1.55}
+.pn *{box-sizing:border-box}
+.s{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-weight:400}
+.eb{font-size:10px;letter-spacing:0.24em;text-transform:uppercase;color:#7a6b54;font-weight:400}
+.eb-line{display:flex;align-items:center;gap:10px}
+.eb-line::before{content:'';width:24px;height:0.5px;background:#7a6b54}
+.h1{font-size:48px;line-height:1.05;letter-spacing:-0.02em;color:#2d2e35;font-weight:400}
+.h2{font-size:28px;line-height:1.1;letter-spacing:-0.01em;color:#2d2e35;font-weight:400}
+.accent{color:#b73d37}
+.sec{padding:32px 36px;border-top:0.5px solid #c9bda6}
+.sec:first-child{border-top:none}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.swatch{display:flex;flex-direction:column;gap:6px}
+.sw-box{height:64px;border-radius:4px;border:0.5px solid #c9bda6}
+.sw-name{font-size:11px;color:#2d2e35;font-weight:500;line-height:1.2}
+.sw-hex{font-size:10px;color:#7a6b54;font-family:'DM Sans',monospace;letter-spacing:0.04em}
+.dot{width:14px;height:14px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #d9cdb8}
+.dot-row:last-child{border-bottom:none}
+.dot-label{font-size:13px;color:#2d2e35;flex:1}
+.dot-hex{font-size:10px;color:#7a6b54;letter-spacing:0.04em}
+.princ{padding:12px 0;border-bottom:0.5px solid #d9cdb8;display:flex;gap:14px;align-items:baseline}
+.princ:last-child{border-bottom:none}
+.princ-num{font-size:11px;color:#b73d37;font-weight:500;letter-spacing:0.04em;flex-shrink:0;width:24px}
+.princ-text{font-size:13px;color:#4a4a4f;line-height:1.55}
+.princ-text b{font-weight:500;color:#2d2e35}
+.type-sample{padding:14px 16px;background:#fbf6ec;border:0.5px solid #d9cdb8;border-radius:4px;margin-bottom:10px}
+.type-label{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#998f7e;margin-bottom:6px}
+.btn{padding:14px 28px;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-weight:500;border-radius:0;border:0.5px solid transparent;display:inline-block}
+.btn-primary{background:#b73d37;color:#fbf6ec;border-color:#b73d37}
+.btn-ghost{background:transparent;color:#2d2e35;border-color:#2d2e35}
+.btn-soft{background:transparent;color:#b73d37;border-color:#b73d37}
+.input{display:flex;flex-direction:column;gap:6px}
+.input-label{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#7a6b54}
+.input-field{padding:12px 14px;background:#fbf6ec;border:0.5px solid #c9bda6;font-size:13px;color:#2d2e35;border-radius:0}
+.stat{padding:18px 20px;border-top:0.5px solid #7a6b54;background:transparent}
+.stat-num{font-size:30px;line-height:1;color:#2d2e35;font-weight:400;letter-spacing:-0.01em}
+.stat-num small{font-size:13px;color:#7a6b54;margin-left:4px;letter-spacing:0.02em}
+.stat-label{font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:#7a6b54;margin-top:8px}
+.numfeat{display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:0.5px solid #c9bda6}
+.numfeat-num{font-size:10px;color:#b73d37;letter-spacing:0.1em}
+.numfeat-title{font-size:13px;color:#2d2e35;font-weight:500}
+.numfeat-title i{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-weight:400}
+.numfeat-body{font-size:12px;color:#7a6b54;line-height:1.5}
+.quote{font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:22px;line-height:1.35;color:#2d2e35;padding-left:16px;border-left:0.5px solid #b73d37}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:0.5px solid #c9bda6;border-radius:100px;font-size:11px;color:#2d2e35;background:#fbf6ec}
+.tag{display:inline-block;padding:4px 10px;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:#7a6b54;border:0.5px solid #c9bda6;background:#fbf6ec}
+.dark-sec{background:#2d2e35;color:#f4ede2;padding:32px 36px}
+.dark-sec .eb{color:#bfb39c}
+.dark-sec .h2{color:#f4ede2}
+.dark-sec .accent{color:#e89996}
+.spacer-row{display:flex;align-items:flex-end;gap:8px;margin-top:14px}
+.spacer-unit{background:#b73d37;opacity:0.3}
+.spacer-cap{font-size:9px;color:#7a6b54;letter-spacing:0.08em;margin-top:4px;text-align:center}
+</style>
+
+</head><body><h2 class="sr-only">Sistema de diseño Popnest: principios, paleta de colores, tipografía y componentes</h2>
+
+<div class="pn">
+
+  <div class="sec" style="text-align:center;padding-top:44px;padding-bottom:36px">
+    <div class="eb" style="margin-bottom:18px">— Sistema de diseño · v1</div>
+    <div class="h1">Popnest <span class="s accent">design.</span></div>
+    <div style="font-size:13px;color:#7a6b54;margin-top:14px;max-width:440px;margin-left:auto;margin-right:auto;line-height:1.6">Tono cálido, presencia tipográfica, mínimo cromático, máximo cuidado.</div>
+  </div>
+
+  <div class="sec">
+    <div class="eb-line" style="margin-bottom:18px">01 · Filosofía</div>
+    <div class="grid-2">
+      <div>
+        <div class="princ"><div class="princ-num">i.</div><div class="princ-text"><b>Mínimo cromático.</b> Cremas cálidos como base, rojo terracota como acento.</div></div>
+        <div class="princ"><div class="princ-num">ii.</div><div class="princ-text"><b>Tipografía protagonista.</b> DM Sans para cuerpo, <span class="s">Instrument Serif italic</span> para acentos editoriales.</div></div>
+        <div class="princ"><div class="princ-num">iii.</div><div class="princ-text"><b>Bordes finos, mucho aire.</b> Borders de 0.5px, espacios generosos, cards sin sombras.</div></div>
+      </div>
+      <div>
+        <div class="princ"><div class="princ-num">iv.</div><div class="princ-text"><b>Editorial sobre transaccional.</b> Eyebrows uppercase, números romanos, citas en serif. Revista, no SaaS.</div></div>
+        <div class="princ"><div class="princ-num">v.</div><div class="princ-text"><b>Prácticas como dots de color.</b> Cada disciplina tiene su tono. Sustituye iconos.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eb-line" style="margin-bottom:18px">02 · Paleta · Marca</div>
+    <div class="grid-4">
+      <div class="swatch"><div class="sw-box" style="background:#b73d37"></div><div class="sw-name">Primary</div><div class="sw-hex">#b73d37</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#9d342e"></div><div class="sw-name">Primary hover</div><div class="sw-hex">#9d342e</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#c76661"></div><div class="sw-name">Secondary</div><div class="sw-hex">#c76661</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#d48d88"></div><div class="sw-name">Tertiary</div><div class="sw-hex">#d48d88</div></div>
+    </div>
+
+    <div class="eb" style="margin-top:24px;margin-bottom:14px">Fondos</div>
+    <div class="grid-5">
+      <div class="swatch"><div class="sw-box" style="background:#f4ede2"></div><div class="sw-name">Base</div><div class="sw-hex">#f4ede2</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#fbf6ec"></div><div class="sw-name">Elevated</div><div class="sw-hex">#fbf6ec</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#ede4d2"></div><div class="sw-name">Secondary</div><div class="sw-hex">#ede4d2</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#d8c5af"></div><div class="sw-name">Warm sand</div><div class="sw-hex">#d8c5af</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#2d2e35;border-color:#2d2e35"></div><div class="sw-name">Dark</div><div class="sw-hex">#2d2e35</div></div>
+    </div>
+
+    <div class="eb" style="margin-top:24px;margin-bottom:14px">Texto</div>
+    <div class="grid-5">
+      <div class="swatch"><div class="sw-box" style="background:#2d2e35;border-color:#2d2e35"></div><div class="sw-name">Text</div><div class="sw-hex">#2d2e35</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#4a4a4f;border-color:#4a4a4f"></div><div class="sw-name">Soft</div><div class="sw-hex">#4a4a4f</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#6b6960;border-color:#6b6960"></div><div class="sw-name">Muted</div><div class="sw-hex">#6b6960</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#7a6b54;border-color:#7a6b54"></div><div class="sw-name">Subtle</div><div class="sw-hex">#7a6b54</div></div>
+      <div class="swatch"><div class="sw-box" style="background:#998f7e;border-color:#998f7e"></div><div class="sw-name">Faint</div><div class="sw-hex">#998f7e</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eb-line" style="margin-bottom:18px">03 · Prácticas · Dots de color</div>
+    <div class="grid-2">
+      <div>
+        <div class="dot-row"><span class="dot" style="background:#b73d37"></span><span class="dot-label">Yoga</span><span class="dot-hex">#b73d37</span></div>
+        <div class="dot-row"><span class="dot" style="background:#c76661"></span><span class="dot-label">Pilates</span><span class="dot-hex">#c76661</span></div>
+        <div class="dot-row"><span class="dot" style="background:#d48d88"></span><span class="dot-label">Sound healing</span><span class="dot-hex">#d48d88</span></div>
+      </div>
+      <div>
+        <div class="dot-row"><span class="dot" style="background:#2d3a52"></span><span class="dot-label">Meditación</span><span class="dot-hex">#2d3a52</span></div>
+        <div class="dot-row"><span class="dot" style="background:#7a6b54"></span><span class="dot-label">Tai chi</span><span class="dot-hex">#7a6b54</span></div>
+        <div class="dot-row"><span class="dot" style="background:#998f7e"></span><span class="dot-label">Otros / general</span><span class="dot-hex">#998f7e</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eb-line" style="margin-bottom:18px">04 · Tipografía</div>
+
+    <div class="type-sample">
+      <div class="type-label">DM Sans · Regular · Display</div>
+      <div style="font-size:42px;line-height:1.05;letter-spacing:-0.02em">Respirar, mover, <span class="s accent">reconectar.</span></div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Heading 2 · Sans + Italic serif accent</div>
+      <div class="h2">Nuestra <span class="s accent">filosofía.</span></div>
+    </div>
+
+    <div class="type-sample">
+      <div class="type-label">Cita · Instrument Serif italic · 22px</div>
+      <div class="quote">"Un espacio para el cuerpo, en una ciudad que rara vez le da tiempo."</div>
+    </div>
+
+    <div class="grid-2" style="margin-top:14px">
+      <div class="type-sample">
+        <div class="type-label">Eyebrow · 10px · 0.24em tracking</div>
+        <div class="eb-line">— Sobre el estudio</div>
+      </div>
+      <div class="type-sample">
+        <div class="type-label">Body · 13px · DM Sans</div>
+        <div style="color:#4a4a4f">Trabajamos en grupos pequeños porque creemos que cada cuerpo merece ser visto.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eb-line" style="margin-bottom:18px">05 · Componentes</div>
+
+    <div class="eb" style="margin-bottom:10px">Botones</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px">
+      <button class="btn btn-primary">Reservar →</button>
+      <button class="btn btn-ghost">Ver horario</button>
+      <button class="btn btn-soft">Saber más</button>
+    </div>
+
+    <div class="eb" style="margin-bottom:10px">Inputs</div>
+    <div class="grid-2" style="margin-bottom:24px">
+      <div class="input">
+        <div class="input-label">— Nombre</div>
+        <div class="input-field" style="color:#998f7e">Mariana <span class="s">Reyes</span></div>
+      </div>
+      <div class="input">
+        <div class="input-label"><span class="s accent" style="font-size:13px;letter-spacing:0">i.</span> Email</div>
+        <div class="input-field" style="color:#998f7e">tu@correo.com</div>
+      </div>
+    </div>
+
+    <div class="eb" style="margin-bottom:10px">Chips &amp; tags</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+      <span class="chip"><span class="dot" style="background:#b73d37;width:8px;height:8px"></span>Yoga · 7am</span>
+      <span class="chip"><span class="dot" style="background:#c76661;width:8px;height:8px"></span>Pilates · 9am</span>
+      <span class="tag">— Más elegido</span>
+      <span class="tag" style="background:#b73d37;color:#fbf6ec;border-color:#b73d37">— Nuevo</span>
+    </div>
+
+    <div class="eb" style="margin-bottom:10px">Stats (banda)</div>
+    <div class="grid-3" style="gap:0;margin-bottom:24px">
+      <div class="stat"><div class="stat-num">8</div><div class="stat-label">Personas por clase</div></div>
+      <div class="stat"><div class="stat-num">5</div><div class="stat-label">Prácticas distintas</div></div>
+      <div class="stat"><div class="stat-num">60<small>min</small></div><div class="stat-label">Por sesión</div></div>
+    </div>
+
+    <div class="eb" style="margin-bottom:10px">Numbered features (i / ii / iii / iv)</div>
+    <div class="grid-4">
+      <div class="numfeat">
+        <div class="numfeat-num">— 01</div>
+        <div class="numfeat-title">Diseñado con <i>cuidado</i></div>
+        <div class="numfeat-body">Materiales con intención.</div>
+      </div>
+      <div class="numfeat">
+        <div class="numfeat-num">— 02</div>
+        <div class="numfeat-title">Una energía <i>femenina</i></div>
+        <div class="numfeat-body">Abierto a todos los cuerpos.</div>
+      </div>
+      <div class="numfeat">
+        <div class="numfeat-num">— 03</div>
+        <div class="numfeat-title">Lejos de la <i>ciudad</i></div>
+        <div class="numfeat-body">La prisa se queda fuera.</div>
+      </div>
+      <div class="numfeat">
+        <div class="numfeat-num">— 04</div>
+        <div class="numfeat-title">Una hora <i>para ti</i></div>
+        <div class="numfeat-body">Sin distracciones.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="eb-line" style="margin-bottom:18px">06 · Espaciado · Bordes · Radio</div>
+    <div class="grid-2">
+      <div>
+        <div class="eb" style="margin-bottom:8px">Spacing scale</div>
+        <div class="spacer-row">
+          <div style="text-align:center"><div class="spacer-unit" style="width:8px;height:8px"></div><div class="spacer-cap">8</div></div>
+          <div style="text-align:center"><div class="spacer-unit" style="width:16px;height:16px"></div><div class="spacer-cap">16</div></div>
+          <div style="text-align:center"><div class="spacer-unit" style="width:24px;height:24px"></div><div class="spacer-cap">24</div></div>
+          <div style="text-align:center"><div class="spacer-unit" style="width:40px;height:40px"></div><div class="spacer-cap">40</div></div>
+          <div style="text-align:center"><div class="spacer-unit" style="width:64px;height:64px"></div><div class="spacer-cap">64</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="eb" style="margin-bottom:8px">Bordes y radio</div>
+        <div style="font-size:12px;color:#4a4a4f;line-height:1.8">
+          <div>· <b style="color:#2d2e35">0.5px</b> solid — default para cards</div>
+          <div>· <b style="color:#2d2e35">1px</b> solid — emphasis ocasional</div>
+          <div>· <b style="color:#2d2e35">radius 0</b> — botones, inputs, cards</div>
+          <div>· <b style="color:#2d2e35">radius 100px</b> — chips/pills</div>
+          <div>· <span class="s accent">Sin sombras.</span> Sin glow. Sin gradients.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dark-sec">
+    <div class="eb-line" style="margin-bottom:18px">07 · Pareo oscuro · CTAs grandes</div>
+    <div class="h2">En el corazón <span class="s accent">de Coyoacán.</span></div>
+    <div style="font-size:13px;color:#bfb39c;margin-top:14px;max-width:440px;line-height:1.6">El fondo <code style="background:#1f2027;padding:2px 6px;font-size:11px;color:#e89996">#2d2e35</code> se reserva para manifesto, dirección, y bloques que cierran narrativa.</div>
+    <div style="margin-top:20px;display:flex;gap:10px">
+      <button class="btn" style="background:#b73d37;color:#fbf6ec;border-color:#b73d37">Reservar →</button>
+      <button class="btn" style="background:transparent;color:#f4ede2;border-color:#f4ede2">Cómo llegar</button>
+    </div>
+  </div>
+
+</div>
+</body></html>

@@ -32,6 +32,15 @@ Sin este script, el panel **Otorgar paquete** y las compras repetidas del mismo 
 - **`add_discount_code_redemptions.sql`** — reservas con código gratis (`BIENVENIDA`, `POPNEST`, etc.).
 - **`add_booking_package_credit_deducted.sql`** — recomendado si usas paquetes y cancelaciones.
 
+## Consultas de clientes (solo lectura)
+
+| Archivo | Para qué |
+|---------|----------|
+| `query_todos_los_clientes.sql` | Listado de todos los perfiles, foco en Georginas, paquetes y duplicados por email/nombre |
+| `query_paquetes_por_cliente.sql` | Buscar paquetes por nombre (Emma, Georgina Navarrete, etc.) |
+| `query_paquetes_emma_sandy_georgina.sql` | Emma, Sandy y Georgina Navarrete por email |
+| `query_paquetes_activos.sql` | Paquetes activos de todo el estudio |
+
 ## Verificación rápida
 
 ```sql

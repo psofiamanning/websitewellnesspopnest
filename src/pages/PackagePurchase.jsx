@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { createPaymentIntent } from '../services/bookingService'
+import { createPaymentIntent, validatePackageDiscountCode } from '../services/bookingService'
 import { getCurrentUser, isAuthenticated } from '../services/authService'
 import { trackMetaLead } from '../utils/metaPixel'
 import StripeCardElement from '../components/StripeCardElement'
@@ -30,6 +30,37 @@ function PackagePurchase() {
   const [cardholderName, setCardholderName] = useState('')
   const [stripeCardData, setStripeCardData] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
+
+  // Código de descuento (porcentaje) y nombre de quien refirió
+  const [discountCodeInput, setDiscountCodeInput] = useState('')
+  const [appliedDiscount, setAppliedDiscount] = useState(null) // { code, percent, label }
+  const [discountError, setDiscountError] = useState('')
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false)
+  const [referredBy, setReferredBy] = useState('')
+
+  const handleApplyDiscountCode = async () => {
+    setDiscountError('')
+    if (!discountCodeInput.trim()) {
+      setDiscountError('Escribe un código de descuento.')
+      return
+    }
+    setIsValidatingDiscount(true)
+    try {
+      const result = await validatePackageDiscountCode(discountCodeInput)
+      setAppliedDiscount({ code: result.code, percent: result.percent, label: result.label })
+    } catch (err) {
+      setAppliedDiscount(null)
+      setDiscountError(err.message || 'No se pudo aplicar el código.')
+    } finally {
+      setIsValidatingDiscount(false)
+    }
+  }
+
+  const handleRemoveDiscountCode = () => {
+    setAppliedDiscount(null)
+    setDiscountCodeInput('')
+    setDiscountError('')
+  }
 
   useEffect(() => {
     // Verificar autenticación primero
@@ -152,8 +183,11 @@ function PackagePurchase() {
     setIsProcessing(true)
 
     try {
-      // Precio del paquete en centavos
-      const amount = packageInfo.price * 100 // precio en centavos (ej. $2,250 = 225000)
+      // Precio del paquete con descuento (si aplica), en centavos
+      const finalPrice = appliedDiscount
+        ? Math.max(0, Math.round(packageInfo.price * (1 - appliedDiscount.percent / 100)))
+        : packageInfo.price
+      const amount = finalPrice * 100 // precio en centavos (ej. $2,250 = 225000)
       
       // Crear Payment Intent con Stripe
       let paymentIntent
@@ -221,6 +255,9 @@ function PackagePurchase() {
         packageId: packageInfo.id,
         packageName: packageInfo.name,
         classes: packageInfo.classes,
+        discountCode: appliedDiscount ? appliedDiscount.code : null,
+        discountPercent: appliedDiscount ? appliedDiscount.percent : null,
+        referredBy: referredBy?.trim() || null,
         customer: {
           firstName: customerInfo.firstName,
           lastName: customerInfo.lastName,
@@ -270,7 +307,7 @@ function PackagePurchase() {
       if (stripeError) {
         alert(`⚠️ Compra guardada pero el pago requiere atención.\n\nPaquete: ${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\n\nError: ${stripeError.message}`)
       } else if (paymentStatus === 'succeeded') {
-        trackMetaLead({ content_name: 'compra_paquete', value: packageInfo?.price || 0, currency: 'MXN' })
+        trackMetaLead({ content_name: 'compra_paquete', value: finalPrice || 0, currency: 'MXN' })
         alert(`✅ ¡Paquete comprado exitosamente!\n\n${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\nEmail: ${customerInfo.email}\n\nAhora puedes usar tus ${packageInfo.classes} clases cuando quieras.`)
         navigate('/packages')
       } else {
@@ -295,6 +332,11 @@ function PackagePurchase() {
       </div>
     )
   }
+
+  // Precio final mostrado (con descuento porcentual si hay un código aplicado)
+  const finalPrice = appliedDiscount
+    ? Math.max(0, Math.round(packageInfo.price * (1 - appliedDiscount.percent / 100)))
+    : packageInfo.price
 
   return (
     <div className="wellness-background min-h-screen">
@@ -585,6 +627,89 @@ function PackagePurchase() {
               </div>
             </div>
 
+            {/* Código de descuento y referido */}
+            <div className="mb-8">
+              <h3 className="text-h3 font-heading text-body mb-4">
+                Descuento y referido
+              </h3>
+              <div className="rounded-lg p-6 border-2 space-y-6"
+                   style={{
+                     backgroundColor: '#faf9f9',
+                     borderColor: '#E5B3B0',
+                     boxShadow: '0 2px 8px rgba(183, 61, 55, 0.05)'
+                   }}>
+                {/* Código de descuento */}
+                <div>
+                  <label className="block text-body font-body font-medium mb-2">
+                    Código de descuento
+                  </label>
+                  {appliedDiscount ? (
+                    <div className="rounded-lg p-4 border-2 flex flex-wrap items-center justify-between gap-3"
+                         style={{ borderColor: '#B73D37', backgroundColor: '#FEE2E2' }}>
+                      <p className="text-sm font-body text-body m-0">
+                        <strong>{appliedDiscount.code}</strong> aplicado — {appliedDiscount.label}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleRemoveDiscountCode}
+                        className="text-sm font-body underline"
+                        style={{ color: '#B73D37' }}
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="text"
+                          placeholder="Ej. POPNEST20"
+                          value={discountCodeInput}
+                          onChange={(e) => setDiscountCodeInput(e.target.value.toUpperCase())}
+                          className="flex-1 px-4 py-3 rounded-lg border-2 focus:outline-none font-body text-body uppercase transition-all duration-300"
+                          style={{ borderColor: '#DED5D5', backgroundColor: '#FFFFFF' }}
+                          onFocus={(e) => e.target.style.borderColor = '#B73D37'}
+                          onBlur={(e) => e.target.style.borderColor = '#DED5D5'}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyDiscountCode}
+                          disabled={isValidatingDiscount}
+                          className="px-6 py-3 rounded-lg font-body font-semibold transition-colors disabled:opacity-50"
+                          style={{ backgroundColor: '#B73D37', color: '#FFFFFF' }}
+                        >
+                          {isValidatingDiscount ? 'Validando…' : 'Aplicar'}
+                        </button>
+                      </div>
+                      {discountError && (
+                        <p className="text-sm font-body mt-2" style={{ color: '#B73D37' }}>
+                          {discountError}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Nombre de quien refirió */}
+                <div>
+                  <label className="block text-body font-body font-medium mb-2">
+                    Nombre de la persona que te refirió (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Ana García"
+                    value={referredBy}
+                    onChange={(e) => setReferredBy(e.target.value)}
+                    maxLength={120}
+                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none font-body text-body transition-all duration-300"
+                    style={{ borderColor: '#DED5D5', backgroundColor: '#FFFFFF' }}
+                    onFocus={(e) => e.target.style.borderColor = '#B73D37'}
+                    onBlur={(e) => e.target.style.borderColor = '#DED5D5'}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Resumen */}
             <div className="mb-8 pt-6 border-t" style={{ borderColor: '#E5B3B0' }}>
               <div className="rounded-lg p-6 border-2"
@@ -612,10 +737,23 @@ function PackagePurchase() {
                   <p>
                     <span className="font-medium">Teléfono:</span> {customerInfo.phone}
                   </p>
+                  {appliedDiscount && (
+                    <p>
+                      <span className="font-medium">Descuento ({appliedDiscount.code}):</span>{' '}
+                      <span style={{ color: '#B73D37' }}>
+                        −{appliedDiscount.percent}% (−${(packageInfo.price - finalPrice).toLocaleString()} MXN)
+                      </span>
+                    </p>
+                  )}
                   <p className="pt-2 border-t" style={{ borderColor: '#E5B3B0' }}>
                     <span className="font-medium">Total:</span>{' '}
+                    {appliedDiscount && (
+                      <span className="text-lg font-body line-through mr-2" style={{ color: '#9CA3AF' }}>
+                        ${packageInfo.price.toLocaleString()}
+                      </span>
+                    )}
                     <span className="text-2xl font-bold" style={{ color: '#B73D37' }}>
-                      ${packageInfo.price.toLocaleString()} MXN
+                      ${finalPrice.toLocaleString()} MXN
                     </span>
                   </p>
                 </div>
@@ -719,7 +857,7 @@ function PackagePurchase() {
                       }
                     }}
                   >
-                    {isProcessing ? 'Procesando pago...' : `Pagar $${packageInfo.price.toLocaleString()} MXN`}
+                    {isProcessing ? 'Procesando pago...' : `Pagar $${finalPrice.toLocaleString()} MXN`}
                   </button>
                   <p className="text-xs text-body font-body text-center mt-2 opacity-75">
                     Al hacer clic, procesaremos tu pago de forma segura

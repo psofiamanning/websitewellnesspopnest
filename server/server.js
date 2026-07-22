@@ -41,6 +41,7 @@ import {
 } from './db/packages.js'
 import { getSupabaseAnon } from './db/supabaseClient.js'
 import { validateDiscountCodeForCustomer } from './db/discountCodes.js'
+import { findPackageDiscountCode, normalizePackageDiscountCode } from './config/packageDiscountCodes.js'
 import { saveLeadEmail } from './db/leads.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -216,6 +217,24 @@ async function sendAdminPasswordResetEmail(email, resetToken) {
     console.log('✅ Email de restablecimiento (admin) enviado a:', email)
   } catch (err) {
     console.error('❌ Error enviando email de restablecimiento admin:', err.message)
+  }
+}
+
+/** Envía el correo automático de bienvenida al capturar un lead de clase gratis. */
+async function sendFreeClassEmail(email) {
+  if (!email) return
+  if (!mailerSend && !mailTransporter) {
+    console.warn('⚠️ Email de clase gratis no enviado (correo no configurado):', email)
+    return
+  }
+  const subject = '🎁 Tu clase gratis en Estudio Popnest Wellness'
+  const text = `¡Hola!\n\nGracias por tu interés en Estudio Popnest Wellness. Aquí tienes tu clase de regalo.\n\nPara reservarla, entra a ${FRONTEND_URL}, elige el horario que prefieras y menciona este correo en recepción.\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>¡Hola!</p><p>Gracias por tu interés en <strong>Estudio Popnest Wellness</strong>. Aquí tienes tu <strong>clase de regalo</strong> 🎁</p><p>Para reservarla, entra a <a href="${FRONTEND_URL}" style="color:#B73D37;font-weight:bold;">nuestra web</a>, elige el horario que prefieras y menciona este correo en recepción.</p><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
+  try {
+    await sendEmail({ to: email, subject, text, html })
+    console.log('✅ Email de clase gratis enviado a:', email)
+  } catch (err) {
+    console.error('❌ Error enviando email de clase gratis a', email, ':', err.message)
   }
 }
 
@@ -524,6 +543,26 @@ app.post('/api/discount-codes/validate', async (req, res) => {
   }
 })
 
+// Endpoint: Validar código de descuento porcentual para PAQUETES.
+app.post('/api/package-discounts/validate', async (req, res) => {
+  try {
+    const { code } = req.body || {}
+    const def = findPackageDiscountCode(code)
+    if (!def) {
+      return res.status(400).json({ valid: false, error: 'Código de descuento inválido o no disponible.' })
+    }
+    res.json({
+      valid: true,
+      code: normalizePackageDiscountCode(def.code),
+      percent: def.percent,
+      label: def.label,
+    })
+  } catch (error) {
+    console.error('Error validating package discount code:', error)
+    res.status(500).json({ valid: false, error: error.message })
+  }
+})
+
 // Endpoint: Captura de correo del popup de clase gratis (cuenta regresiva)
 app.post('/api/leads', async (req, res) => {
   try {
@@ -531,6 +570,11 @@ app.post('/api/leads', async (req, res) => {
     const result = await saveLeadEmail({ email, source, offer })
     if (!result.ok) {
       return res.status(400).json(result)
+    }
+    // Solo enviar el correo la primera vez (no en correos ya registrados).
+    if (!result.alreadyRegistered) {
+      // Fire-and-forget: no bloquea la respuesta al usuario.
+      sendFreeClassEmail(email)
     }
     res.json(result)
   } catch (error) {
@@ -1576,6 +1620,7 @@ app.post('/api/packages/purchase', async (req, res) => {
       amountPaid: purchaseData.payment?.amount ?? 0,
       stripePaymentIntentId: purchaseData.stripeInfo?.paymentIntentId ?? null,
       paymentStatus: purchaseData.payment?.status === 'succeeded' ? 'succeeded' : 'pending',
+      referredBy: purchaseData.referredBy ?? null,
     })
 
     console.log('✅ Compra de paquete guardada:', {

@@ -24,6 +24,7 @@ export function adaptBookingRow(row) {
     status: row.status,
     type: row.type,
     paymentMethod: row.payment_method,
+    referredBy: row.referred_by ?? null,
     date: schedules?.scheduled_date ?? null,
     time: schedules?.scheduled_time ?? null,
     className: classes?.name ?? null,

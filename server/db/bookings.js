@@ -182,9 +182,38 @@ function mapBookingTypeForDb(t) {
   return t || 'clase'
 }
 
-function isMissingPackageCreditColumnError(err) {
+// Columnas opcionales que pueden no existir todavía si no se corrió la migración.
+const OPTIONAL_BOOKING_COLUMNS = ['referred_by', 'package_credit_deducted']
+
+function missingOptionalColumn(err, row) {
   const m = `${err?.message || ''} ${err?.details || ''}`.toLowerCase()
-  return m.includes('package_credit_deducted')
+  return OPTIONAL_BOOKING_COLUMNS.find((c) => c in row && m.includes(c)) || null
+}
+
+/**
+ * Inserta en bookings_new tolerando columnas opcionales aún no migradas:
+ * si la BD rechaza por una columna que no existe, la quita y reintenta.
+ */
+async function insertBookingRow(supabase, row) {
+  let attempt = { ...row }
+  for (let i = 0; i <= OPTIONAL_BOOKING_COLUMNS.length; i++) {
+    const res = await supabase.from('bookings_new').insert(attempt).select(BOOKING_RELATIONS).single()
+    if (!res.error) return res
+    const missing = missingOptionalColumn(res.error, attempt)
+    if (!missing) return res
+    console.warn(
+      `bookings_new.${missing} no existe; se omite. Ejecuta la migración correspondiente en Supabase.`
+    )
+    const { [missing]: _omit, ...rest } = attempt
+    attempt = rest
+  }
+  return supabase.from('bookings_new').insert(attempt).select(BOOKING_RELATIONS).single()
+}
+
+// Nombre de quien refirió (texto libre opcional). Se recorta y limita la longitud.
+function sanitizeReferredBy(value) {
+  const s = String(value || '').trim()
+  return s ? s.slice(0, 120) : null
 }
 
 async function decrementScheduleSpot(scheduleId, currentSpots) {
@@ -270,6 +299,7 @@ export async function saveBooking(flat) {
   const paymentMethod = mapDbPaymentMethod(flat.paymentMethod)
   const type = mapBookingTypeForDb(flat.type)
   const status = flat.status || 'pending'
+  const referredBy = sanitizeReferredBy(flat.referredBy)
 
   const PAQUETE_20_NOMBRE = 'Paquete de 20 Clases'
 
@@ -278,18 +308,15 @@ export async function saveBooking(flat) {
     const email = customer.email || ''
     const discount = await assertDiscountEligible(email, code)
 
-    const { data: booking, error: bErr } = await supabase
-      .from('bookings_new')
-      .insert({
-        customer_id: profile.id,
-        schedule_id: schedule.id,
-        customer_package_id: null,
-        type,
-        status: status === 'pending' ? 'confirmed' : status,
-        payment_method: 'discount_code',
-      })
-      .select(BOOKING_RELATIONS)
-      .single()
+    const { data: booking, error: bErr } = await insertBookingRow(supabase, {
+      customer_id: profile.id,
+      schedule_id: schedule.id,
+      customer_package_id: null,
+      type,
+      status: status === 'pending' ? 'confirmed' : status,
+      payment_method: 'discount_code',
+      referred_by: referredBy,
+    })
     if (bErr) throw bErr
 
     const { error: pErr } = await supabase.from('payments_new').insert({
@@ -379,23 +406,12 @@ export async function saveBooking(flat) {
       status,
       payment_method: 'package',
       package_credit_deducted: deductCredit,
+      referred_by: referredBy,
     }
 
-    let { data: booking, error: bErr } = await supabase
-      .from('bookings_new')
-      .insert(insertRow)
-      .select(BOOKING_RELATIONS)
-      .single()
-
-    if (bErr && isMissingPackageCreditColumnError(bErr)) {
-      const { package_credit_deducted: _omit, ...fallbackRow } = insertRow
-      const retry = await supabase.from('bookings_new').insert(fallbackRow).select(BOOKING_RELATIONS).single()
-      booking = retry.data
-      bErr = retry.error
-      console.warn(
-        'bookings_new.package_credit_deducted no existe; ejecuta server/sql/add_booking_package_credit_deducted.sql en Supabase.'
-      )
-    }
+    // insertBookingRow reintenta sin las columnas opcionales que aún no existan
+    // (package_credit_deducted / referred_by).
+    const { data: booking, error: bErr } = await insertBookingRow(supabase, insertRow)
     if (bErr) throw bErr
     if (!booking) throw new Error('No se pudo crear la reserva con paquete.')
 
@@ -415,18 +431,15 @@ export async function saveBooking(flat) {
 
   if (paymentMethod === 'manual') {
     const manualStatus = status || 'confirmed'
-    const { data: booking, error: bErr } = await supabase
-      .from('bookings_new')
-      .insert({
-        customer_id: profile.id,
-        schedule_id: schedule.id,
-        customer_package_id: null,
-        type,
-        status: manualStatus,
-        payment_method: 'manual',
-      })
-      .select(BOOKING_RELATIONS)
-      .single()
+    const { data: booking, error: bErr } = await insertBookingRow(supabase, {
+      customer_id: profile.id,
+      schedule_id: schedule.id,
+      customer_package_id: null,
+      type,
+      status: manualStatus,
+      payment_method: 'manual',
+      referred_by: referredBy,
+    })
     if (bErr) throw bErr
 
     const decMan = shouldDecrementSpotOnInsert({ ...flat, status: manualStatus, paymentMethod: 'manual' })
@@ -441,18 +454,15 @@ export async function saveBooking(flat) {
   const amount = flat.payment?.amount ?? 0
   const cardLastFour = flat.payment?.cardLastFour || flat.payment?.card_last_four || null
 
-  const { data: booking, error: bErr } = await supabase
-    .from('bookings_new')
-    .insert({
-      customer_id: profile.id,
-      schedule_id: schedule.id,
-      customer_package_id: null,
-      type,
-      status,
-      payment_method: 'card',
-    })
-    .select(BOOKING_RELATIONS)
-    .single()
+  const { data: booking, error: bErr } = await insertBookingRow(supabase, {
+    customer_id: profile.id,
+    schedule_id: schedule.id,
+    customer_package_id: null,
+    type,
+    status,
+    payment_method: 'card',
+    referred_by: referredBy,
+  })
   if (bErr) throw bErr
 
   const payStatus =

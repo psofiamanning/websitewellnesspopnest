@@ -193,6 +193,7 @@ export async function insertCustomerPackageAfterPayment({
   amountPaid,
   stripePaymentIntentId,
   paymentStatus = 'succeeded',
+  referredBy = null,
 }) {
   const supabase = getSupabaseAdmin()
   const { data: candidates, error: pErr } = await supabase
@@ -218,20 +219,37 @@ export async function insertCustomerPackageAfterPayment({
     classesRemaining = Math.max(0, classesTotal - 2)
   }
 
-  const { data: inserted, error: iErr } = await supabase
+  const cleanReferredBy = String(referredBy || '').trim().slice(0, 120) || null
+  const insertRow = {
+    customer_id: profileId,
+    package_id: pkg.id,
+    classes_remaining: classesRemaining,
+    classes_total: classesTotal,
+    payment_status: payOk ? 'succeeded' : 'pending',
+    amount_paid: amountPaid,
+    stripe_payment_intent_id: stripePaymentIntentId,
+    expires_at: expiresAt,
+    referred_by: cleanReferredBy,
+  }
+  let { data: inserted, error: iErr } = await supabase
     .from('customer_packages')
-    .insert({
-      customer_id: profileId,
-      package_id: pkg.id,
-      classes_remaining: classesRemaining,
-      classes_total: classesTotal,
-      payment_status: payOk ? 'succeeded' : 'pending',
-      amount_paid: amountPaid,
-      stripe_payment_intent_id: stripePaymentIntentId,
-      expires_at: expiresAt,
-    })
+    .insert(insertRow)
     .select(CUSTOMER_PACKAGE_SELECT)
     .single()
+  // Si la columna referred_by aún no existe en Supabase, reintenta sin ella.
+  if (iErr && `${iErr.message || ''} ${iErr.details || ''}`.toLowerCase().includes('referred_by')) {
+    console.warn(
+      'customer_packages.referred_by no existe; ejecuta server/sql/add_package_referred_by.sql en Supabase.'
+    )
+    const { referred_by: _omit, ...fallbackRow } = insertRow
+    const retry = await supabase
+      .from('customer_packages')
+      .insert(fallbackRow)
+      .select(CUSTOMER_PACKAGE_SELECT)
+      .single()
+    inserted = retry.data
+    iErr = retry.error
+  }
   if (iErr) throw iErr
   const map = await countBookingsByCustomerPackageIds([inserted.id])
   const cnt = map.get(inserted.id) ?? map.get(Number(inserted.id)) ?? 0

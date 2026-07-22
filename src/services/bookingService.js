@@ -20,6 +20,20 @@ export const validateDiscountCode = async (email, code) => {
   return data
 }
 
+// Validar código de descuento porcentual para PAQUETES → { code, percent, label }
+export const validatePackageDiscountCode = async (code) => {
+  const response = await fetch(`${BACKEND_URL}/api/package-discounts/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok || !data.valid) {
+    throw new Error(data.error || 'Código de descuento no válido.')
+  }
+  return data
+}
+
 // Guardar reserva (ahora usa el backend)
 export const saveBooking = async (bookingData) => {
   // Paquete, código de descuento o pago con tarjeta confirmado

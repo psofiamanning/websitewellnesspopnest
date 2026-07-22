@@ -45,14 +45,8 @@ function BookingClassEditorialView({
   onBooking,
   onClearDate,
   onClearTime,
-  discountCodeInput,
-  setDiscountCodeInput,
-  appliedDiscount,
-  discountError,
-  discountMessage,
-  isValidatingDiscount,
-  onApplyDiscountCode,
-  onRemoveDiscountCode,
+  referredBy,
+  onReferredByChange,
 }) {
   const classSlug = classInfo.name.toLowerCase()
   const descParagraphs = (classInfo.fullDescription || classInfo.description || '')
@@ -81,11 +75,9 @@ function BookingClassEditorialView({
     ? `${selectedPackage.packageName} (${formatPackageAvailability(selectedPackage)})`
     : null
 
-  const paymentSummary = appliedDiscount
-    ? `Gratis · código ${appliedDiscount.code}`
-    : packageLabel
-      ? packageLabel
-      : `Pago con tarjeta · ${SINGLE_CLASS_PRICE_LABEL}`
+  const paymentSummary = packageLabel
+    ? packageLabel
+    : `Pago con tarjeta · ${SINGLE_CLASS_PRICE_LABEL}`
 
   const [showClassInfo, setShowClassInfo] = useState(false)
 
@@ -312,9 +304,7 @@ function BookingClassEditorialView({
                   </div>
                 </dl>
 
-                {appliedDiscount ? (
-                  <p className="bk-package-note">Clase gratis con código de descuento</p>
-                ) : usePackage && packageLabel ? (
+                {usePackage && packageLabel ? (
                   <p className="bk-package-note">Descuenta 1 clase de tu paquete</p>
                 ) : null}
 
@@ -393,55 +383,20 @@ function BookingClassEditorialView({
                     </div>
                   </div>
 
-                  <div className="bk-discount">
-                    <label htmlFor="bk-discount">Código de descuento</label>
-                    {appliedDiscount ? (
-                      <div className="bk-discount-applied">
-                        <p className="bk-discount-applied__text">
-                          <strong>{appliedDiscount.code}</strong> aplicado — {appliedDiscount.label}
-                        </p>
-                        <button
-                          type="button"
-                          className="bk-confirm-change"
-                          onClick={onRemoveDiscountCode}
-                        >
-                          Quitar
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="bk-discount-row">
-                        <input
-                          id="bk-discount"
-                          type="text"
-                          value={discountCodeInput}
-                          onChange={(e) => setDiscountCodeInput(e.target.value.toUpperCase())}
-                          placeholder="Ej. BIENVENIDA"
-                          autoComplete="off"
-                          spellCheck={false}
-                        />
-                        <button
-                          type="button"
-                          className="pn-btn pn-btn--secondary"
-                          disabled={isValidatingDiscount}
-                          onClick={onApplyDiscountCode}
-                        >
-                          {isValidatingDiscount ? 'Verificando…' : 'Aplicar'}
-                        </button>
-                      </div>
-                    )}
-                    {discountMessage ? (
-                      <p className="bk-discount-ok" role="status">
-                        {discountMessage}
-                      </p>
-                    ) : null}
-                    {discountError ? (
-                      <p className="bk-alert" role="alert">
-                        {discountError}
-                      </p>
-                    ) : null}
+                  <div className="bk-field bk-field--full bk-referral">
+                    <label htmlFor="bk-referral">Nombre de la persona que te refirió (opcional)</label>
+                    <input
+                      id="bk-referral"
+                      type="text"
+                      value={referredBy}
+                      onChange={(e) => onReferredByChange(e.target.value)}
+                      placeholder="Ej. Ana García"
+                      autoComplete="off"
+                      maxLength={120}
+                    />
                   </div>
 
-                  {!appliedDiscount && userPackages?.hasActivePackages ? (
+                  {userPackages?.hasActivePackages ? (
                     <div style={{ marginTop: 20 }}>
                       <p className="pn-text-sm" style={{ marginBottom: 12, color: 'var(--pn-color-text-muted)' }}>
                         Método de pago
@@ -462,7 +417,6 @@ function BookingClassEditorialView({
                             name="bk-pay"
                             checked={usePackage && selectedPackageId === pkg.id}
                             onChange={() => {
-                              onRemoveDiscountCode()
                               setUsePackage(true)
                               setSelectedPackageId(pkg.id)
                             }}
@@ -486,7 +440,7 @@ function BookingClassEditorialView({
                     </div>
                   ) : null}
 
-                  {!appliedDiscount && !usePackage ? (
+                  {!usePackage ? (
                     <div style={{ marginTop: 20 }}>
                       <StripeCardElement
                         onCardReady={setStripeCardData}
@@ -517,8 +471,6 @@ function BookingClassEditorialView({
                       <span className="bk-spinner" aria-hidden />
                       Procesando tu reserva…
                     </>
-                  ) : appliedDiscount ? (
-                    'Confirmar reserva gratis →'
                   ) : usePackage ? (
                     'Confirmar reserva →'
                   ) : (

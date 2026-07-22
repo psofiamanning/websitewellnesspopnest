@@ -31,6 +31,11 @@ Sin este script, el panel **Otorgar paquete** y las compras repetidas del mismo 
 
 - **`add_discount_code_redemptions.sql`** — reservas con código gratis (`BIENVENIDA`, `POPNEST`, etc.).
 - **`add_booking_package_credit_deducted.sql`** — recomendado si usas paquetes y cancelaciones.
+- **`add_booking_referred_by.sql`** — guarda el nombre de quien refirió en reservas de clase/coach.
+- **`add_package_referred_by.sql`** — guarda el nombre de quien refirió en compras de paquete.
+
+> Sin estos dos últimos, las reservas/compras siguen funcionando: el backend detecta la
+> columna faltante y la omite (el nombre de referido simplemente no se guarda hasta correr el SQL).
 
 ## Consultas de clientes (solo lectura)
 

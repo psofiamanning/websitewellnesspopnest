@@ -40,6 +40,17 @@ function coachImageFocus(coachId) {
   return undefined
 }
 
+/** Iniciales para el avatar de respaldo cuando la coach aún no tiene foto. */
+function coachInitials(name) {
+  if (!name || typeof name !== 'string') return '·'
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join('')
+}
+
 function Teachers() {
   const navigate = useNavigate()
 
@@ -72,14 +83,35 @@ function Teachers() {
               return (
                 <article key={coach.id} className="coach-card" aria-labelledby={`coach-name-${coach.id}`}>
                   <div className="coach-card__media">
-                    <img
-                      src={coach.image}
-                      alt=""
-                      className="coach-card__img"
-                      data-coach-focus={focus || undefined}
-                      loading="lazy"
-                      decoding="async"
-                    />
+                    {coach.image ? (
+                      <img
+                        src={coach.image}
+                        alt=""
+                        className="coach-card__img"
+                        data-coach-focus={focus || undefined}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div
+                        className="coach-card__img coach-card__img--placeholder"
+                        aria-hidden
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background:
+                            'linear-gradient(135deg, var(--pn-color-practice-sound, #d48d88), var(--pn-color-practice-yoga, #b73d37))',
+                          color: '#fff',
+                          fontFamily: 'var(--pn-font-heading, serif)',
+                          fontWeight: 700,
+                          fontSize: 'clamp(2rem, 6vw, 3.25rem)',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        {coachInitials(coach.name)}
+                      </div>
+                    )}
                     <span className="sr-only">{coach.name}</span>
                   </div>
 

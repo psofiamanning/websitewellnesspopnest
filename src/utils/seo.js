@@ -156,8 +156,10 @@ const CLASS_SLUG_TO_NAME = {
   'tai-chi': 'Tai Chi',
   'sound-healing': 'Sound Healing',
   'meditacion': 'Meditación',
-  'yoga-vinyasa': 'Yoga Vinyasa',
   'power-yoga-1': 'Power Yoga',
+  'belly-dance': 'Belly Dance',
+  'stretching': 'Stretching',
+  'meditacion-sound-healing': 'Meditación y Sound Healing',
   pilates: 'Pilates'
 }
 

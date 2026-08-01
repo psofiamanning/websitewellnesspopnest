@@ -9,6 +9,8 @@ export const SCHEDULE_FILTERS = [
   { id: 'meditation', label: 'Meditación', practice: 'meditation' },
   { id: 'sound', label: 'Sound healing', practice: 'sound' },
   { id: 'taichi', label: 'Tai chi', practice: 'taichi' },
+  { id: 'dance', label: 'Belly Dance', practice: 'dance' },
+  { id: 'stretching', label: 'Stretching', practice: 'stretching' },
 ]
 
 const DAY_SHORT = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM']
@@ -16,8 +18,11 @@ const DAY_SHORT = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM']
 export function practiceForClassId(classId) {
   if (classId === 'pilates') return 'pilates'
   if (classId === 'meditacion') return 'meditation'
+  if (classId === 'meditacion-sound-healing') return 'meditation'
   if (classId === 'sound-healing') return 'sound'
   if (classId === 'tai-chi') return 'taichi'
+  if (classId === 'belly-dance') return 'dance'
+  if (classId === 'stretching') return 'stretching'
   return 'yoga'
 }
 

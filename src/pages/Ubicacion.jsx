@@ -67,7 +67,7 @@ function Ubicacion() {
                 Estudio Popnest Wellness está en <strong>Coyoacán</strong>, una de las alcaldías con más vida cultural y tranquila de la Ciudad de México. La colonia <strong>Del Carmen</strong> nos sitúa cerca de centros de arte, cafés y espacios peatonales, ideal para combinar tu práctica de yoga o meditación con un rato en la zona.
               </p>
               <p className="mt-4">
-                El estudio forma parte de un lugar que integra galería de arte, cafetería y zona de coworking. Al fondo del espacio encontrarás nuestro salón de yoga y meditación: un lugar reservado para las clases de hatha yoga, yoga vinyasa, power yoga, tai chi, sound healing y meditación en Coyoacán.
+                El estudio forma parte de un lugar que integra galería de arte, cafetería y zona de coworking. Al fondo del espacio encontrarás nuestro salón de yoga y meditación: un lugar reservado para las clases de hatha yoga, pilates, power yoga, tai chi, sound healing, meditación, belly dance y stretching en Coyoacán.
               </p>
             </section>
 
@@ -85,7 +85,7 @@ function Ubicacion() {
                 Clases de yoga y bienestar en Coyoacán
               </h2>
               <p>
-                Ofrecemos clases de hatha yoga, yoga vinyasa, power yoga, tai chi, sound healing y meditación. Todas se imparten en nuestro espacio en Coyoacán. Puedes ver el horario y <Link to="/classes" className="underline" style={{ color: '#B73D37' }}>reservar tu clase en línea</Link> desde esta misma web.
+                Ofrecemos clases de hatha yoga, pilates, power yoga, tai chi, sound healing, meditación, belly dance y stretching. Todas se imparten en nuestro espacio en Coyoacán. Puedes ver el horario y <Link to="/classes" className="underline" style={{ color: '#B73D37' }}>reservar tu clase en línea</Link> desde esta misma web.
               </p>
             </section>
           </div>

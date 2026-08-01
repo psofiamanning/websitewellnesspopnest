@@ -12,6 +12,8 @@ export const practiceLabels = {
   meditation: 'Meditacion',
   sound: 'Sound Healing',
   taichi: 'Tai Chi',
+  dance: 'Belly Dance',
+  stretching: 'Stretching',
 }
 
 export const PracticeDot = ({

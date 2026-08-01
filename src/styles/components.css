@@ -232,6 +232,8 @@
 .pn-dot--meditation { background: var(--pn-color-practice-meditation); }
 .pn-dot--sound { background: var(--pn-color-practice-sound); }
 .pn-dot--taichi { background: var(--pn-color-practice-taichi); }
+.pn-dot--dance { background: var(--pn-color-practice-dance); }
+.pn-dot--stretching { background: var(--pn-color-practice-stretching); }
 
 /* ----------------------------------------
    TAG / PILL

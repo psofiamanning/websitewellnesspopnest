@@ -17,6 +17,23 @@ Ejecutar en **Supabase → SQL Editor**, en orden. Si un script ya se aplicó, S
 
 Scripts **solo datos/horarios**: 7–10. Ajusta según lo que ya tengas en producción.
 
+## Reemplazo de horario completo — agosto 2026
+
+`update_horario_2026_agosto.sql` — **una sola corrida**. Reemplaza el horario
+semanal completo por el nuevo (clases, días, horas y coaches), agrega las
+clases **Belly Dance**, **Stretching** y **Meditación y Sound Healing**, da de
+alta a la coach **Nadia Navarrete** y archiva **Yoga Vinyasa** (Hayde Ortiz).
+
+- Es transaccional (`BEGIN/COMMIT`) e idempotente; se puede volver a correr.
+- **No borra nada**: los slots viejos se retiran con `valid_until = ayer` o
+  `status='inactive'`, conservando historial y reservas.
+- Requiere `add_schedules_valid_from_until.sql` aplicado antes.
+- Antes de correr, verifica que `public.teachers.full_name` coincida (acentos)
+  y que `public.classes` / `public.teachers` no tengan columnas NOT NULL extra
+  sin default (ver comentarios del script).
+- **Run Club** NO va en la base: es gratis, sin reservación (sección
+  informativa aparte).
+
 ## Permitir varios paquetes del mismo tipo por cliente
 
 Si al comprar un **segundo** “Paquete de 10 Clases” falla con `customer_packages_customer_id_package_id_key` o `customer_packages_unique_active`, ejecutar **una vez**:

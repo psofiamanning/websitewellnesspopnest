@@ -14,6 +14,7 @@ const MENU_ITEMS = [
   { id: 'inicio', label: 'Inicio', path: '/', hash: 'inicio' },
   { id: 'clases', label: 'Clases', path: '/classes', hash: 'clases' },
   { id: 'horario', label: 'Horario', path: '/horario', hash: 'horario' },
+  { id: 'talleres', label: 'Talleres', path: '/talleres', hash: 'talleres' },
   { id: 'planes', label: 'Planes', path: '/packages', hash: 'planes' },
 ]
 

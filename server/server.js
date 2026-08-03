@@ -20,6 +20,19 @@ import {
   getAvailabilityForSlot,
 } from './db/bookings.js'
 import {
+  listActiveTalleres,
+  listAllTalleres,
+  getTallerById,
+  createTaller,
+  updateTaller,
+  deleteTaller,
+  decrementTallerSpot,
+  createTallerBooking,
+  listTallerBookings,
+  uploadTallerImage,
+} from './db/talleres.js'
+import { isTalleresAiConfigured, generateTallerFromPrompt } from './talleresAi.js'
+import {
   isUsingSupabaseForUsers,
   getProfileByEmail,
   profileToApiUser,
@@ -118,7 +131,7 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
     res.status(500).json({ error: err.message })
   }
 })
-app.use(express.json())
+app.use(express.json({ limit: '15mb' })) // límite alto: subida de imágenes de talleres en base64
 
 // Inicializar Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -1714,6 +1727,207 @@ app.use((err, req, res, next) => {
     error: err.message || 'Error interno del servidor',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   })
+})
+
+// =====================================================================
+//  TALLERES (workshops) — contenido editable desde /admin + reserva/pago
+// =====================================================================
+
+/** Public: lista de talleres publicados. */
+app.get('/api/talleres', async (req, res) => {
+  try {
+    const talleres = await listActiveTalleres()
+    res.json({ talleres })
+  } catch (error) {
+    console.error('Error listando talleres:', error)
+    res.status(500).json({ error: error.message || 'Error al listar talleres' })
+  }
+})
+
+/** Public: un taller por id. */
+app.get('/api/talleres/:id', async (req, res) => {
+  try {
+    const taller = await getTallerById(req.params.id)
+    if (!taller || !taller.is_active) return res.status(404).json({ error: 'Taller no encontrado' })
+    res.json({ taller })
+  } catch (error) {
+    console.error('Error obteniendo taller:', error)
+    res.status(500).json({ error: error.message || 'Error al obtener el taller' })
+  }
+})
+
+/** Public: registra la reserva tras un pago exitoso con Stripe. */
+app.post('/api/talleres/:id/book', async (req, res) => {
+  try {
+    const tallerId = req.params.id
+    const { customer = {}, paymentIntentId } = req.body || {}
+
+    const taller = await getTallerById(tallerId)
+    if (!taller || !taller.is_active) return res.status(404).json({ error: 'Taller no disponible.' })
+    if ((taller.spots_available ?? 0) <= 0) return res.status(409).json({ error: 'Taller agotado.' })
+
+    // Verificar el pago con Stripe (monto y estado) antes de guardar.
+    let amountPaid = null
+    if (paymentIntentId) {
+      try {
+        const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
+        if (pi.status !== 'succeeded') {
+          return res.status(402).json({ error: 'El pago no se completó. Intenta de nuevo.' })
+        }
+        const expected = Math.round(Number(taller.price) * 100)
+        if (expected > 0 && pi.amount !== expected) {
+          return res.status(400).json({ error: 'El monto pagado no coincide con el precio del taller.' })
+        }
+        amountPaid = pi.amount / 100
+      } catch (e) {
+        return res.status(400).json({ error: 'No se pudo verificar el pago.' })
+      }
+    } else if (Number(taller.price) > 0) {
+      return res.status(400).json({ error: 'Falta la referencia del pago.' })
+    }
+
+    // Descontar un lugar de forma segura.
+    const updated = await decrementTallerSpot(tallerId)
+    if (!updated) return res.status(409).json({ error: 'Taller agotado.' })
+
+    const booking = await createTallerBooking({
+      tallerId,
+      tallerTitle: taller.title,
+      customerName: `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || customer.name || null,
+      customerEmail: customer.email || null,
+      customerPhone: customer.phone || null,
+      amountPaid,
+      currency: 'mxn',
+      paymentStatus: paymentIntentId ? 'succeeded' : 'free',
+      stripePaymentIntentId: paymentIntentId || null,
+    })
+
+    // Correo de confirmación (no bloqueante).
+    if (customer.email) {
+      const fecha = taller.fecha ? ` el ${taller.fecha}` : ''
+      const hora = taller.hora ? ` a las ${taller.hora}` : ''
+      sendEmail({
+        to: customer.email,
+        toName: booking.customer_name || '',
+        subject: `Reserva confirmada — ${taller.title}`,
+        text: `¡Gracias por tu reserva!\n\nTaller: ${taller.title}${fecha}${hora}\nLugar: ${taller.lugar || 'Estudio Popnest Wellness, Coyoacán'}\n\nTe esperamos.`,
+      }).catch((e) => console.warn('No se pudo enviar correo de taller:', e.message))
+    }
+
+    res.json({ success: true, booking, spotsAvailable: updated.spots_available })
+  } catch (error) {
+    console.error('Error reservando taller:', error)
+    res.status(500).json({ error: error.message || 'Error al reservar el taller' })
+  }
+})
+
+// ---- Admin (protegido con parseAdminToken) ----
+
+app.get('/api/admin/talleres', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const talleres = await listAllTalleres()
+    res.json({ talleres })
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Error al listar talleres' })
+  }
+})
+
+app.post('/api/admin/talleres', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const taller = await createTaller(req.body || {})
+    res.json({ success: true, taller })
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error al crear el taller' })
+  }
+})
+
+app.put('/api/admin/talleres/:id', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const taller = await updateTaller(req.params.id, req.body || {})
+    res.json({ success: true, taller })
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error al actualizar el taller' })
+  }
+})
+
+app.delete('/api/admin/talleres/:id', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const result = await deleteTaller(req.params.id)
+    res.json({ success: true, ...result })
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error al borrar el taller' })
+  }
+})
+
+app.post('/api/admin/talleres/image', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const { dataUrl, filename } = req.body || {}
+    const url = await uploadTallerImage(dataUrl, filename)
+    res.json({ success: true, url })
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error al subir la imagen' })
+  }
+})
+
+app.get('/api/admin/taller-bookings', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const bookings = await listTallerBookings(req.query.tallerId || null)
+    res.json({ bookings })
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Error al listar reservas' })
+  }
+})
+
+/** Genera un Payment Link de Stripe para un taller (producto + precio + link). */
+app.post('/api/admin/talleres/payment-link', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const { title, price } = req.body || {}
+    const name = String(title || '').trim() || 'Taller — Estudio Popnest Wellness'
+    const amount = Math.round(Number(price) * 100)
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'El taller debe tener un precio mayor a 0 para generar un link de pago.' })
+    }
+    const product = await stripe.products.create({ name })
+    const priceObj = await stripe.prices.create({
+      product: product.id,
+      unit_amount: amount,
+      currency: 'mxn',
+    })
+    const link = await stripe.paymentLinks.create({
+      line_items: [{ price: priceObj.id, quantity: 1 }],
+      allow_promotion_codes: true,
+    })
+    res.json({ success: true, url: link.url })
+  } catch (error) {
+    console.error('Error generando payment link de taller:', error)
+    res.status(400).json({ error: error.message || 'No se pudo generar el link de pago.' })
+  }
+})
+
+/** Editor con IA: convierte lenguaje natural en los campos de un taller. */
+app.post('/api/admin/talleres/ai', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  if (!isTalleresAiConfigured()) {
+    return res.status(503).json({
+      error: 'El editor con IA no está configurado. Agrega ANTHROPIC_API_KEY en el servidor (server/.env y Railway).',
+    })
+  }
+  try {
+    const { instruction, current } = req.body || {}
+    const today = new Date().toISOString().slice(0, 10)
+    const taller = await generateTallerFromPrompt({ instruction, current: current || null, today })
+    res.json({ success: true, taller })
+  } catch (error) {
+    console.error('Error en editor IA de talleres:', error)
+    res.status(400).json({ error: error.message || 'Error al generar con IA' })
+  }
 })
 
 // Middleware para rutas no encontradas - debe ir al final

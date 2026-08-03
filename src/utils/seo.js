@@ -19,6 +19,7 @@ const PUBLIC_STATIC_ROUTES = [
   '/',
   '/classes',
   '/horario',
+  '/talleres',
   '/packages',
   '/ubicacion',
   '/privacidad',
@@ -35,6 +36,7 @@ const SITEMAP_META_BY_ROUTE = {
   '/': { changefreq: 'weekly', priority: 1.0 },
   '/classes': { changefreq: 'weekly', priority: 0.9 },
   '/horario': { changefreq: 'weekly', priority: 0.8 },
+  '/talleres': { changefreq: 'weekly', priority: 0.8 },
   '/packages': { changefreq: 'monthly', priority: 0.8 },
   '/ubicacion': { changefreq: 'monthly', priority: 0.8 },
   '/privacidad': { changefreq: 'yearly', priority: 0.4 },
@@ -115,6 +117,10 @@ export const ROUTE_SEO = {
   '/horario': {
     title: 'Horario de Clases en Coyoacán | Estudio Popnest Wellness',
     description: 'Consulta el horario de yoga, meditación y sound healing en Coyoacán. Reserva tu clase en Estudio Popnest Wellness.'
+  },
+  '/talleres': {
+    title: 'Talleres y Experiencias en Coyoacán | Estudio Popnest Wellness',
+    description: 'Talleres y experiencias especiales de bienestar en Coyoacán. Temas, comida y ambiente únicos. Reserva tu lugar en línea en Estudio Popnest Wellness.'
   },
   '/packages': {
     title: 'Paquetes de Clases | Yoga en Coyoacán | Estudio Popnest Wellness',
@@ -221,6 +227,7 @@ export function getBreadcrumbItems(pathname) {
 
   const labels = {
     horario: 'Horario',
+    talleres: 'Talleres',
     packages: 'Planes',
     ubicacion: 'Ubicación',
     privacidad: 'Política de privacidad',

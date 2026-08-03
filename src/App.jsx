@@ -11,6 +11,8 @@ import PageSEO from './components/PageSEO'
 import Home from './pages/Home'
 import Classes from './pages/Classes'
 import Schedule from './pages/Schedule'
+import Talleres from './pages/Talleres'
+import TallerDetalle from './pages/TallerDetalle'
 import Booking from './pages/Booking'
 import Admin from './pages/Admin'
 import AdminLogin from './pages/AdminLogin'
@@ -90,6 +92,7 @@ export function AppContent() {
     pathname === '/classes' ||
     pathname.startsWith('/clases/') ||
     pathname === '/horario' ||
+    pathname === '/talleres' ||
     pathname === '/packages' ||
     pathname === '/ubicacion'
 
@@ -109,6 +112,8 @@ export function AppContent() {
         <Route path="/coaches" element={<Navigate to="/classes" replace />} />
         <Route path="/teachers" element={<Navigate to="/classes" replace />} />
         <Route path="/horario" element={<Schedule />} />
+        <Route path="/talleres" element={<Talleres />} />
+        <Route path="/talleres/:id" element={<TallerDetalle />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/booking/package/:id" element={<PackagePurchase />} />
         <Route path="/booking/:type/:id" element={<Booking />} />

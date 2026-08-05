@@ -112,6 +112,34 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
           await updateBooking(booking.id, { paymentStatus: 'succeeded', status: 'confirmed' })
           const updated = await getBookingById(booking.id)
           if (updated?.customer?.email) sendBookingConfirmationEmail(updated).catch(() => {})
+        } else if (paymentIntent.metadata?.purchase_type === 'package') {
+          // Respaldo: si el pago de un paquete se cobró pero el navegador no logró
+          // registrarlo (sesión caída, red, etc.), lo registramos aquí desde el servidor.
+          // insertCustomerPackageAfterPayment es idempotente por Payment Intent.
+          try {
+            const email = (paymentIntent.metadata.customer_email || '').trim().toLowerCase()
+            const packageName = paymentIntent.metadata.package_name || ''
+            if (!email || !packageName) {
+              console.error('⚠️ [webhook] Pago de paquete sin email/nombre en metadata:', paymentIntent.id)
+            } else {
+              const profile = await getProfileByEmail(email)
+              if (!profile?.id) {
+                console.error(`⚠️ [webhook] Paquete pagado (${paymentIntent.id}) pero SIN perfil para ${email}. Requiere alta manual.`)
+              } else {
+                await insertCustomerPackageAfterPayment({
+                  profileId: profile.id,
+                  packageName,
+                  amountPaid: paymentIntent.amount, // centavos, igual que el flujo del navegador
+                  stripePaymentIntentId: paymentIntent.id,
+                  paymentStatus: 'succeeded',
+                  referredBy: paymentIntent.metadata.referred_by || null,
+                })
+                console.log('✅ [webhook] Paquete registrado como respaldo:', paymentIntent.id, email, packageName)
+              }
+            }
+          } catch (pkgErr) {
+            console.error('⚠️ [webhook] Error en respaldo de paquete:', paymentIntent.id, pkgErr.message)
+          }
         }
         break
       }
@@ -302,10 +330,18 @@ async function assertSlotAvailable(className, date, time) {
 // Endpoint: Crear Payment Intent
 app.post('/api/create-payment-intent', async (req, res) => {
   try {
-    const { amount, currency = 'mxn', customerInfo } = req.body
+    const { amount, currency = 'mxn', customerInfo, metadata: extraMetadata } = req.body
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: 'Amount is required and must be greater than 0' })
+    }
+
+    // Metadata extra (p. ej. tipo de compra y paquete). Stripe exige valores string.
+    const safeExtra = {}
+    if (extraMetadata && typeof extraMetadata === 'object') {
+      for (const [k, v] of Object.entries(extraMetadata)) {
+        if (v != null && v !== '') safeExtra[String(k)] = String(v)
+      }
     }
 
     // Crear Payment Intent con Stripe
@@ -319,6 +355,7 @@ app.post('/api/create-payment-intent', async (req, res) => {
         customer_name: `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim(),
         customer_email: customerInfo?.email || '',
         customer_phone: customerInfo?.phone || '',
+        ...safeExtra,
       },
     })
     

@@ -197,6 +197,12 @@ function PackagePurchase() {
           lastName: customerInfo.lastName,
           email: customerInfo.email,
           phone: customerInfo.phone
+        }, {
+          // Permite que el webhook registre el paquete como respaldo si el navegador falla.
+          purchase_type: 'package',
+          package_name: packageInfo.name,
+          package_id: packageInfo.id,
+          referred_by: referredBy?.trim() || '',
         })
       } catch (paymentError) {
         console.error('Error al crear Payment Intent:', paymentError)
@@ -284,6 +290,8 @@ function PackagePurchase() {
       }
 
       // Guardar en el backend
+      let saveFailed = false
+      let saveErrorMsg = ''
       try {
         const token = localStorage.getItem('auth_token')
         const response = await fetch(`${BACKEND_URL}/api/packages/purchase`, {
@@ -296,22 +304,29 @@ function PackagePurchase() {
         })
 
         if (!response.ok) {
-          const error = await response.json()
+          const error = await response.json().catch(() => ({}))
           throw new Error(error.error || 'Error al guardar la compra del paquete')
         }
       } catch (saveError) {
         console.error('Error guardando compra:', saveError)
-        // Continuar de todas formas
+        saveFailed = true
+        saveErrorMsg = saveError.message || 'Error desconocido'
       }
 
       if (stripeError) {
         alert(`⚠️ Compra guardada pero el pago requiere atención.\n\nPaquete: ${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\n\nError: ${stripeError.message}`)
       } else if (paymentStatus === 'succeeded') {
         trackMetaLead({ content_name: 'compra_paquete', value: finalPrice || 0, currency: 'MXN' })
-        alert(`✅ ¡Paquete comprado exitosamente!\n\n${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\nEmail: ${customerInfo.email}\n\nAhora puedes usar tus ${packageInfo.classes} clases cuando quieras.`)
+        if (saveFailed) {
+          // El pago SÍ se realizó. Si el registro directo falló, el respaldo por webhook
+          // del servidor lo registra igual. No mostramos un "éxito" falso: avisamos con honestidad.
+          alert(`✅ Tu pago se realizó correctamente.\n\nPaquete: ${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\nEmail: ${customerInfo.email}\n\n⚠️ Hubo un detalle al mostrar tu paquete al instante, pero tu pago quedó registrado y tu paquete se activará en unos minutos. Si en un par de horas no ves tus clases, escríbenos a info@estudiopopnest.com con tu nombre y te lo activamos de inmediato.`)
+        } else {
+          alert(`✅ ¡Paquete comprado exitosamente!\n\n${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\nEmail: ${customerInfo.email}\n\nAhora puedes usar tus ${packageInfo.classes} clases cuando quieras.`)
+        }
         navigate('/packages')
       } else {
-        alert(`⚠️ Compra guardada pero el estado del pago es: ${paymentStatus}\n\nRevisa el panel de administración para más detalles.`)
+        alert(`⚠️ El estado del pago es: ${paymentStatus}\n\nSi se te hizo un cargo, escríbenos a info@estudiopopnest.com y lo revisamos.`)
       }
     } catch (error) {
       console.error('Error al procesar la compra:', error)

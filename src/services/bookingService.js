@@ -169,14 +169,14 @@ export const getBookingsByDateRange = async (startDate, endDate) => {
 }
 
 // Crear Payment Intent con Stripe (llamada al backend)
-export const createPaymentIntent = async (amount, currency = 'mxn', customerInfo = {}) => {
+export const createPaymentIntent = async (amount, currency = 'mxn', customerInfo = {}, metadata = {}) => {
   try {
     const response = await fetch(`${BACKEND_URL}/api/create-payment-intent`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ amount, currency, customerInfo })
+      body: JSON.stringify({ amount, currency, customerInfo, metadata })
     })
 
     if (!response.ok) {

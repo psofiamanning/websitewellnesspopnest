@@ -196,6 +196,22 @@ export async function insertCustomerPackageAfterPayment({
   referredBy = null,
 }) {
   const supabase = getSupabaseAdmin()
+
+  // Idempotencia: si este Payment Intent ya se registró (p. ej. el navegador ya lo
+  // guardó, o el webhook llegó primero), devolver la fila existente en vez de duplicar.
+  if (stripePaymentIntentId) {
+    const { data: existing } = await supabase
+      .from('customer_packages')
+      .select(CUSTOMER_PACKAGE_SELECT)
+      .eq('stripe_payment_intent_id', stripePaymentIntentId)
+      .maybeSingle()
+    if (existing) {
+      const dupMap = await countBookingsByCustomerPackageIds([existing.id])
+      const dupCnt = dupMap.get(existing.id) ?? dupMap.get(Number(existing.id)) ?? 0
+      return adaptCustomerPackageRow(existing, { confirmedCount: dupCnt })
+    }
+  }
+
   const { data: candidates, error: pErr } = await supabase
     .from('packages')
     .select('*')

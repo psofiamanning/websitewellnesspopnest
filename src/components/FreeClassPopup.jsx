@@ -6,8 +6,14 @@ const RESOLVED_KEY = 'popnest_free_class_v1' // localStorage: no volver a mostra
 const SHOWN_KEY = 'popnest_free_class_shown' // sessionStorage: mostrar máximo una vez por sesión
 const SHOW_DELAY_MS = 5000
 const COUNTDOWN_START = 50
+const OFFER_LAST_DAY = 10 // La oferta relámpago solo se muestra del día 1 al 10 de cada mes.
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/** true solo durante los primeros OFFER_LAST_DAY días del mes (día 1 al 10). */
+function isOfferWindowActive() {
+  return new Date().getDate() <= OFFER_LAST_DAY
+}
 
 function persistResolved(value) {
   try {
@@ -33,6 +39,8 @@ function FreeClassPopup() {
   // Programar la aparición del popup
   useEffect(() => {
     if (typeof window === 'undefined') return
+    // Solo mostrar la oferta relámpago durante los primeros 10 días del mes.
+    if (!isOfferWindowActive()) return
     let resolved = null
     let shown = null
     try {

@@ -8,6 +8,7 @@ import studioHeroMirrors from '../assets/studio-hero-mirrors.jpg'
 import { classTypes } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
+import { shouldShowProposalPlans } from '../config/proposalPlans'
 import { buildRedesignScheduleSnippets, dotClassForClassId } from '../utils/redesignScheduleFromData'
 import '../styles/tokens.css'
 import '../styles/base.css'
@@ -198,13 +199,17 @@ function Home() {
               </p>
             </div>
             <div className="home-packages">
-              {PACKAGE_OFFERS.map((pkg) => (
+              {PACKAGE_OFFERS.filter((pkg) => !pkg.isProposal || shouldShowProposalPlans()).map((pkg) => (
                 <Link
                   key={pkg.id}
-                  to="/packages"
-                  className={`home-package-card${pkg.popular ? ' home-package-card--popular' : ''}`}
+                  to={pkg.isProposal ? '/packages?preview=equipo' : '/packages'}
+                  className={`home-package-card${pkg.popular ? ' home-package-card--popular' : ''}${pkg.isProposal ? ' home-package-card--new' : ''}`}
                 >
-                  {pkg.popular ? <span className="home-package-card__badge">Más popular</span> : null}
+                  {pkg.isProposal ? (
+                    <span className="home-package-card__badge home-package-card__badge--new">Nuevo</span>
+                  ) : pkg.popular ? (
+                    <span className="home-package-card__badge">Más popular</span>
+                  ) : null}
                   <h3 className="pn-h4">{pkg.name}</h3>
                   <p className="home-package-card__price">
                     <strong>${pkg.price.toLocaleString('es-MX')}</strong> MXN
@@ -235,7 +240,7 @@ function Home() {
             </h2>
             <div className="home-about-phil__copy">
               <p className="pn-text">
-                Creemos en el bienestar como una pausa honesta: grupos reducidos, maestras presentes y un ritmo que
+                Creemos en el bienestar como una pausa honesta: grupos reducidos, coaches presentes y un ritmo que
                 respeta al cuerpo. Aquí la práctica importa tanto como el descanso.
               </p>
               <p className="pn-text">

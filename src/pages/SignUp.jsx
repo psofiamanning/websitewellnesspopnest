@@ -11,7 +11,7 @@ function SignUpAside() {
     <>
       <p className="auth-aside__eyebrow">Lo que recibes</p>
       <h2 className="auth-aside__title">
-        Una cuenta, <em>cinco maestras.</em>
+        Una cuenta, <em>cinco coaches.</em>
       </h2>
       <ol className="auth-list">
         <li>

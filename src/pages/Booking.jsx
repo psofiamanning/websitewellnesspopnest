@@ -1629,7 +1629,7 @@ function Booking() {
                                   <div className="flex-1">
                                     <span className="font-body text-body font-semibold">{pkg.packageName}</span>
                                     <p className="text-xs font-body" style={{ color: '#6B7280' }}>
-                                      {pkg.classesRemaining || pkg.classes} clases disponibles
+                                      {pkg.isUnlimited ? 'Clases ilimitadas' : `${pkg.classesRemaining || pkg.classes} clases disponibles`}
                                     </p>
                                   </div>
                                 </label>

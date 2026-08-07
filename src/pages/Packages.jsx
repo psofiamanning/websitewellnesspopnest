@@ -2,8 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
-import { classTypes } from '../data/classes'
-import { isAuthenticated } from '../services/authService'
+import { shouldShowProposalPlans } from '../config/proposalPlans'
 import '../styles/tokens.css'
 import '../styles/base.css'
 import '../styles/components.css'
@@ -50,11 +49,8 @@ function Packages() {
   const tenPack = PACKAGE_OFFERS.find((p) => p.id === 'package-10-classes')
   const twentyPack = PACKAGE_OFFERS.find((p) => p.id === 'package-20-classes')
 
+  // Clic en una tarjeta → página de detalle pública (el login se pide al comprar).
   function handlePurchase(packageId) {
-    if (!isAuthenticated()) {
-      navigate(`/signup?from=/booking/package/${packageId}`)
-      return
-    }
     navigate(`/booking/package/${packageId}`)
   }
 
@@ -62,48 +58,65 @@ function Packages() {
     if (!tenPack || !twentyPack) return []
     const perTen = Math.round(tenPack.price / tenPack.classes)
     const perTwenty = Math.round(twentyPack.price / twentyPack.classes)
-    return [
+    const base = [
       {
         id: 'single',
         purchaseId: null,
-        eyebrow: 'Primera vez',
         title: 'Clase suelta',
-        subtitle: 'Prueba una sesión sin compromiso',
+        classes: 1,
         price: SINGLE_CLASS_PRICE_MXN,
-        priceNote: 'MXN · pago por reserva',
-        benefits: [
-          'Una clase del horario regular',
-          'Reserva en línea en minutos',
-          'Ideal para conocer el estudio',
-        ],
+        perClass: SINGLE_CLASS_PRICE_MXN,
+        savings: 0,
+        vigenciaShort: 'Por reserva',
         featured: false,
-        cta: 'Reservar clase',
+        cta: 'Reservar',
       },
       {
         id: tenPack.id,
         purchaseId: tenPack.id,
-        eyebrow: 'Más elegido',
-        title: 'Paquete de diez',
-        subtitle: tenPack.description,
+        title: 'Paquete de 10',
+        classes: tenPack.classes,
         price: tenPack.price,
-        priceNote: `MXN · ${formatMxn(perTen)} por clase · vigencia 2 meses`,
-        benefits: tenPack.benefits,
+        perClass: perTen,
+        savings: tenPack.originalPrice ? tenPack.originalPrice - tenPack.price : 0,
+        vigenciaShort: 'Vigencia 2 meses',
         featured: true,
-        cta: 'Comprar paquete',
+        cta: 'Ver detalle',
       },
       {
         id: twentyPack.id,
         purchaseId: twentyPack.id,
-        eyebrow: 'Mejor valor',
-        title: 'Paquete de veinte',
-        subtitle: twentyPack.description,
+        title: 'Paquete de 20',
+        classes: twentyPack.classes,
         price: twentyPack.price,
-        priceNote: `MXN · ${formatMxn(perTwenty)} por clase · vigencia 2 meses`,
-        benefits: twentyPack.benefits,
+        perClass: perTwenty,
+        savings: twentyPack.originalPrice ? twentyPack.originalPrice - twentyPack.price : 0,
+        vigenciaShort: 'Vigencia 2 meses',
         featured: false,
-        cta: 'Comprar paquete',
+        cta: 'Ver detalle',
       },
     ]
+
+    // Planes en propuesta (revisión interna): se agregan solo si el modo preview
+    // está activo o si ya se hicieron públicos. El público normal no los ve.
+    if (shouldShowProposalPlans()) {
+      const proposals = PACKAGE_OFFERS.filter((p) => p.isProposal).map((p) => ({
+        id: p.id,
+        purchaseId: p.id,
+        title: p.name,
+        classes: p.classes,
+        unlimited: p.unlimited || false,
+        price: p.price,
+        perClass: p.classes ? Math.round(p.price / p.classes) : 0,
+        savings: p.originalPrice ? p.originalPrice - p.price : 0,
+        vigenciaShort: `Vigencia ${p.validityDays || 30} días`,
+        featured: false,
+        isNew: true,
+        cta: 'Ver detalle',
+      }))
+      base.push(...proposals)
+    }
+    return base
   }, [tenPack, twentyPack])
 
   const comparisonRows = useMemo(() => {
@@ -174,94 +187,50 @@ function Packages() {
     return value
   }
 
-  const practiceCount = classTypes.length
-
   return (
     <div className="pkg-page pkg-page--with-site-nav">
-      <div className="pkg-shell">
-        <header className="pkg-hero">
-          <div>
-            <p className="pkg-hero__eyebrow">
-              <span className="pkg-hero__eyebrow-line" aria-hidden />
-              03 · Planes
-            </p>
-            <h1 className="pkg-hero__title">
-              Elige tu <em className="pn-serif">ritmo.</em>
-            </h1>
-          </div>
-          <div>
-            <p className="pkg-hero__copy">
-              Compra una clase suelta o un paquete y reserva cuando te convenga. Todos los planes incluyen acceso al
-              horario regular del estudio.
-            </p>
-            <p className="pkg-hero__copy">
-              Grupos de hasta 8 personas, maestras presentes y reserva en línea sin complicaciones.
-            </p>
-          </div>
-        </header>
-
-        <section className="pkg-stats" aria-label="Resumen de planes">
-          <div className="pkg-stat">
-            <span className="pkg-stat__value">3</span>
-            <span className="pkg-stat__label">opciones</span>
-            <span className="pkg-stat__sublabel">suelta y paquetes</span>
-          </div>
-          <div className="pkg-stat">
-            <span className="pkg-stat__value">2</span>
-            <span className="pkg-stat__label">meses</span>
-            <span className="pkg-stat__sublabel">de vigencia</span>
-          </div>
-          <div className="pkg-stat">
-            <span className="pkg-stat__value">{practiceCount}</span>
-            <span className="pkg-stat__label">prácticas</span>
-            <span className="pkg-stat__sublabel">del horario</span>
-          </div>
-          <div className="pkg-stat">
-            <span className="pkg-stat__value">8</span>
-            <span className="pkg-stat__label">max</span>
-            <span className="pkg-stat__sublabel">personas por clase</span>
-          </div>
-        </section>
-
-        <section className="pkg-section" aria-labelledby="pkg-pricing-heading">
+      <div className="pkg-shell pkg-shell--direct">
+        <section className="pkg-section pkg-section--first" aria-labelledby="pkg-pricing-heading">
           <div className="pkg-section__head">
             <div className="pn-eyebrow" style={{ marginBottom: 14 }}>
               Tarifas
             </div>
             <h2 id="pkg-pricing-heading" className="pn-h1">
-              Paquetes que se sienten <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>claros.</span>
+              Elige tu <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>paquete.</span>
             </h2>
+            <p className="pkg-section__sub">Toca un plan para ver el detalle completo.</p>
           </div>
-          <div className="pkg-pricing">
+          <div className="pkg-grid">
             {plans.map((plan) => (
-              <article
+              <button
+                type="button"
                 key={plan.id}
-                className={`pkg-card${plan.featured ? ' pkg-card--featured' : ''}`}
+                className={`pkg-tile${plan.featured ? ' pkg-tile--featured' : ''}${plan.isNew ? ' pkg-tile--new' : ''}`}
+                onClick={() => onPlanClick(plan)}
               >
-                {plan.featured ? <span className="pkg-card__badge">Más popular</span> : null}
-                <p className="pkg-card__eyebrow">{plan.eyebrow}</p>
-                <h3 className="pkg-card__title">{plan.title}</h3>
-                <p className="pkg-card__subtitle">{plan.subtitle}</p>
-                <p className="pkg-card__price">{formatMxn(plan.price)}</p>
-                <p className="pkg-card__price-note">{plan.priceNote}</p>
-                <ul className="pkg-card__list">
-                  {plan.benefits.map((b) => (
-                    <li key={b}>
-                      <span className="pkg-card__check" aria-hidden>
-                        ✓
-                      </span>
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  className={`pkg-card__cta pn-btn pn-btn--block${plan.featured ? ' pn-btn--primary' : ' pn-btn--ghost'}`}
-                  onClick={() => onPlanClick(plan)}
-                >
-                  {plan.cta}
-                </button>
-              </article>
+                {plan.isNew ? (
+                  <span className="pkg-tile__flag pkg-tile__flag--new">Nuevo</span>
+                ) : plan.featured ? (
+                  <span className="pkg-tile__flag">Popular</span>
+                ) : null}
+                <span className="pkg-tile__name">{plan.title}</span>
+                <span className="pkg-tile__num">{plan.unlimited ? '∞' : plan.classes}</span>
+                <span className="pkg-tile__unit">
+                  {plan.unlimited ? 'ilimitadas' : plan.classes === 1 ? 'clase' : 'clases'}
+                </span>
+                <span className="pkg-tile__price">
+                  {formatMxn(plan.price)} <em>MXN</em>
+                </span>
+                {plan.unlimited ? (
+                  <span className="pkg-tile__perclass">Todas las disciplinas</span>
+                ) : plan.savings > 0 ? (
+                  <span className="pkg-tile__save">Ahorra {formatMxn(plan.savings)}</span>
+                ) : (
+                  <span className="pkg-tile__perclass">{formatMxn(plan.perClass)} / clase</span>
+                )}
+                <span className="pkg-tile__meta">{plan.vigenciaShort}</span>
+                <span className="pkg-tile__cta">{plan.cta} →</span>
+              </button>
             ))}
           </div>
         </section>

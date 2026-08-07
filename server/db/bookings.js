@@ -302,6 +302,7 @@ export async function saveBooking(flat) {
   const referredBy = sanitizeReferredBy(flat.referredBy)
 
   const PAQUETE_20_NOMBRE = 'Paquete de 20 Clases'
+  const PAQUETE_ILIMITADO_NOMBRE = 'Ilimitado Mensual'
 
   if (paymentMethod === 'discount_code') {
     const code = normalizeDiscountCode(flat.discountCode)
@@ -365,6 +366,8 @@ export async function saveBooking(flat) {
     if (Number.isNaN(packageId)) {
       throw new Error('No tienes clases disponibles en este paquete o el paquete no existe.')
     }
+    // Sin `.gt('classes_remaining', 0)` aquí: validamos el cupo en código para
+    // poder tratar el paquete ilimitado (que se rige por vigencia, no por cupo).
     const { data: cp, error: cpErr } = await supabase
       .from('customer_packages')
       .select(
@@ -372,19 +375,29 @@ export async function saveBooking(flat) {
         id,
         classes_remaining,
         classes_total,
+        expires_at,
         packages ( name, total_classes )
       `
       )
       .eq('id', packageId)
       .eq('customer_id', profile.id)
       .eq('payment_status', 'succeeded')
-      .gt('classes_remaining', 0)
       .maybeSingle()
     if (cpErr || !cp) {
       throw new Error('No tienes clases disponibles en este paquete o el paquete no existe.')
     }
 
     const pkgName = cp.packages?.name?.trim() || ''
+    const isUnlimited = pkgName === PAQUETE_ILIMITADO_NOMBRE
+    if (isUnlimited) {
+      // Ilimitado: solo se valida que no haya vencido; NO consume cupo.
+      if (cp.expires_at && new Date(cp.expires_at) <= new Date()) {
+        throw new Error('Tu pase ilimitado ya venció.')
+      }
+    } else if (!(Number(cp.classes_remaining) > 0)) {
+      throw new Error('No tienes clases disponibles en este paquete o el paquete no existe.')
+    }
+
     const packageTotal =
       cp.classes_total ?? cp.packages?.total_classes ?? 0
     const prevBookings = await countBookingsForCustomerPackage(cp.id)
@@ -396,6 +409,9 @@ export async function saveBooking(flat) {
     let deductCredit = true
     if (pkgName === PAQUETE_20_NOMBRE) {
       deductCredit = prevBookings >= 2
+    }
+    if (isUnlimited) {
+      deductCredit = false // el ilimitado nunca descuenta
     }
 
     const insertRow = {

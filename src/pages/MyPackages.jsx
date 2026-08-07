@@ -22,8 +22,9 @@ function formatDate(iso) {
 }
 
 function packageStatus(pkg) {
-  const remaining = Number(pkg.classesRemaining ?? 0)
   if (pkg.expiresAt && new Date(pkg.expiresAt) <= new Date()) return 'expired'
+  if (pkg.isUnlimited) return 'active' // ilimitado: activo por vigencia, no por cupo
+  const remaining = Number(pkg.classesRemaining ?? 0)
   if (remaining <= 0) return 'depleted'
   return 'active'
 }
@@ -54,10 +55,16 @@ function PackageCard({ pkg, showReserve }) {
       </div>
 
       {status === 'active' ? (
-        <p className="mp-card__remaining">
-          {remaining}
-          <span>{remaining === 1 ? 'clase disponible' : 'clases disponibles'}</span>
-        </p>
+        pkg.isUnlimited ? (
+          <p className="mp-card__remaining">
+            ∞<span>clases ilimitadas</span>
+          </p>
+        ) : (
+          <p className="mp-card__remaining">
+            {remaining}
+            <span>{remaining === 1 ? 'clase disponible' : 'clases disponibles'}</span>
+          </p>
+        )
       ) : (
         <p className="mp-card__remaining" style={{ fontSize: '18px', color: 'var(--pn-color-text-soft)' }}>
           {used} de {total} clases usadas
@@ -75,7 +82,7 @@ function PackageCard({ pkg, showReserve }) {
         </li>
         <li>
           <span>Total del paquete</span>
-          <span>{total} clases</span>
+          <span>{pkg.isUnlimited ? 'Ilimitado' : `${total} clases`}</span>
         </li>
         <li>
           <span>Usadas</span>
@@ -84,7 +91,7 @@ function PackageCard({ pkg, showReserve }) {
         {status === 'active' ? (
           <li>
             <span>Disponibles</span>
-            <span>{remaining}</span>
+            <span>{pkg.isUnlimited ? 'Ilimitadas' : remaining}</span>
           </li>
         ) : null}
         <li>

@@ -8,6 +8,7 @@ import { canUseMarketingCookies } from './utils/cookieConsent'
 import CookieConsent from './components/CookieConsent'
 import FreeClassPopup from './components/FreeClassPopup'
 import PageSEO from './components/PageSEO'
+import { syncProposalPreviewFromUrl } from './config/proposalPlans'
 import Home from './pages/Home'
 import Classes from './pages/Classes'
 import Schedule from './pages/Schedule'
@@ -70,6 +71,12 @@ function ScrollToTop() {
 
 export function AppContent() {
   const { pathname } = useLocation()
+
+  // Activa el modo preview interno de planes si la URL trae ?preview=equipo,
+  // y lo mantiene al navegar entre páginas (persistido en localStorage).
+  useEffect(() => {
+    syncProposalPreviewFromUrl()
+  }, [])
   const isStandalonePreview =
     pathname === '/design-system' ||
     pathname === '/schedule-redesign' ||

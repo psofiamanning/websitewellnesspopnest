@@ -167,6 +167,160 @@
   color: #fff;
 }
 
+/* Badge sutil para planes en propuesta (revisión interna): pill suave a la
+   izquierda, distinto del "Más popular" sólido de la derecha. */
+.pkg-card__badge--new {
+  right: auto;
+  left: 0;
+  background: #faf9f9;
+  color: var(--pn-color-primary);
+  border-right: 1px solid #e5b3b0;
+  border-bottom: 1px solid #e5b3b0;
+}
+
+/* Frase de ahorro resaltada: destaca del resto de beneficios.
+   Se usa `.pkg-card__list li.pkg-card__save` para ganar especificidad a
+   `.pkg-card__list li` (que fija el color gris del texto). */
+.pkg-card__list li.pkg-card__save {
+  color: #2f7d5f;
+  font-weight: 700;
+}
+.pkg-card__list li.pkg-card__save .pkg-card__check {
+  color: #2f7d5f;
+}
+
+/* ── Grid compacto de paquetes: tiles clickeables → página de detalle ── */
+.pkg-section--first {
+  padding-top: 28px;
+}
+.pkg-section__sub {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--pn-color-text-subtle, #8a7f7a);
+}
+
+.pkg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 26px;
+}
+@media (min-width: 720px) {
+  .pkg-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+}
+@media (min-width: 1040px) {
+  .pkg-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.pkg-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 5px;
+  padding: 26px 14px 18px;
+  background: var(--pn-color-bg-secondary, #ede4d2);
+  border: 1px solid #e2d6c0;
+  border-radius: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease,
+    background 0.18s ease;
+}
+.pkg-tile:hover,
+.pkg-tile:focus-visible {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(183, 61, 55, 0.22);
+  border-color: var(--pn-color-primary);
+  background: var(--pn-color-bg-elevated, #fbf6ec);
+  outline: none;
+}
+.pkg-tile--featured {
+  border-color: var(--pn-color-primary);
+}
+
+.pkg-tile__name {
+  min-height: 2.6em;
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle, #8a7f7a);
+}
+.pkg-tile__num {
+  font-family: var(--pn-font-serif, 'Georgia', 'Times New Roman', serif);
+  font-size: 56px;
+  line-height: 1;
+  font-weight: 700;
+  color: #2b2b2b;
+}
+.pkg-tile__unit {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pn-color-text-subtle, #8a7f7a);
+}
+.pkg-tile__price {
+  margin-top: 10px;
+  font-size: 27px;
+  font-weight: 700;
+  color: var(--pn-color-primary);
+}
+.pkg-tile__price em {
+  font-size: 15px;
+  font-weight: 500;
+  font-style: normal;
+  color: var(--pn-color-text-subtle, #8a7f7a);
+}
+.pkg-tile__save {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2f7d5f;
+}
+.pkg-tile__perclass {
+  font-size: 15px;
+  color: var(--pn-color-text-subtle, #8a7f7a);
+}
+.pkg-tile__meta {
+  font-size: 15px;
+  color: var(--pn-color-text-subtle, #8a7f7a);
+}
+.pkg-tile__cta {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pn-color-primary);
+}
+.pkg-tile__flag {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 6px 11px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--pn-color-primary);
+  color: #fff;
+  border-radius: 0 16px 0 12px;
+}
+.pkg-tile__flag--new {
+  right: auto;
+  left: 0;
+  background: #fff;
+  color: var(--pn-color-primary);
+  border-right: 1px solid #e5b3b0;
+  border-bottom: 1px solid #e5b3b0;
+  border-radius: 16px 0 12px 0;
+}
+
 .pkg-card__eyebrow {
   margin: 0 0 10px;
   font-size: 11px;

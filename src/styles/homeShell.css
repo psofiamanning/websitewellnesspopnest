@@ -384,6 +384,16 @@ a.home-package-card:hover {
   color: #fff;
 }
 
+/* Badge sutil para planes en propuesta (revisión interna). */
+.home-package-card__badge--new {
+  right: auto;
+  left: 0;
+  background: #faf9f9;
+  color: var(--pn-color-primary);
+  border-right: 1px solid #e5b3b0;
+  border-bottom: 1px solid #e5b3b0;
+}
+
 .home-package-card__price {
   margin: 0;
   font-size: 15px;

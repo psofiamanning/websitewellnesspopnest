@@ -7,6 +7,9 @@ import { upsertProfileFromCustomer, getProfileByEmail } from './users.js'
 import { countBookingsByCustomerPackageIds } from './bookings.js'
 
 const PAQUETE_20_NOMBRE = 'Paquete de 20 Clases'
+// Paquete ilimitado: NO descuenta clases; vale por tiempo (su vigencia).
+// Se detecta por nombre (mismo patrón que el Paquete de 20), sin columnas nuevas.
+export const PAQUETE_ILIMITADO_NOMBRE = 'Ilimitado Mensual'
 /** Catálogo interno: créditos sin Stripe; el cliente elige fecha al reservar. */
 export const ADMIN_GRANT_PACKAGE_NAME = 'Clases otorgadas — Administración'
 
@@ -24,6 +27,7 @@ function adaptCustomerPackageRow(row, options = {}) {
   const confirmedCount = options.confirmedCount
   const adminGranted =
     row.admin_granted === true || pkg?.name === ADMIN_GRANT_PACKAGE_NAME
+  const isUnlimited = pkg?.name === PAQUETE_ILIMITADO_NOMBRE
   let rem
   let used
   if (confirmedCount != null && Number.isFinite(Number(confirmedCount))) {
@@ -72,6 +76,7 @@ function adaptCustomerPackageRow(row, options = {}) {
     status: row.payment_status === 'succeeded' ? 'confirmed' : 'pending',
     classesRemaining: rem,
     classesUsed: used,
+    isUnlimited,
     userId: row.customer_id,
   }
 }
@@ -103,19 +108,25 @@ export async function listAllPackagePurchases() {
 async function fetchActivePackagesForCustomerId(customerId) {
   if (!customerId) return []
   const supabase = getSupabaseAdmin()
+  // Sin `.gt('classes_remaining', 0)` en la consulta: filtramos en JS para poder
+  // incluir el paquete ilimitado (que no se rige por cupo, sino por vigencia).
   const { data, error } = await supabase
     .from('customer_packages')
     .select(CUSTOMER_PACKAGE_SELECT)
     .eq('customer_id', customerId)
     .eq('payment_status', 'succeeded')
-    .gt('classes_remaining', 0)
   if (error) {
     console.error('fetchActivePackagesForCustomerId:', error.message)
     return []
   }
   const now = new Date()
   const enriched = await mapPackagesWithBookingCounts(data || [])
-  return enriched.filter((p) => p && (!p.expiresAt || new Date(p.expiresAt) > now))
+  return enriched.filter(
+    (p) =>
+      p &&
+      (!p.expiresAt || new Date(p.expiresAt) > now) &&
+      (p.isUnlimited || Number(p.classesRemaining) > 0),
+  )
 }
 
 /** Paquetes activos por id de perfil (mismo criterio que por email). */
@@ -147,9 +158,11 @@ async function fetchAllPurchasedPackagesForCustomerId(customerId) {
 
 function isPackageActive(pkg, now = new Date()) {
   if (!pkg) return false
+  if (pkg.expiresAt && new Date(pkg.expiresAt) <= now) return false
+  // Ilimitado: activo mientras no venza, sin importar el cupo.
+  if (pkg.isUnlimited) return true
   const remaining = Number(pkg.classesRemaining ?? 0)
   if (remaining <= 0) return false
-  if (pkg.expiresAt && new Date(pkg.expiresAt) <= now) return false
   return true
 }
 

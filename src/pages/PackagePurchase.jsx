@@ -7,6 +7,7 @@ import { getCurrentUser, isAuthenticated } from '../services/authService'
 import { trackMetaLead } from '../utils/metaPixel'
 import StripeCardElement from '../components/StripeCardElement'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
+import { shouldShowProposalPlans } from '../config/proposalPlans'
 
 import { BACKEND_URL } from '../config/api.js'
 
@@ -63,11 +64,24 @@ function PackagePurchase() {
   }
 
   useEffect(() => {
-    // Verificar autenticación primero
-    if (!isAuthenticated()) {
-      navigate(`/login?from=/booking/package/${id}`, { replace: true })
+    // El detalle del paquete es PÚBLICO: no se exige login para verlo. El login
+    // se pide solo al presionar "Comprar" (ver botón más abajo).
+    const pkg = packages.find(p => p.id === id)
+    if (!pkg) {
+      navigate('/packages')
       return
     }
+    // Blindaje: un plan en propuesta solo es visible/comprable con preview activo
+    // (o si ya se hizo público). Evita accesos del público por deep-link.
+    if (pkg.isProposal && !shouldShowProposalPlans()) {
+      navigate('/packages')
+      return
+    }
+    setPackageInfo(pkg)
+    setIsCheckingAuth(false)
+
+    // Si no hay sesión, no precargamos datos: se pedirá al comprar.
+    if (!isAuthenticated()) return
 
     // Función para cargar información del usuario
     const loadUserInfo = () => {
@@ -110,15 +124,6 @@ function PackagePurchase() {
       console.log('🔄 Reintentando cargar información del usuario después del delay...')
       loadUserInfo()
     }, 200)
-
-    setIsCheckingAuth(false)
-
-    const pkg = packages.find(p => p.id === id)
-    if (!pkg) {
-      navigate('/packages')
-      return
-    }
-    setPackageInfo(pkg)
 
     return () => clearTimeout(timeoutId)
   }, [id, navigate])
@@ -322,7 +327,7 @@ function PackagePurchase() {
           // del servidor lo registra igual. No mostramos un "éxito" falso: avisamos con honestidad.
           alert(`✅ Tu pago se realizó correctamente.\n\nPaquete: ${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\nEmail: ${customerInfo.email}\n\n⚠️ Hubo un detalle al mostrar tu paquete al instante, pero tu pago quedó registrado y tu paquete se activará en unos minutos. Si en un par de horas no ves tus clases, escríbenos a info@estudiopopnest.com con tu nombre y te lo activamos de inmediato.`)
         } else {
-          alert(`✅ ¡Paquete comprado exitosamente!\n\n${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\nEmail: ${customerInfo.email}\n\nAhora puedes usar tus ${packageInfo.classes} clases cuando quieras.`)
+          alert(`✅ ¡Paquete comprado exitosamente!\n\n${packageInfo.name}\nCliente: ${customerInfo.firstName} ${customerInfo.lastName}\nEmail: ${customerInfo.email}\n\n${packageInfo.unlimited ? 'Ya puedes reservar clases ilimitadas durante tu mes.' : `Ahora puedes usar tus ${packageInfo.classes} clases cuando quieras.`}`)
         }
         navigate('/packages')
       } else {
@@ -354,48 +359,36 @@ function PackagePurchase() {
     : packageInfo.price
 
   return (
-    <div className="wellness-background min-h-screen">
-      <div className="wellness-shapes">
-        <div className="wellness-shape shape-1"></div>
-        <div className="wellness-shape shape-2"></div>
-        <div className="wellness-shape shape-3"></div>
-        <div className="wellness-shape shape-4"></div>
-        <div className="wellness-shape shape-5"></div>
-      </div>
-      <div className="wellness-content">
-        <header className="relative z-10 mt-20 border-b"
-                style={{ 
-                  backgroundColor: '#FFFFFF',
-                  borderColor: '#E5B3B0',
-                  boxShadow: '0 2px 8px rgba(183, 61, 55, 0.05)'
-                }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <button
-              onClick={() => navigate('/packages')}
-              className="text-primary hover:text-secondary mb-6 flex items-center font-body transition-colors duration-300"
-              style={{ color: '#B73D37' }}
-              onMouseEnter={(e) => e.target.style.color = '#C76661'}
-              onMouseLeave={(e) => e.target.style.color = '#B73D37'}
-            >
-              ← Volver
-            </button>
-            <div className="flex flex-col">
-              <div className="inline-block mb-4">
-                <div className="w-16 h-1 rounded-full" style={{ backgroundColor: '#D48D88' }}></div>
-              </div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-body">
-                Comprar {packageInfo.name}
-              </h1>
-            </div>
-          </div>
+    <div className="pkg-page pkg-page--with-site-nav">
+      <div className="pkg-shell" style={{ paddingLeft: '20px', paddingRight: '20px' }}>
+        <header style={{ paddingTop: '24px' }}>
+          <button
+            type="button"
+            onClick={() => navigate('/packages')}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              color: 'var(--pn-color-primary)',
+              fontSize: '15px',
+              marginBottom: '16px',
+            }}
+          >
+            ← Volver a planes
+          </button>
+          <h1 className="pn-h1">{packageInfo.name}</h1>
         </header>
 
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-          <div className="bg-white rounded-lg p-6 md:p-8 border-2"
-               style={{ 
-                 borderColor: '#E5B3B0',
-                 boxShadow: '0 8px 32px rgba(183, 61, 55, 0.1)'
-               }}>
+        <main style={{ maxWidth: '760px', margin: '0 auto', padding: '24px 0 56px' }}>
+          <div
+            style={{
+              background: 'var(--pn-color-bg-elevated)',
+              borderRadius: '18px',
+              padding: '28px',
+              border: '1px solid #e7ddd6',
+            }}
+          >
             {/* Información del paquete */}
             <div className="mb-8 pb-8 border-b" style={{ borderColor: '#E5B3B0' }}>
               <h2 className="text-2xl font-heading font-bold mb-4" style={{ color: '#1F2937' }}>
@@ -409,7 +402,7 @@ function PackagePurchase() {
                   MXN
                 </span>
               </div>
-              {packageInfo.originalPrice && (
+              {packageInfo.originalPrice > 0 && (
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-sm font-body line-through" style={{ color: '#9CA3AF' }}>
                     ${packageInfo.originalPrice.toLocaleString()} MXN
@@ -440,6 +433,32 @@ function PackagePurchase() {
               </div>
             </div>
 
+            {/* Compra: el detalle es público; el login se pide AQUÍ, al comprar. */}
+            {!isAuthenticated() && (
+              <div style={{ marginTop: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/signup?from=/booking/package/${packageInfo.id}`)}
+                  className="pn-btn pn-btn--primary pn-btn--block"
+                >
+                  Comprar {packageInfo.name}
+                </button>
+                <p style={{ marginTop: '14px', textAlign: 'center', fontSize: '14px', color: 'var(--pn-color-text-subtle)' }}>
+                  Crea tu cuenta o{' '}
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/login?from=/booking/package/${packageInfo.id}`)}
+                    style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', textDecoration: 'underline', color: 'var(--pn-color-primary)', cursor: 'pointer' }}
+                  >
+                    inicia sesión
+                  </button>{' '}
+                  para completar tu compra de forma segura.
+                </p>
+              </div>
+            )}
+
+            {isAuthenticated() && (
+            <>
             {/* Información del cliente */}
             <div className="mb-8">
               <h3 className="text-h3 font-heading text-body mb-4">
@@ -741,7 +760,7 @@ function PackagePurchase() {
                     <span className="font-medium">Paquete:</span> {packageInfo.name}
                   </p>
                   <p>
-                    <span className="font-medium">Clases incluidas:</span> {packageInfo.classes}
+                    <span className="font-medium">Clases incluidas:</span> {packageInfo.unlimited ? 'Ilimitadas' : packageInfo.classes}
                   </p>
                   <p>
                     <span className="font-medium">Cliente:</span> {customerInfo.firstName} {customerInfo.lastName}
@@ -880,6 +899,8 @@ function PackagePurchase() {
                 </div>
               )
             })()}
+            </>
+            )}
           </div>
         </main>
       </div>

@@ -31,7 +31,7 @@ function LoginAside() {
         </li>
         <li>
           <span className="auth-list__num">iii</span>
-          <span className="auth-list__label">Maestras favoritas</span>
+          <span className="auth-list__label">Coaches favoritos</span>
           <span className="auth-list__value">3 guardadas</span>
         </li>
       </ol>

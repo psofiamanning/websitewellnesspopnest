@@ -61,6 +61,7 @@ function BookingClassEditorialView({
   ]
 
   const formatPackageAvailability = (pkg) => {
+    if (pkg?.isUnlimited) return 'clases ilimitadas'
     const remaining = Number(pkg?.classesRemaining ?? pkg?.classes ?? 0)
     const count = `${remaining} ${remaining === 1 ? 'clase disponible' : 'clases disponibles'}`
     return pkg?.adminGranted ? `${count} · otorgadas por el estudio` : count
@@ -280,7 +281,7 @@ function BookingClassEditorialView({
                   </div>
                   <div className="bk-confirm-row">
                     <div>
-                      <dt>Maestra</dt>
+                      <dt>Coach</dt>
                       <dd>{classInfo.teacher}</dd>
                     </div>
                     <span />

@@ -93,6 +93,8 @@ function Navbar() {
   }
 
   const itemHref = (item) => {
+    // "Planes" siempre navega a la página de paquetes, nunca al scroll de Home.
+    if (item.id === 'planes') return item.path
     if (isHome) {
       return item.hash === 'inicio' ? '/#inicio' : `/#${item.hash}`
     }
@@ -186,7 +188,7 @@ function Navbar() {
             {MENU_ITEMS.map((item) => {
               const href = itemHref(item)
               const active = isItemActive(item)
-              if (isHome) {
+              if (isHome && item.id !== 'planes') {
                 return (
                   <a
                     key={item.id}
@@ -234,7 +236,7 @@ function Navbar() {
           {MENU_ITEMS.map((item) => {
             const href = itemHref(item)
             const active = isItemActive(item)
-            if (isHome) {
+            if (isHome && item.id !== 'planes') {
               return (
                 <a
                   key={item.id}

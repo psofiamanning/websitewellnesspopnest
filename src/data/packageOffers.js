@@ -7,14 +7,14 @@ export const PACKAGE_OFFERS = [
     id: 'package-10-classes',
     name: 'Paquete de 10 Clases',
     classes: 10,
-    price: 2250,
+    price: 1900,
     originalPrice: 2500,
     description:
-      'Ahorra $250 comprando 10 clases. Puedes usar estas clases para cualquier práctica disponible en nuestro estudio.',
+      'Ahorra $600 comprando 10 clases. Puedes usar estas clases para cualquier práctica disponible en nuestro estudio.',
     benefits: [
       'Válido para todas las clases',
       'Válido por 2 meses desde la compra',
-      'Ahorra $25 por clase frente al precio por clase suelta',
+      'Ahorra $60 por clase frente al precio por clase suelta',
       'Flexibilidad total',
     ],
     popular: true,

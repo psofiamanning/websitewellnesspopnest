@@ -116,6 +116,25 @@ function Packages() {
       }))
       base.push(...proposals)
     }
+
+    // Orden de presentación: clase suelta → Descubre (3) → Ilimitado → el resto
+    // por número de clases ascendente. Aplica a desktop y móvil (mismo grid).
+    const ORDER = [
+      'single',
+      'paquete-descubre-3',
+      'paquete-ilimitado-mes',
+      'paquete-4-clases',
+      'paquete-8-clases',
+      'package-10-classes',
+      'paquete-12-clases',
+      'package-20-classes',
+      'paquete-popnest-duo',
+    ]
+    const rank = (id) => {
+      const i = ORDER.indexOf(id)
+      return i === -1 ? ORDER.length : i
+    }
+    base.sort((a, b) => rank(a.id) - rank(b.id))
     return base
   }, [tenPack, twentyPack])
 

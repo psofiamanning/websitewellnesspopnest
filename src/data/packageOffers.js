@@ -13,7 +13,7 @@ export const PACKAGE_OFFERS = [
       'Ahorra $600 comprando 10 clases. Puedes usar estas clases para cualquier práctica disponible en nuestro estudio.',
     benefits: [
       'Válido para todas las clases',
-      'Válido por 2 meses desde la compra',
+      'Válido por 30 días desde la compra',
       'Ahorra $60 por clase frente al precio por clase suelta',
       'Flexibilidad total',
     ],

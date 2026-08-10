@@ -23,7 +23,7 @@ const FAQ_ITEMS = [
   },
   {
     q: '¿Cuánto tiempo tengo para usar mis clases?',
-    a: 'Los paquetes de 10 y 20 clases tienen vigencia de 2 meses desde la compra. La clase suelta se usa en la reserva que elijas.',
+    a: 'El paquete de 20 clases tiene vigencia de 2 meses; los demás paquetes, de 30 días. La clase suelta se usa en la reserva que elijas.',
   },
   {
     q: '¿Qué pasa si no puedo asistir?',
@@ -79,7 +79,7 @@ function Packages() {
         price: tenPack.price,
         perClass: perTen,
         savings: tenPack.originalPrice ? tenPack.originalPrice - tenPack.price : 0,
-        vigenciaShort: 'Vigencia 2 meses',
+        vigenciaShort: 'Vigencia 30 días',
         featured: true,
         cta: 'Ver detalle',
       },
@@ -145,7 +145,7 @@ function Packages() {
       {
         label: 'Vigencia',
         single: 'Por reserva',
-        ten: '2 meses',
+        ten: '30 días',
         twenty: '2 meses',
       },
       {

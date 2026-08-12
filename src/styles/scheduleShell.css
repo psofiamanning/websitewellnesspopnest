@@ -447,3 +447,60 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* —— Horario en móvil: lista vertical por día (no rejilla horizontal) —— */
+@media (max-width: 760px) {
+  .sc-board-wrap {
+    overflow-x: visible;
+  }
+  .sc-board {
+    grid-template-columns: 1fr;
+    min-width: 0;
+    border-top: none;
+    border-left: none;
+  }
+  .sc-day-col {
+    min-height: 0;
+    border-right: none;
+    border-bottom: var(--pn-border-thin);
+  }
+  /* Encabezado del día como barra compacta horizontal */
+  .sc-day-col__head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding: 16px 6px 12px;
+    background: color-mix(in srgb, var(--pn-color-bg-secondary) 40%, transparent);
+    border-bottom: var(--pn-border-soft);
+  }
+  .sc-day-col--today .sc-day-col__head {
+    background: color-mix(in srgb, var(--pn-color-primary) 8%, var(--pn-color-bg-elevated));
+  }
+  .sc-day-col__today {
+    order: -1;
+    width: 100%;
+    margin: 0;
+  }
+  .sc-day-col__dow {
+    order: 1;
+  }
+  .sc-day-col__num {
+    order: 2;
+    margin: 0;
+    font-size: 24px;
+  }
+  .sc-day-col__month {
+    order: 3;
+    margin: 0;
+  }
+  .sc-day-col__rule {
+    display: none;
+  }
+  .sc-day-col__body {
+    padding: 0;
+  }
+  .sc-class {
+    padding: 16px 6px;
+  }
+}

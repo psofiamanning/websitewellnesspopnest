@@ -174,7 +174,7 @@ function Packages() {
         itemOffered: {
           '@type': 'Service',
           name: `${p.title} — clases de yoga y bienestar en Coyoacán`,
-          provider: { '@type': 'YogaStudio', name: 'Estudio Popnest Wellness' },
+          provider: { '@type': 'HealthClub', name: 'Estudio Popnest Wellness' },
         },
       })),
     }),

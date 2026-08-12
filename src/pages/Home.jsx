@@ -118,7 +118,7 @@ function Home() {
                 </h2>
               </div>
               <p className="pn-text">
-                Yoga, pilates, meditación, sound healing y tai chi. Sesiones de 60 minutos en grupos reducidos.
+                Yoga, pilates, meditación, sound healing, tai chi, belly dance y stretching. Sesiones de 60 minutos en grupos reducidos.
               </p>
             </div>
 

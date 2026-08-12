@@ -96,7 +96,7 @@ export const ROUTE_SEO = {
   },
   '/classes': {
     title: 'Clases de Yoga y Bienestar en Coyoacán | Estudio Popnest Wellness',
-    description: 'Descubre clases de yoga, pilates, tai chi, meditación y sound healing en Coyoacán. Reserva en línea. Estudio boutique en Coyoacán, CDMX.'
+    description: 'Descubre clases de yoga, pilates, tai chi, belly dance, stretching, meditación y sound healing en Coyoacán. Reserva en línea. Estudio boutique en CDMX.'
   },
   '/coaches': {
     title: 'Coaches de Yoga en Coyoacán | Estudio Popnest Wellness',

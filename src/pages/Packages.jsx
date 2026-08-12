@@ -43,6 +43,18 @@ function formatMxn(n) {
   return `$${n.toLocaleString('es-MX')}`
 }
 
+// Schema.org FAQPage: hace las FAQ elegibles para rich snippets y que las IAs
+// las citen. El contenido coincide con lo visible (mismo FAQ_ITEMS).
+const FAQ_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+}
+
 function Packages() {
   const navigate = useNavigate()
 
@@ -208,6 +220,10 @@ function Packages() {
 
   return (
     <div className="pkg-page pkg-page--with-site-nav">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
+      />
       <div className="pkg-shell pkg-shell--direct">
         <section className="pkg-section pkg-section--first" aria-labelledby="pkg-pricing-heading">
           <div className="pkg-section__head">

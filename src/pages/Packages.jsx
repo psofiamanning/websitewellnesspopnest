@@ -150,6 +150,37 @@ function Packages() {
     return base
   }, [tenPack, twentyPack])
 
+  // Schema.org OfferCatalog: precios de cada plan en datos estructurados
+  // (rich results + AEO para consultas de precio). Se construye desde `plans`,
+  // así siempre coincide con lo visible.
+  const offersSchema = useMemo(
+    () => ({
+      '@context': 'https://schema.org',
+      '@type': 'OfferCatalog',
+      name: 'Paquetes y clases — Estudio Popnest Wellness',
+      url: 'https://popnest.app/packages',
+      itemListElement: plans.map((p) => ({
+        '@type': 'Offer',
+        name: p.title,
+        price: String(p.price),
+        priceCurrency: 'MXN',
+        availability: 'https://schema.org/InStock',
+        url: 'https://popnest.app/packages',
+        category: p.unlimited
+          ? 'Membresía ilimitada (30 días)'
+          : p.id === 'single'
+            ? '1 clase'
+            : `${p.classes} clases`,
+        itemOffered: {
+          '@type': 'Service',
+          name: `${p.title} — clases de yoga y bienestar en Coyoacán`,
+          provider: { '@type': 'YogaStudio', name: 'Estudio Popnest Wellness' },
+        },
+      })),
+    }),
+    [plans],
+  )
+
   const comparisonRows = useMemo(() => {
     if (!tenPack || !twentyPack) return []
     const perTen = Math.round(tenPack.price / tenPack.classes)
@@ -223,6 +254,10 @@ function Packages() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(offersSchema) }}
       />
       <div className="pkg-shell pkg-shell--direct">
         <section className="pkg-section pkg-section--first" aria-labelledby="pkg-pricing-heading">

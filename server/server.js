@@ -210,7 +210,17 @@ async function sendEmail({ to, toName = '', subject, text, html }) {
       .setSubject(subject)
       .setHtml(html || text)
       .setText(text)
-    await mailerSend.email.send(emailParams)
+    try {
+      await mailerSend.email.send(emailParams)
+    } catch (err) {
+      // El SDK de MailerSend NO pone el motivo en err.message (queda undefined).
+      // El detalle real viene en err.statusCode + err.body (p. ej. dominio no
+      // verificado, cuenta trial, o remitente no permitido). Lo exponemos aquí.
+      const status = err?.statusCode ?? err?.response?.status
+      const body = err?.body ?? err?.response?.data
+      const detail = body ? JSON.stringify(body) : (err?.message || String(err))
+      throw new Error(`MailerSend falló (HTTP ${status ?? '??'}): ${detail}`)
+    }
     return
   }
   if (mailTransporter) {

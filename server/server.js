@@ -56,6 +56,7 @@ import { getSupabaseAnon } from './db/supabaseClient.js'
 import { validateDiscountCodeForCustomer } from './db/discountCodes.js'
 import { findPackageDiscountCode, normalizePackageDiscountCode } from './config/packageDiscountCodes.js'
 import { saveLeadEmail } from './db/leads.js'
+import { isMailerLiteConfigured, upsertMailerLiteSubscriber } from './mailerlite.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -631,10 +632,19 @@ app.post('/api/leads', async (req, res) => {
     if (!result.ok) {
       return res.status(400).json(result)
     }
-    // Solo enviar el correo la primera vez (no en correos ya registrados).
+    // Solo actuar la primera vez (no en correos ya registrados).
     if (!result.alreadyRegistered) {
       // Fire-and-forget: no bloquea la respuesta al usuario.
-      sendFreeClassEmail(email)
+      if (isMailerLiteConfigured()) {
+        // Preferido: alta en MailerLite → su automatización manda la clase gratis
+        // y desde ahí puedes enviar promociones. (Marketing.)
+        upsertMailerLiteSubscriber({ email, fields: { source: source || 'popup_clase_gratis' } })
+          .then(() => console.log('✅ Suscriptor agregado a MailerLite:', email))
+          .catch((err) => console.error('❌ Error agregando a MailerLite', email, ':', err.message))
+      } else {
+        // Respaldo mientras MailerLite no esté configurado: envío directo actual.
+        sendFreeClassEmail(email)
+      }
     }
     res.json(result)
   } catch (error) {

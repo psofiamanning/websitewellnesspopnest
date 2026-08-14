@@ -33,6 +33,7 @@ import MyBookings from './pages/MyBookings'
 import MyPackages from './pages/MyPackages'
 import Ubicacion from './pages/Ubicacion'
 import ClassLanding from './pages/ClassLanding'
+import Espacios from './pages/Espacios'
 import DesignSystem from './pages/DesignSystem'
 import HomeRedesign from './pages/HomeRedesign'
 import ScheduleRedesign from './pages/ScheduleRedesign'
@@ -84,6 +85,12 @@ export function AppContent() {
     pathname === '/mis-reservas-redesign' ||
     pathname === '/previews'
 
+  // Portal oculto /espacios (+ /espacios/oficinas): sin navbar ni footer del sitio.
+  const isHiddenSpacePage = pathname === '/espacios' || pathname.startsWith('/espacios/')
+
+  /** Vistas que se muestran solas, sin navbar, footer, cookies ni popup. */
+  const isBareLayout = isStandalonePreview || isHiddenSpacePage
+
   const hideGlobalNavbar =
     pathname === '/home-redesign' ||
     pathname === '/classes-redesign' ||
@@ -108,8 +115,8 @@ export function AppContent() {
       <MetaPixelRouter />
       <ScrollToTop />
       <PageSEO />
-      {!hideGlobalNavbar && !isStandalonePreview && <Navbar />}
-      {!isStandalonePreview && <PostLoginClassesBanner />}
+      {!hideGlobalNavbar && !isBareLayout && <Navbar />}
+      {!isBareLayout && <PostLoginClassesBanner />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<Classes />} />
@@ -135,6 +142,8 @@ export function AppContent() {
         <Route path="/profesores/login" element={<Navigate to="/coaches/login" replace />} />
         <Route path="/profesores" element={<Navigate to="/classes" replace />} />
         <Route path="/ubicacion" element={<Ubicacion />} />
+        {/* Portal oculto: no enlazado en el sitio ni en el sitemap (noindex). */}
+        <Route path="/espacios" element={<Espacios />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />
         <Route path="/mis-reservas" element={<MyBookings />} />
@@ -147,9 +156,9 @@ export function AppContent() {
         <Route path="/classes-redesign" element={<DevOnlyRoute><ClassesRedesign /></DevOnlyRoute>} />
         <Route path="/previews" element={<DevOnlyRoute><Previews /></DevOnlyRoute>} />
       </Routes>
-      {!isStandalonePreview && <Footer />}
+      {!isBareLayout && <Footer />}
       {!isStandalonePreview && <CookieConsent />}
-      {!isStandalonePreview && isMarketingRoute && <FreeClassPopup />}
+      {!isBareLayout && isMarketingRoute && <FreeClassPopup />}
     </>
   )
 }

@@ -68,7 +68,8 @@ const NOINDEX_PREFIXES = [
   '/packages-redesign',
   '/mis-reservas-redesign',
   '/classes-redesign',
-  '/previews'
+  '/previews',
+  '/espacios'
 ]
 
 /** Rutas de cuenta, reserva, admin y previews: no indexar en buscadores. */
@@ -153,6 +154,10 @@ export const ROUTE_SEO = {
   '/mis-paquetes': {
     title: 'Mis Paquetes | Estudio Popnest Wellness',
     description: 'Consulta tus paquetes de clases activos, clases disponibles e historial de compras en Estudio Popnest Wellness.'
+  },
+  '/espacios': {
+    title: 'Espacios | Estudio Popnest',
+    description: 'Wellness y oficinas en Londres 105, Del Carmen, Coyoacán.'
   }
 }
 
@@ -230,6 +235,7 @@ export function getBreadcrumbItems(pathname) {
     talleres: 'Talleres',
     packages: 'Planes',
     ubicacion: 'Ubicación',
+    espacios: 'Espacios',
     privacidad: 'Política de privacidad',
     terminos: 'Términos y condiciones',
     login: 'Iniciar sesión',

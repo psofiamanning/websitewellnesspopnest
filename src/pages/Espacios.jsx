@@ -12,11 +12,7 @@ import '../styles/espaciosShell.css'
  * Usa uno u otro en cada opción.
  */
 const WELLNESS_LINK = { to: '/classes' }
-const OFICINAS_LINK = {
-  href:
-    'https://wa.me/525554379644?text=' +
-    encodeURIComponent('Hola, me interesa información sobre las oficinas en Popnest.'),
-}
+const OFICINAS_LINK = { href: 'https://www.estudiopopnest.com' }
 
 /** Renderiza la tarjeta como <Link> interno o <a> externo según el destino. */
 function Door({ link, className, children }) {

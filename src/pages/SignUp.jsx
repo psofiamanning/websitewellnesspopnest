@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { signup, getCurrentUser } from '../services/authService'
 import { trackMetaLead } from '../utils/metaPixel'
@@ -56,6 +56,15 @@ function SignUp() {
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
+  const errorRef = useRef(null)
+
+  // El aviso de error vive arriba del formulario y el botón está hasta abajo:
+  // sin esto, en móvil parece que el clic "no hizo nada".
+  useEffect(() => {
+    // Salto directo (sin 'smooth'): algunos navegadores ignoran el scroll suave
+    // y el aviso se quedaría fuera de pantalla.
+    if (error) errorRef.current?.scrollIntoView({ block: 'center' })
+  }, [error])
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -64,6 +73,7 @@ function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (isLoading) return
     setError('')
 
     if (formData.password.length < 8) {
@@ -129,7 +139,7 @@ function SignUp() {
       ) : (
         <>
           {error ? (
-            <div className="auth-alert" role="alert">
+            <div className="auth-alert" role="alert" ref={errorRef}>
               {error}
             </div>
           ) : null}
@@ -197,6 +207,7 @@ function SignUp() {
               value={formData.password}
               onChange={handleChange}
               minLength={8}
+              autoComplete="new-password"
               hint="Mínimo 8 caracteres"
             />
 

@@ -11,6 +11,7 @@ function AuthPasswordField({
   hint,
   headExtra,
   placeholder,
+  autoComplete,
 }) {
   const [visible, setVisible] = useState(false)
 
@@ -34,7 +35,7 @@ function AuthPasswordField({
           required={required}
           minLength={minLength}
           placeholder={placeholder}
-          autoComplete={name === 'password' ? 'current-password' : 'new-password'}
+          autoComplete={autoComplete || (name === 'password' ? 'current-password' : 'new-password')}
         />
         <button
           type="button"

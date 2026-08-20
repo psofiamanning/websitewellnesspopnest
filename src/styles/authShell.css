@@ -319,10 +319,11 @@ a.auth-submit.auth-submit--link {
   font-size: var(--pn-text-sm);
   line-height: 1.55;
   color: var(--pn-color-text-soft);
+  cursor: pointer;
 }
 
 .auth-terms input {
-  margin-top: 4px;
+  margin-top: 2px;
   accent-color: var(--pn-color-primary);
 }
 

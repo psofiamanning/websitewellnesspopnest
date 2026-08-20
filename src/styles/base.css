@@ -50,6 +50,29 @@ select {
   cursor: text;
 }
 
+/* Casillas y radios: `all: unset` les quita el widget nativo y quedan de 0x0
+   (invisibles e imposibles de marcar). Se les devuelve su apariencia. */
+input[type='checkbox'],
+input[type='radio'] {
+  appearance: auto;
+  -webkit-appearance: auto;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  accent-color: var(--pn-color-primary);
+}
+
+input[type='radio'] {
+  border-radius: 50%;
+}
+
+input[type='checkbox']:focus-visible,
+input[type='radio']:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--pn-color-primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
 h1, h2, h3, h4, h5, h6 {
   color: var(--pn-color-text);
   font-weight: var(--pn-weight-regular);

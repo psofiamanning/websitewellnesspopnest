@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchTalleres } from '../services/talleresService'
 
-/** Precio legible: 0 → "Gratis", si no "$1,200 MXN". */
+/** Precio legible: sin precio cargado → "Precio por confirmar", si no "$1,200 MXN". */
 function formatPrice(price) {
   const n = Number(price) || 0
-  if (n <= 0) return 'Gratis'
+  if (n <= 0) return 'Precio por confirmar'
   return `$${n.toLocaleString('es-MX')} MXN`
 }
 

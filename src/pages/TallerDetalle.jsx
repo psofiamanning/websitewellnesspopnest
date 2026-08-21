@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { fetchTaller, bookTaller } from '../services/talleresService'
-import { trackMetaLead } from '../utils/metaPixel'
+import { fetchTaller } from '../services/talleresService'
 
 const WHATSAPP_NUMBER = '525554379644'
 
 function formatPrice(price) {
   const n = Number(price) || 0
-  if (n <= 0) return 'Gratis'
+  if (n <= 0) return 'Precio por confirmar'
   return `$${n.toLocaleString('es-MX')} MXN`
 }
 
@@ -31,11 +30,6 @@ function TallerDetalle() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const [customer, setCustomer] = useState({ firstName: '', lastName: '', email: '', phone: '' })
-  const [processing, setProcessing] = useState(false)
-  const [formError, setFormError] = useState('')
-  const [done, setDone] = useState(false)
-
   useEffect(() => {
     let alive = true
     fetchTaller(id)
@@ -47,38 +41,7 @@ function TallerDetalle() {
     }
   }, [id])
 
-  const isFree = taller ? Number(taller.price) <= 0 : false
   const soldOut = taller ? (taller.spots_available ?? 0) <= 0 : false
-
-  const setField = (field, value) => {
-    setFormError('')
-    setCustomer((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const contactReady =
-    customer.firstName.trim() && customer.lastName.trim() && customer.email.trim() && customer.phone.trim()
-  const canSubmit = contactReady && !soldOut && !processing
-
-  // Solo aplica a talleres gratuitos: pagados sin link de Stripe se resuelven por WhatsApp.
-  const handleSubmit = async () => {
-    setFormError('')
-    if (!contactReady) {
-      setFormError('Completa tus datos de contacto (nombre, apellido, correo y teléfono).')
-      return
-    }
-
-    setProcessing(true)
-    try {
-      await bookTaller(id, { customer, paymentIntentId: null })
-
-      trackMetaLead({ content_name: 'reserva_taller', value: 0, currency: 'MXN' })
-      setDone(true)
-    } catch (e) {
-      setFormError(e.message || 'Ocurrió un error al reservar. Intenta de nuevo.')
-    } finally {
-      setProcessing(false)
-    }
-  }
 
   const whatsappHref = taller
     ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
@@ -108,36 +71,6 @@ function TallerDetalle() {
           <button onClick={() => navigate('/talleres')} className="font-body underline" style={{ color: '#B73D37' }}>
             Ver todos los talleres
           </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (done) {
-    return (
-      <div className="pn-page-with-site-nav min-h-screen" style={{ background: 'var(--pn-color-bg-base)' }}>
-        <div className="max-w-2xl mx-auto px-4 pt-28 pb-16">
-          <div className="rounded-2xl border-2 bg-white p-8 text-center" style={{ borderColor: '#D48D88' }}>
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: '#FEE2E2' }}>
-              <span className="text-2xl">✓</span>
-            </div>
-            <h1 className="text-2xl font-heading font-bold mb-2" style={{ color: '#1F2937' }}>
-              ¡Reserva confirmada!
-            </h1>
-            <p className="font-body mb-1" style={{ color: '#4B5563' }}>
-              {taller.title}{formatFecha(taller.fecha) ? ` · ${formatFecha(taller.fecha)}` : ''}{taller.hora ? ` · ${taller.hora}` : ''}
-            </p>
-            <p className="font-body text-sm mb-6" style={{ color: '#6B7280' }}>
-              Te enviamos un correo de confirmación a {customer.email}. ¡Te esperamos!
-            </p>
-            <button
-              onClick={() => navigate('/talleres')}
-              className="rounded-lg px-6 py-3 text-sm font-body font-semibold text-white"
-              style={{ backgroundColor: '#B73D37' }}
-            >
-              Ver más talleres
-            </button>
-          </div>
         </div>
       </div>
     )
@@ -200,8 +133,6 @@ function TallerDetalle() {
                   ? 'Este taller ya no tiene lugares disponibles.'
                   : taller.payment_link
                   ? `${formatPrice(taller.price)} · pago seguro con Stripe.`
-                  : isFree
-                  ? 'Completa tus datos para apartar tu lugar.'
                   : `${formatPrice(taller.price)} · escríbenos por WhatsApp para reservar y pagar.`}
               </p>
 
@@ -214,12 +145,12 @@ function TallerDetalle() {
                   className="block w-full rounded-lg px-5 py-3.5 text-center text-sm font-body font-semibold text-white transition-colors"
                   style={{ backgroundColor: '#B73D37' }}
                 >
-                  {isFree ? 'Reservar mi lugar' : `Pagar ${formatPrice(taller.price)} y reservar`}
+                  Pagar {formatPrice(taller.price)} y reservar
                 </a>
               )}
 
-              {/* Taller de paga sin link todavía: se resuelve por WhatsApp, no cobramos en el sitio. */}
-              {!soldOut && !taller.payment_link && !isFree && (
+              {/* Sin link de pago: se resuelve por WhatsApp, no cobramos en el sitio. */}
+              {!soldOut && !taller.payment_link && (
                 <a
                   href={whatsappHref}
                   target="_blank"
@@ -229,32 +160,6 @@ function TallerDetalle() {
                 >
                   Escríbenos por WhatsApp para reservar →
                 </a>
-              )}
-
-              {/* Formulario para talleres gratuitos: solo apartan lugar, no hay cobro. */}
-              {!soldOut && !taller.payment_link && isFree && (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                    <input className="rounded-lg border-2 px-4 py-3 font-body" style={{ borderColor: '#DED5D5' }} placeholder="Nombre" value={customer.firstName} onChange={(e) => setField('firstName', e.target.value)} />
-                    <input className="rounded-lg border-2 px-4 py-3 font-body" style={{ borderColor: '#DED5D5' }} placeholder="Apellido" value={customer.lastName} onChange={(e) => setField('lastName', e.target.value)} />
-                  </div>
-                  <input type="email" className="mb-3 w-full rounded-lg border-2 px-4 py-3 font-body" style={{ borderColor: '#DED5D5' }} placeholder="Correo electrónico" value={customer.email} onChange={(e) => setField('email', e.target.value)} />
-                  <input type="tel" className="mb-4 w-full rounded-lg border-2 px-4 py-3 font-body" style={{ borderColor: '#DED5D5' }} placeholder="Teléfono" value={customer.phone} onChange={(e) => setField('phone', e.target.value)} />
-
-                  {formError && (
-                    <p className="mb-3 text-sm font-body" style={{ color: '#B73D37' }}>{formError}</p>
-                  )}
-
-                  <button
-                    type="button"
-                    disabled={!canSubmit}
-                    onClick={handleSubmit}
-                    className="w-full rounded-lg px-5 py-3.5 text-sm font-body font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    style={{ backgroundColor: '#B73D37' }}
-                  >
-                    {processing ? 'Procesando…' : 'Confirmar reserva'}
-                  </button>
-                </>
               )}
             </div>
           </div>

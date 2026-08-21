@@ -221,7 +221,7 @@ export async function insertCustomerPackageAfterPayment({
     if (existing) {
       const dupMap = await countBookingsByCustomerPackageIds([existing.id])
       const dupCnt = dupMap.get(existing.id) ?? dupMap.get(Number(existing.id)) ?? 0
-      return adaptCustomerPackageRow(existing, { confirmedCount: dupCnt })
+      return { ...adaptCustomerPackageRow(existing, { confirmedCount: dupCnt }), _isNewPayment: false }
     }
   }
 
@@ -282,7 +282,7 @@ export async function insertCustomerPackageAfterPayment({
   if (iErr) throw iErr
   const map = await countBookingsByCustomerPackageIds([inserted.id])
   const cnt = map.get(inserted.id) ?? map.get(Number(inserted.id)) ?? 0
-  return adaptCustomerPackageRow(inserted, { confirmedCount: cnt })
+  return { ...adaptCustomerPackageRow(inserted, { confirmedCount: cnt }), _isNewPayment: true }
 }
 
 async function ensureAdminGrantCatalogPackage() {

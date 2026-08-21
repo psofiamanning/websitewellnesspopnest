@@ -127,7 +127,7 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
               if (!profile?.id) {
                 console.error(`⚠️ [webhook] Paquete pagado (${paymentIntent.id}) pero SIN perfil para ${email}. Requiere alta manual.`)
               } else {
-                await insertCustomerPackageAfterPayment({
+                const backupPurchase = await insertCustomerPackageAfterPayment({
                   profileId: profile.id,
                   packageName,
                   amountPaid: paymentIntent.amount, // centavos, igual que el flujo del navegador
@@ -136,6 +136,9 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
                   referredBy: paymentIntent.metadata.referred_by || null,
                 })
                 console.log('✅ [webhook] Paquete registrado como respaldo:', paymentIntent.id, email, packageName)
+                if (backupPurchase._isNewPayment) {
+                  sendPackageConfirmationEmail(backupPurchase).catch(() => {})
+                }
               }
             }
           } catch (pkgErr) {
@@ -310,6 +313,29 @@ async function sendBookingConfirmationEmail(booking) {
     console.log('✅ Email de confirmación de reserva enviado a:', email)
   } catch (err) {
     console.error('❌ Error enviando email de confirmación de reserva:', err.message)
+  }
+}
+
+/** Envía correo de confirmación al comprar un paquete de clases. */
+async function sendPackageConfirmationEmail(purchase) {
+  const email = purchase?.customer?.email
+  if (!email || (!mailerSend && !mailTransporter)) {
+    if (!email) console.warn('⚠️ Compra de paquete sin email, no se envía confirmación:', purchase?.id)
+    return
+  }
+  const name = purchase.customer?.firstName || ''
+  const packageName = purchase.packageName || 'Paquete de clases'
+  const classes = purchase.classes || 0
+  const amount = ((purchase.payment?.amount || 0) / 100).toFixed(2)
+  const currency = purchase.payment?.currency || 'MXN'
+  const subject = 'Pago confirmado - Estudio Popnest Wellness'
+  const text = `Hola ${name ? name + ',' : ''}\n\nTu pago fue confirmado.\n\nPaquete: ${packageName}\nClases: ${classes}\nMonto: $${amount} ${currency}\n\nYa puedes reservar tus clases en "Mis reservas" en nuestra web.\n\nGracias,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>Hola ${name ? `<strong>${name}</strong>,` : ''}</p><p>Tu pago fue <strong>confirmado</strong>.</p><p><strong>Paquete:</strong> ${packageName}<br><strong>Clases:</strong> ${classes}<br><strong>Monto:</strong> $${amount} ${currency}</p><p>Ya puedes reservar tus clases en <strong>Mis reservas</strong> en nuestra web.</p><p>Gracias,<br>El equipo de Estudio Popnest Wellness</p>`
+  try {
+    await sendEmail({ to: email, toName: name, subject, text, html })
+    console.log('✅ Email de confirmación de paquete enviado a:', email)
+  } catch (err) {
+    console.error('❌ Error enviando email de confirmación de paquete:', err.message)
   }
 }
 
@@ -1701,6 +1727,10 @@ app.post('/api/packages/purchase', async (req, res) => {
       paymentStatus: savedPurchase.payment?.status,
       classesRemaining: savedPurchase.classesRemaining,
     })
+
+    if (savedPurchase.payment?.status === 'succeeded' && !savedPurchase.adminGranted && savedPurchase._isNewPayment) {
+      sendPackageConfirmationEmail(savedPurchase).catch(() => {})
+    }
 
     res.json({
       success: true,

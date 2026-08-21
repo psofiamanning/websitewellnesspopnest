@@ -279,6 +279,22 @@ export async function insertCustomerPackageAfterPayment({
     inserted = retry.data
     iErr = retry.error
   }
+  // Carrera: el respaldo del webhook y la confirmación del navegador insertaron casi
+  // al mismo tiempo y ambos pasaron el chequeo de "¿ya existe?" de arriba — la
+  // restricción única de stripe_payment_intent_id (server/sql/add_customer_packages_stripe_pi_unique.sql)
+  // deja pasar solo al primero; el perdedor recupera esa fila en vez de duplicarla.
+  if (iErr && iErr.code === '23505' && stripePaymentIntentId) {
+    const { data: existing } = await supabase
+      .from('customer_packages')
+      .select(CUSTOMER_PACKAGE_SELECT)
+      .eq('stripe_payment_intent_id', stripePaymentIntentId)
+      .maybeSingle()
+    if (existing) {
+      const dupMap = await countBookingsByCustomerPackageIds([existing.id])
+      const dupCnt = dupMap.get(existing.id) ?? dupMap.get(Number(existing.id)) ?? 0
+      return { ...adaptCustomerPackageRow(existing, { confirmedCount: dupCnt }), _isNewPayment: false }
+    }
+  }
   if (iErr) throw iErr
   const map = await countBookingsByCustomerPackageIds([inserted.id])
   const cnt = map.get(inserted.id) ?? map.get(Number(inserted.id)) ?? 0

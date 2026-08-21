@@ -79,15 +79,49 @@ export async function getProfileForAuthUser(user) {
 
 export async function upsertProfileForAuthUser(user, extra = {}) {
   const supabase = getSupabaseAdmin()
-  const row = {
-    id: user.id,
-    auth_id: user.id,
-    email: user.email,
-    first_name: extra.first_name ?? user.user_metadata?.first_name ?? '',
-    last_name: extra.last_name ?? user.user_metadata?.last_name ?? '',
-    phone: extra.phone != null ? String(extra.phone) : String(user.user_metadata?.phone ?? ''),
+  const email = (user.email || '').trim().toLowerCase()
+  const firstName = extra.first_name ?? user.user_metadata?.first_name ?? ''
+  const lastName = extra.last_name ?? user.user_metadata?.last_name ?? ''
+  const phone =
+    extra.phone != null
+      ? String(extra.phone)
+      : user.user_metadata?.phone != null
+        ? String(user.user_metadata.phone)
+        : ''
+
+  // Reutiliza el perfil existente por correo (p. ej. creado antes por una reserva de
+  // invitado, con un `id` distinto al del usuario de Auth) en vez de insertar uno
+  // nuevo con `id: user.id` — ese insert choca con la restricción única de `email` y
+  // deja auth_id sin vincular, provocando el mismo error en cada intento posterior.
+  if (email) {
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+    if (existing) {
+      const patch = { email, auth_id: user.id }
+      // No pisar nombre/teléfono ya guardados con vacíos si esta llamada (p. ej. un
+      // login) no trae datos nuevos — el metadata de Auth suele no tenerlos.
+      if (firstName) patch.first_name = firstName
+      if (lastName) patch.last_name = lastName
+      if (phone) patch.phone = phone
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(patch)
+        .eq('id', existing.id)
+        .select()
+        .single()
+      if (error) throw error
+      return data
+    }
   }
-  const { data, error } = await supabase.from('profiles').upsert(row, { onConflict: 'id' }).select().single()
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .insert({ id: user.id, auth_id: user.id, email, first_name: firstName, last_name: lastName, phone })
+    .select()
+    .single()
   if (error) throw error
   return data
 }

@@ -3,7 +3,7 @@
  */
 
 import { getSupabaseAdmin } from './supabaseClient.js'
-import { upsertProfileFromCustomer, getProfileByEmail } from './users.js'
+import { upsertProfileFromCustomer, getProfileByEmail, upsertProfileForAuthUser } from './users.js'
 import { countBookingsByCustomerPackageIds } from './bookings.js'
 
 const PAQUETE_20_NOMBRE = 'Paquete de 20 Clases'
@@ -567,21 +567,11 @@ export async function resolveProfileIdForPackagePurchase(purchaseData, authUser)
     const supabase = getSupabaseAdmin()
     const { data } = await supabase.from('profiles').select('id').eq('auth_id', authUser.id).maybeSingle()
     if (data?.id) return data.id
-    const { data: created } = await supabase
-      .from('profiles')
-      .upsert(
-        {
-          id: authUser.id,
-          auth_id: authUser.id,
-          email: authUser.email,
-          first_name: purchaseData.customer?.firstName || '',
-          last_name: purchaseData.customer?.lastName || '',
-          phone: purchaseData.customer?.phone != null ? String(purchaseData.customer.phone) : '',
-        },
-        { onConflict: 'id' }
-      )
-      .select('id')
-      .single()
+    const created = await upsertProfileForAuthUser(authUser, {
+      first_name: purchaseData.customer?.firstName || '',
+      last_name: purchaseData.customer?.lastName || '',
+      phone: purchaseData.customer?.phone != null ? String(purchaseData.customer.phone) : '',
+    })
     return created?.id
   }
   const c = purchaseData.customer || {}

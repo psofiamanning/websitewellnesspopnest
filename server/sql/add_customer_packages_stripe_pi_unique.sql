@@ -6,14 +6,13 @@
 -- NULL no choca consigo mismo en Postgres, así que los paquetes otorgados por
 -- administración (sin stripe_payment_intent_id) no se ven afectados.
 --
--- ⚠️ YA EXISTE UN CASO REAL DUPLICADO (encontrado 2026-08-21, antes de este fix):
--- pi_3U5d3YA0gqRxLoT31Aexu7ku — paz barrera de la mora (pbarrera@gamaimpresores.com),
--- paquete "Descubre Popnest", filas customer_packages id 22 y 23, creadas con 65ms de
--- diferencia. Le quedaron 4 clases disponibles (2+2) en vez de las 3 que pagó una vez
--- ($550 MXN). Este ALTER TABLE fallará hasta que se resuelva ese duplicado — decide
--- primero cómo ajustar el saldo de esa clienta (¿le dejas la clase de más como cortesía,
--- le restas las 2 clases de más, o contactas para aclarar?) y borra o fusiona la fila
--- sobrante manualmente. Para volver a encontrar duplicados:
+-- (Caso real ya resuelto 2026-08-21: pi_3U5d3YA0gqRxLoT31Aexu7ku — paz barrera de
+-- la mora, paquete "Descubre Popnest" duplicado en customer_packages id 22 y 23 por
+-- esta misma carrera. Se fusionó en la fila 22 [6 clases totales, 4 disponibles,
+-- dejándole la clase de más como cortesía] y se re-apuntó su reserva 107; la fila 23
+-- se borró. Este ALTER TABLE ya debería poder correr sin chocar.)
+--
+-- Si en el futuro vuelve a haber un duplicado antes de correr esto, revisar con:
 --
 --   SELECT stripe_payment_intent_id, count(*), array_agg(id) AS ids
 --   FROM public.customer_packages

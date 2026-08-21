@@ -131,9 +131,9 @@ function SignUp() {
     >
       {showSuccess ? (
         <div className="auth-alert auth-alert--ok" role="status">
-          <p style={{ margin: '0 0 8px', fontWeight: 600 }}>¡Cuenta creada!</p>
+          <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Cuenta creada exitosamente</p>
           <p style={{ margin: 0 }}>
-            Bienvenida a Estudio Popnest Wellness. En unos segundos te llevamos a continuar.
+            Revisa tu correo para confirmar tus datos. En unos segundos te llevamos a continuar.
           </p>
         </div>
       ) : (

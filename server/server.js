@@ -51,6 +51,7 @@ import {
   addClassesToCustomerPackage,
   listCustomerPackagesByEmail,
   resolveProfileIdForPackagePurchase,
+  getPackagePrice,
 } from './db/packages.js'
 import { getSupabaseAnon } from './db/supabaseClient.js'
 import { validateDiscountCodeForCustomer } from './db/discountCodes.js'
@@ -346,6 +347,8 @@ const TEACHERS_FILE = join(__dirname, 'teachers.json')
 const MARKETING_ASSETS_DIR = join(__dirname, 'marketing-assets')
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 const ADMIN_RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000 // 1 hora
+// Debe coincidir con SINGLE_CLASS_AMOUNT_CENTS en src/config/pricing.js.
+const SINGLE_CLASS_AMOUNT_CENTS = 25000
 
 async function assertSlotAvailable(className, date, time) {
   const slot = await getAvailabilityForSlot(className, date, time)
@@ -378,6 +381,34 @@ app.post('/api/create-payment-intent', async (req, res) => {
     if (extraMetadata && typeof extraMetadata === 'object') {
       for (const [k, v] of Object.entries(extraMetadata)) {
         if (v != null && v !== '') safeExtra[String(k)] = String(v)
+      }
+    }
+
+    // Verificar que el monto sea el precio real — sin esto, el navegador podía pedir
+    // cualquier cantidad y Stripe la cobraría tal cual.
+    if (safeExtra.purchase_type === 'class') {
+      if (amount !== SINGLE_CLASS_AMOUNT_CENTS) {
+        console.error(`⚠️ Monto de clase no coincide: esperado ${SINGLE_CLASS_AMOUNT_CENTS}, recibido ${amount}`)
+        return res.status(400).json({ error: 'El monto no coincide con el precio de la clase.' })
+      }
+    } else if (safeExtra.purchase_type === 'package') {
+      const pkg = await getPackagePrice({ packageName: safeExtra.package_name })
+      if (!pkg) {
+        return res.status(400).json({ error: 'Paquete no encontrado.' })
+      }
+      let expectedPesos = pkg.price
+      if (safeExtra.discount_code) {
+        const discount = findPackageDiscountCode(safeExtra.discount_code)
+        if (discount) {
+          expectedPesos = Math.max(0, Math.round(pkg.price * (1 - discount.percent / 100)))
+        }
+      }
+      const expectedCents = expectedPesos * 100
+      if (amount !== expectedCents) {
+        console.error(
+          `⚠️ Monto de paquete "${pkg.name}" no coincide: esperado ${expectedCents}, recibido ${amount}`
+        )
+        return res.status(400).json({ error: 'El monto no coincide con el precio del paquete.' })
       }
     }
 

@@ -418,6 +418,8 @@ function Booking() {
             lastName: customerInfo.lastName,
             email: customerInfo.email,
             phone: customerInfo.phone
+          }, {
+            purchase_type: 'class',
           })
         } catch (paymentError) {
           console.error('Error al crear Payment Intent:', paymentError)

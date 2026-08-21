@@ -207,6 +207,9 @@ function PackagePurchase() {
           purchase_type: 'package',
           package_name: packageInfo.name,
           package_id: packageInfo.id,
+          // Para que el servidor pueda verificar que `amount` sí corresponde al
+          // precio con descuento, no confiar en el monto que manda el navegador.
+          discount_code: appliedDiscount?.code || '',
           referred_by: referredBy?.trim() || '',
         })
       } catch (paymentError) {

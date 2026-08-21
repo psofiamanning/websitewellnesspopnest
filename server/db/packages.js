@@ -578,6 +578,24 @@ export async function listCustomerPackagesByEmail(email) {
   return (await mapPackagesWithBookingCounts(rows)).filter(Boolean)
 }
 
+/**
+ * Precio real del catálogo por nombre exacto (el `id` del frontend es un slug propio
+ * de src/data/packageOffers.js, no el id numérico de esta tabla — por eso se busca
+ * por `name`, el mismo identificador que usa insertCustomerPackageAfterPayment).
+ * Para validar montos.
+ */
+export async function getPackagePrice({ packageName } = {}) {
+  if (!packageName) return null
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('packages')
+    .select('id, name, price')
+    .eq('name', packageName)
+    .maybeSingle()
+  if (error || !data) return null
+  return { id: data.id, name: data.name, price: Number(data.price) || 0 }
+}
+
 export async function resolveProfileIdForPackagePurchase(purchaseData, authUser) {
   if (authUser?.id) {
     const supabase = getSupabaseAdmin()

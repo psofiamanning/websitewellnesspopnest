@@ -216,11 +216,30 @@ function sanitizeReferredBy(value) {
   return s ? s.slice(0, 120) : null
 }
 
+function isMissingRpcFunction(err, name) {
+  const m = `${err?.message || ''} ${err?.details || ''} ${err?.hint || ''}`.toLowerCase()
+  return err?.code === '42883' || err?.code === 'PGRST202' || m.includes(name.toLowerCase())
+}
+
+/**
+ * Resta un lugar de forma atómica (UPDATE ... WHERE spots_available > 0, una sola
+ * sentencia SQL) para que dos reservas simultáneas por el último lugar no puedan
+ * ambas "ganar". Devuelve `false` si ya no había cupo (el llamador debe deshacer
+ * lo que haya insertado). `currentSpots` es solo el valor de respaldo si la función
+ * de Supabase (server/sql/add_atomic_schedule_spot_functions.sql) aún no se corrió.
+ */
 async function decrementScheduleSpot(scheduleId, currentSpots) {
   const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase.rpc('decrement_schedule_spot', { p_schedule_id: scheduleId })
+  if (!error) return data === true
+  if (!isMissingRpcFunction(error, 'decrement_schedule_spot')) throw error
+  console.warn(
+    'decrement_schedule_spot() no existe; ejecuta server/sql/add_atomic_schedule_spot_functions.sql en Supabase. Usando decremento no atómico mientras tanto.'
+  )
   const next = Math.max(0, (currentSpots ?? 0) - 1)
-  const { error } = await supabase.from('schedules').update({ spots_available: next }).eq('id', scheduleId)
-  if (error) throw error
+  const { error: fbErr } = await supabase.from('schedules').update({ spots_available: next }).eq('id', scheduleId)
+  if (fbErr) throw fbErr
+  return true
 }
 
 /** Reservas que cuentan para cupo/saldo de paquete (no canceladas). */
@@ -263,8 +282,15 @@ export async function countBookingsByCustomerPackageIds(packageIds) {
   return map
 }
 
+/** Devuelve un lugar (cancelación/reprogramación) de forma atómica, sin pasar de spots_total. */
 async function incrementScheduleSpot(scheduleId) {
   const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase.rpc('increment_schedule_spot', { p_schedule_id: scheduleId })
+  if (!error) return
+  if (!isMissingRpcFunction(error, 'increment_schedule_spot')) throw error
+  console.warn(
+    'increment_schedule_spot() no existe; ejecuta server/sql/add_atomic_schedule_spot_functions.sql en Supabase. Usando incremento no atómico mientras tanto.'
+  )
   const { data: row, error: rErr } = await supabase
     .from('schedules')
     .select('spots_available, spots_total')
@@ -273,8 +299,8 @@ async function incrementScheduleSpot(scheduleId) {
   if (rErr || !row) throw rErr || new Error('Schedule not found')
   const cap = row.spots_total != null ? row.spots_total : (row.spots_available ?? 0) + 1
   const next = Math.min(cap, (row.spots_available ?? 0) + 1)
-  const { error } = await supabase.from('schedules').update({ spots_available: next }).eq('id', scheduleId)
-  if (error) throw error
+  const { error: fbErr } = await supabase.from('schedules').update({ spots_available: next }).eq('id', scheduleId)
+  if (fbErr) throw fbErr
 }
 
 /**
@@ -350,7 +376,14 @@ export async function saveBooking(flat) {
       status: booking.status,
       paymentMethod: 'discount_code',
     })
-    if (decDisc) await decrementScheduleSpot(schedule.id, avail)
+    if (decDisc && !(await decrementScheduleSpot(schedule.id, avail))) {
+      await supabase.from('discount_code_redemptions').delete().eq('booking_id', booking.id)
+      await supabase.from('payments_new').delete().eq('booking_id', booking.id)
+      await supabase.from('bookings_new').delete().eq('id', booking.id)
+      throw new Error(
+        'Lo sentimos, esta clase ya no tiene lugares disponibles para esta fecha y hora. Por favor selecciona otra fecha u hora.'
+      )
+    }
 
     const { data: full, error: fErr } = await supabase
       .from('bookings_new')
@@ -440,7 +473,15 @@ export async function saveBooking(flat) {
     }
 
     const decPkg = shouldDecrementSpotOnInsert({ ...flat, status, paymentMethod: 'package' })
-    if (decPkg) await decrementScheduleSpot(schedule.id, avail)
+    if (decPkg && !(await decrementScheduleSpot(schedule.id, avail))) {
+      if (deductCredit) {
+        await supabase.from('customer_packages').update({ classes_remaining: cp.classes_remaining }).eq('id', cp.id)
+      }
+      await supabase.from('bookings_new').delete().eq('id', booking.id)
+      throw new Error(
+        'Lo sentimos, esta clase ya no tiene lugares disponibles para esta fecha y hora. Por favor selecciona otra fecha u hora.'
+      )
+    }
 
     return adaptBookingRow(booking)
   }
@@ -459,7 +500,12 @@ export async function saveBooking(flat) {
     if (bErr) throw bErr
 
     const decMan = shouldDecrementSpotOnInsert({ ...flat, status: manualStatus, paymentMethod: 'manual' })
-    if (decMan) await decrementScheduleSpot(schedule.id, avail)
+    if (decMan && !(await decrementScheduleSpot(schedule.id, avail))) {
+      await supabase.from('bookings_new').delete().eq('id', booking.id)
+      throw new Error(
+        'Lo sentimos, esta clase ya no tiene lugares disponibles para esta fecha y hora. Por favor selecciona otra fecha u hora.'
+      )
+    }
 
     return adaptBookingRow(booking)
   }
@@ -467,6 +513,14 @@ export async function saveBooking(flat) {
   // card
   const stripePaymentIntentId =
     flat.paymentIntentId || flat.stripeInfo?.paymentIntentId || null
+
+  // Idempotencia: un doble clic o reintento de red para el mismo Payment Intent no
+  // debe crear una segunda reserva (ni descontar cupo ni mandar el correo dos veces).
+  if (stripePaymentIntentId) {
+    const existing = await findBookingByStripePaymentIntentId(stripePaymentIntentId)
+    if (existing) return existing
+  }
+
   const amount = flat.payment?.amount ?? 0
   const cardLastFour = flat.payment?.cardLastFour || flat.payment?.card_last_four || null
 
@@ -498,7 +552,13 @@ export async function saveBooking(flat) {
   if (pErr) throw pErr
 
   const decCard = shouldDecrementSpotOnInsert({ ...flat, status, paymentMethod: 'card' })
-  if (decCard) await decrementScheduleSpot(schedule.id, avail)
+  if (decCard && !(await decrementScheduleSpot(schedule.id, avail))) {
+    await supabase.from('payments_new').delete().eq('booking_id', booking.id)
+    await supabase.from('bookings_new').delete().eq('id', booking.id)
+    throw new Error(
+      'Lo sentimos, esta clase ya no tiene lugares disponibles para esta fecha y hora. Por favor selecciona otra fecha u hora.'
+    )
+  }
 
   const { data: full, error: fErr } = await supabase
     .from('bookings_new')
@@ -532,8 +592,12 @@ export async function updateBooking(bookingId, updates) {
     if (!newSched || (newSched.spots_available ?? 0) <= 0) return null
 
     const oldId = cur.schedule_id
+    // Primero se reserva el lugar en el horario nuevo (atómico); solo si eso
+    // funciona se libera el del horario viejo — así una carrera por el último
+    // lugar del horario nuevo no deja el viejo con un hueco de más sin motivo.
+    const gotNewSpot = await decrementScheduleSpot(newSched.id, newSched.spots_available)
+    if (!gotNewSpot) return null
     await incrementScheduleSpot(oldId)
-    await decrementScheduleSpot(newSched.id, newSched.spots_available)
 
     const { data: updated, error: uErr } = await supabase
       .from('bookings_new')
@@ -561,9 +625,10 @@ export async function updateBooking(bookingId, updates) {
         .select('spots_available')
         .eq('id', cur.schedule_id)
         .single()
-      if (sch && (sch.spots_available ?? 0) > 0) {
-        await decrementScheduleSpot(cur.schedule_id, sch.spots_available)
-      }
+      // Best effort: si ya no hay cupo, no se descuenta pero la reserva igual se
+      // confirma (el pago ya se hizo) — decrementScheduleSpot lo revisa de forma
+      // atómica, sin la carrera de leer-y-luego-escribir que había aquí.
+      await decrementScheduleSpot(cur.schedule_id, sch?.spots_available)
     }
 
     const patch = {}

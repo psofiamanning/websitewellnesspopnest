@@ -548,36 +548,15 @@ app.post('/api/confirm-booking', async (req, res) => {
       return res.status(400).json({ error: 'Payment Intent ID is required for card payments' })
     }
 
-    // Verificar el estado del Payment Intent
+    // Verificar el estado del Payment Intent. Si Stripe no lo confirma, no se
+    // asume que el pago se hizo — hacerlo permitiría reservar gratis con un
+    // paymentIntentId inventado.
     let paymentIntent
     try {
       paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
     } catch (stripeError) {
-      console.warn(`⚠️ PaymentIntent ${paymentIntentId} no encontrado, pero guardando reserva de todas formas`)
-
-      if (bookingData.className && bookingData.date && bookingData.time) {
-        const cap = await assertSlotAvailable(bookingData.className, bookingData.date, bookingData.time)
-        if (!cap.ok) {
-          return res.status(400).json({ error: cap.message, code: 'CLASS_FULL' })
-        }
-      }
-
-      const booking = {
-        ...bookingData,
-        paymentIntentId: paymentIntentId,
-        paymentStatus: 'succeeded',
-        createdAt: new Date().toISOString(),
-        status: 'confirmed',
-        note: 'PaymentIntent no encontrado en Stripe, pero pago confirmado en frontend',
-      }
-
-      const savedBooking = await saveBooking(booking)
-      sendBookingConfirmationEmail(savedBooking).catch(() => {})
-      return res.json({
-        success: true,
-        booking: savedBooking,
-        warning: 'PaymentIntent no encontrado en Stripe, pero reserva guardada',
-      })
+      console.error(`⚠️ No se pudo verificar el PaymentIntent ${paymentIntentId}:`, stripeError.message)
+      return res.status(400).json({ error: 'No se pudo verificar el pago. Intenta de nuevo.' })
     }
 
     if (paymentIntent.status !== 'succeeded') {
@@ -694,11 +673,30 @@ app.post('/api/bookings', async (req, res) => {
       }
     }
 
+    // El pago con tarjeta se confirma solo si Stripe lo dice, no porque el navegador
+    // lo afirme — sin esto, una petición forjada podía reservar gratis.
+    let cardConfirmed = false
+    const claimsCardSuccess =
+      bookingData.payment?.status === 'succeeded' &&
+      bookingData.paymentMethod !== 'package' &&
+      bookingData.paymentMethod !== 'discount_code'
+    if (claimsCardSuccess) {
+      const paymentIntentId = bookingData.stripeInfo?.paymentIntentId
+      if (paymentIntentId) {
+        try {
+          const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
+          cardConfirmed = pi.status === 'succeeded'
+        } catch (e) {
+          console.error('⚠️ No se pudo verificar el PaymentIntent en /api/bookings:', e.message)
+        }
+      }
+    }
+
     const booking = {
       ...bookingData,
       createdAt: new Date().toISOString(),
       status:
-        bookingData.payment?.status === 'succeeded' ||
+        cardConfirmed ||
         bookingData.paymentMethod === 'package' ||
         bookingData.paymentMethod === 'discount_code'
           ? 'confirmed'

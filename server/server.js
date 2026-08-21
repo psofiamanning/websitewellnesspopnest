@@ -294,13 +294,46 @@ async function sendFreeClassEmail(email) {
   }
 }
 
+/**
+ * Aviso interno (al correo del propio estudio) cuando una reserva o compra se
+ * confirmó pero no tenía correo del cliente — para que alguien le dé seguimiento
+ * manual (teléfono, WhatsApp) en vez de que quede solo en un log que nadie revisa.
+ */
+async function notifyAdminMissingCustomerEmail({ type, id, details }) {
+  if (!mailerSend && !mailTransporter) return
+  const detailLines = Object.entries(details || {})
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('\n')
+  try {
+    await sendEmail({
+      to: MAILERSEND_FROM_EMAIL,
+      toName: 'Estudio Popnest Wellness',
+      subject: `⚠️ Falta correo del cliente — ${type} #${id}`,
+      text: `Se registró ${type} (#${id}) sin correo del cliente, así que no se le pudo mandar confirmación.\n\n${detailLines}\n\nContáctalo por teléfono/WhatsApp para confirmar manualmente.`,
+    })
+  } catch (err) {
+    console.error('❌ No se pudo mandar el aviso interno de correo faltante:', err.message)
+  }
+}
+
 /** Envía correo de confirmación de reserva al cliente. */
 async function sendBookingConfirmationEmail(booking) {
   const email = booking?.customer?.email
-  if (!email || (!mailerSend && !mailTransporter)) {
-    if (!email) console.warn('⚠️ Reserva sin email, no se envía confirmación:', booking?.id)
+  if (!email) {
+    console.warn('⚠️ Reserva sin email, no se envía confirmación:', booking?.id)
+    notifyAdminMissingCustomerEmail({
+      type: 'una reserva de clase',
+      id: booking?.id,
+      details: {
+        Clase: booking?.className,
+        Nombre: booking?.customer?.firstName || booking?.customer?.name || '',
+        Teléfono: booking?.customer?.phone || '',
+      },
+    })
     return
   }
+  if (!mailerSend && !mailTransporter) return
   const name = booking.customer?.firstName || booking.customer?.name || ''
   const className = booking.className || 'Clase'
   const dateStr = booking.formattedDate || booking.date || ''
@@ -320,10 +353,21 @@ async function sendBookingConfirmationEmail(booking) {
 /** Envía correo de confirmación al comprar un paquete de clases. */
 async function sendPackageConfirmationEmail(purchase) {
   const email = purchase?.customer?.email
-  if (!email || (!mailerSend && !mailTransporter)) {
-    if (!email) console.warn('⚠️ Compra de paquete sin email, no se envía confirmación:', purchase?.id)
+  if (!email) {
+    console.warn('⚠️ Compra de paquete sin email, no se envía confirmación:', purchase?.id)
+    notifyAdminMissingCustomerEmail({
+      type: 'una compra de paquete',
+      id: purchase?.id,
+      details: {
+        Paquete: purchase?.packageName,
+        Nombre: purchase?.customer?.firstName || '',
+        Teléfono: purchase?.customer?.phone || '',
+        Monto: purchase?.payment?.amount ? `$${(purchase.payment.amount / 100).toFixed(2)} ${purchase.payment.currency || 'MXN'}` : '',
+      },
+    })
     return
   }
+  if (!mailerSend && !mailTransporter) return
   const name = purchase.customer?.firstName || ''
   const packageName = purchase.packageName || 'Paquete de clases'
   const classes = purchase.classes || 0

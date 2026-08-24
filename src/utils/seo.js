@@ -51,6 +51,27 @@ export function getSitemapMeta(pathname) {
   return SITEMAP_META_BY_ROUTE[pathname] ?? { changefreq: 'monthly', priority: 0.5 }
 }
 
+/** Rutas estáticas conocidas de la app (deben coincidir con las de App.jsx). */
+const KNOWN_STATIC_PATHS = new Set([
+  '/', '/classes', '/coaches', '/coaches/login', '/coaches/panel', '/teachers',
+  '/horario', '/talleres', '/packages', '/ubicacion', '/espacios',
+  '/privacidad', '/terminos', '/login', '/signup', '/forgot-password', '/reset-password',
+  '/admin', '/admin/login', '/admin/forgot-password', '/admin/reset-password',
+  '/profesores', '/profesores/login', '/mis-reservas', '/mis-paquetes',
+  '/design-system', '/home-redesign', '/schedule-redesign', '/packages-redesign',
+  '/mis-reservas-redesign', '/classes-redesign', '/previews'
+])
+
+/** Prefijos de rutas dinámicas conocidas (detalle de taller, reserva, landing de clase). */
+const KNOWN_DYNAMIC_PREFIXES = ['/talleres/', '/booking/', '/clases/']
+
+/** true si la ruta corresponde a una página real de la app (no un 404). */
+export function isKnownRoute(pathname) {
+  if (!pathname) return false
+  if (KNOWN_STATIC_PATHS.has(pathname)) return true
+  return KNOWN_DYNAMIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+}
+
 const NOINDEX_PREFIXES = [
   '/login',
   '/signup',
@@ -77,6 +98,7 @@ export function shouldNoindex(pathname) {
   if (!pathname) return false
   if (SITEMAP_ROUTES.includes(pathname)) return false
   if (pathname === '/teachers' || pathname === '/coaches') return true
+  if (!isKnownRoute(pathname)) return true
   return NOINDEX_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   )
@@ -267,6 +289,12 @@ export function getSeoForPath(pathname) {
     return {
       title: 'Reservar | Estudio Popnest Wellness',
       description: 'Completa tu reserva en Estudio Popnest Wellness, Coyoacán.'
+    }
+  }
+  if (!isKnownRoute(pathname)) {
+    return {
+      title: 'Página no encontrada | Estudio Popnest Wellness',
+      description: 'La página que buscas no existe o fue movida. Consulta clases, horario y paquetes de Estudio Popnest Wellness en Coyoacán.'
     }
   }
   return { title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION }

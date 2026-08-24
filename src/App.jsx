@@ -41,6 +41,7 @@ import PackagesRedesign from './pages/PackagesRedesign'
 import MyBookingsRedesign from './pages/MyBookingsRedesign'
 import ClassesRedesign from './pages/ClassesRedesign'
 import Previews from './pages/Previews'
+import NotFound from './pages/NotFound'
 import DevOnlyRoute from './components/DevOnlyRoute'
 import './App.css'
 
@@ -155,6 +156,7 @@ export function AppContent() {
         <Route path="/mis-reservas-redesign" element={<DevOnlyRoute><MyBookingsRedesign /></DevOnlyRoute>} />
         <Route path="/classes-redesign" element={<DevOnlyRoute><ClassesRedesign /></DevOnlyRoute>} />
         <Route path="/previews" element={<DevOnlyRoute><Previews /></DevOnlyRoute>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {!isBareLayout && <Footer />}
       {!isStandalonePreview && <CookieConsent />}

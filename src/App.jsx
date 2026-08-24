@@ -33,6 +33,7 @@ import MyBookings from './pages/MyBookings'
 import MyPackages from './pages/MyPackages'
 import Ubicacion from './pages/Ubicacion'
 import ClassLanding from './pages/ClassLanding'
+import YogaCoyoacan from './pages/YogaCoyoacan'
 import Espacios from './pages/Espacios'
 import DesignSystem from './pages/DesignSystem'
 import HomeRedesign from './pages/HomeRedesign'
@@ -121,6 +122,7 @@ export function AppContent() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<Classes />} />
+        <Route path="/clases/yoga-coyoacan" element={<YogaCoyoacan />} />
         <Route path="/clases/:slug" element={<ClassLanding />} />
         <Route path="/coaches/login" element={<TeacherLogin />} />
         <Route path="/coaches/panel" element={<TeacherDashboard />} />

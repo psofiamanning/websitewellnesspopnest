@@ -121,6 +121,12 @@ function ClassLanding() {
                 <Link to="/ubicacion">Cómo llegar</Link>
                 {' · '}
                 <Link to="/classes">Ver todas las prácticas</Link>
+                {data.yogaHubPath && (
+                  <>
+                    {' · '}
+                    <Link to={data.yogaHubPath}>Yoga en Coyoacán</Link>
+                  </>
+                )}
               </p>
             </section>
           </div>

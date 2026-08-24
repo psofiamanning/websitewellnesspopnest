@@ -32,6 +32,8 @@ function formatScheduleSummary(classId) {
   return parts.join(' · ')
 }
 
+const YOGA_STYLE_CLASS_IDS = new Set(['hatha-yoga', 'power-yoga-1'])
+
 export function getClassLandingData(slug) {
   const classId = getClassIdFromLandingSlug(slug)
   if (!classId) return null
@@ -57,6 +59,7 @@ export function getClassLandingData(slug) {
     scheduleSummary: formatScheduleSummary(classId),
     bookingPath: `/booking/class/${classId}`,
     horarioPath: '/horario',
+    yogaHubPath: YOGA_STYLE_CLASS_IDS.has(classId) ? '/clases/yoga-coyoacan' : null,
     faqs: LANDING_FAQ_BY_CLASS_ID[classId] ?? [],
     otherLandings: Object.entries(LANDING_SLUG_TO_CLASS_ID)
       .filter(([s]) => s !== slug)

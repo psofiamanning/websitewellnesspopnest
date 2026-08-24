@@ -67,9 +67,10 @@ function Classes() {
           </div>
           <p className="cl-hero__guides pn-text-sm">
             Guías por práctica en Coyoacán:{' '}
-            {getLandingNavItems().map((item, i) => (
+            <Link to="/clases/yoga-coyoacan">Yoga</Link>
+            {getLandingNavItems().map((item) => (
               <span key={item.slug}>
-                {i > 0 ? ' · ' : null}
+                {' · '}
                 <Link to={item.path}>{item.name}</Link>
               </span>
             ))}

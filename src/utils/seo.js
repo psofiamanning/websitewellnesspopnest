@@ -23,7 +23,8 @@ const PUBLIC_STATIC_ROUTES = [
   '/packages',
   '/ubicacion',
   '/privacidad',
-  '/terminos'
+  '/terminos',
+  '/clases/yoga-coyoacan'
 ]
 
 /** Rutas públicas que se pre-renderizan en build (HTML estático para crawlers). */
@@ -121,6 +122,10 @@ export const ROUTE_SEO = {
     title: 'Clases de Yoga y Bienestar en Coyoacán | Estudio Popnest Wellness',
     description: 'Descubre clases de yoga, pilates, tai chi, belly dance, stretching, meditación y sound healing en Coyoacán. Reserva en línea. Estudio boutique en CDMX.'
   },
+  '/clases/yoga-coyoacan': {
+    title: 'Yoga en Coyoacán | Hatha Yoga y Power Yoga | Estudio Popnest Wellness',
+    description: 'Clases de yoga en Coyoacán: Hatha Yoga y Power Yoga en un estudio boutique en Del Carmen. Grupos reducidos, coaches especializadas. Reserva en línea.'
+  },
   '/coaches': {
     title: 'Coaches de Yoga en Coyoacán | Estudio Popnest Wellness',
     description: 'Conoce a los coaches de yoga y bienestar en Estudio Popnest Wellness, Coyoacán. Reserva tu clase en línea.'
@@ -209,6 +214,12 @@ export function getBreadcrumbItems(pathname) {
 
   if (segments[0] === 'classes') {
     items.push({ name: 'Clases', url: '/classes' })
+    return items
+  }
+
+  if (segments[0] === 'clases' && segments[1] === 'yoga-coyoacan') {
+    items.push({ name: 'Clases', url: '/classes' })
+    items.push({ name: 'Yoga en Coyoacán', url: pathname })
     return items
   }
 

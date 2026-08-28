@@ -31,6 +31,7 @@ function Admin() {
   const [filteredPackages, setFilteredPackages] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterDate, setFilterDate] = useState('')
+  const [filterDateEnd, setFilterDateEnd] = useState('')
   const [bookingsViewMode, setBookingsViewMode] = useState('class') // 'class' | 'teacher'
   const [selectedGroup, setSelectedGroup] = useState(null) // { type: 'class'|'teacher', name: string } | null
   const [selectedBooking, setSelectedBooking] = useState(null)
@@ -78,7 +79,7 @@ function Admin() {
   useEffect(() => {
     filterBookings()
     filterPackages()
-  }, [bookings, packages, searchTerm, filterDate])
+  }, [bookings, packages, searchTerm, filterDate, filterDateEnd])
 
   const loadBookings = async () => {
     try {
@@ -119,9 +120,10 @@ function Admin() {
       )
     }
 
-    // Filtrar por fecha
+    // Filtrar por fecha (rango: sin "hasta", se compara solo el día exacto)
     if (filterDate) {
-      filtered = filtered.filter(booking => booking.date === filterDate)
+      const end = filterDateEnd || filterDate
+      filtered = filtered.filter(booking => booking.date >= filterDate && booking.date <= end)
     }
 
     setFilteredBookings(filtered)
@@ -129,7 +131,7 @@ function Admin() {
 
   // Reservas filtradas por fecha (y opcionalmente por búsqueda)
   let bookingsByDate = filterDate
-    ? bookings.filter(b => b.date === filterDate)
+    ? bookings.filter(b => b.date >= filterDate && b.date <= (filterDateEnd || filterDate))
     : []
   if (searchTerm.trim()) {
     const term = searchTerm.toLowerCase().trim()
@@ -141,6 +143,18 @@ function Admin() {
       b.teacherName?.toLowerCase().includes(term)
     )
   }
+
+  // Reservas y paquetes para las tarjetas de estadísticas: todo el histórico si no hay
+  // filtro de fecha, o solo lo que cae dentro del rango Desde/Hasta seleccionado.
+  const bookingsForStats = filterDate
+    ? bookings.filter(b => b.date >= filterDate && b.date <= (filterDateEnd || filterDate))
+    : bookings
+  const packagesForStats = filterDate
+    ? packages.filter(p => {
+        const day = (p.createdAt || p.purchaseDate || '').slice(0, 10)
+        return day && day >= filterDate && day <= (filterDateEnd || filterDate)
+      })
+    : packages
 
   // Agrupar por clase
   const byClass = bookingsByDate.reduce((acc, b) => {
@@ -166,7 +180,9 @@ function Admin() {
     ? (selectedGroup.type === 'class' ? byClass[selectedGroup.name] : byTeacher[selectedGroup.name]) || []
     : []
 
-  // Lista de todas las reservas para la vista inicial (sin filtro de fecha): orden por fecha y hora (más recientes / próximas primero)
+  // Lista de todas las reservas para la vista inicial (sin filtro de fecha): orden por fecha de
+  // reservación/compra (más recientes primero), igual que la pestaña de Paquetes, para que una
+  // reserva de clase suelta recién pagada sea fácil de ubicar sin importar cuándo sea la clase.
   const allBookingsForList = searchTerm.trim()
     ? bookings.filter(b =>
         (b.customer?.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -177,9 +193,7 @@ function Admin() {
       )
     : [...bookings]
   const allBookingsSortedByDate = [...allBookingsForList].sort((a, b) => {
-    const da = new Date(`${a.date}T${a.time || '00:00'}`)
-    const db = new Date(`${b.date}T${b.time || '00:00'}`)
-    return db - da
+    return new Date(b.createdAt) - new Date(a.createdAt)
   })
 
   const filterPackages = () => {
@@ -613,19 +627,36 @@ function Admin() {
 
             {/* Filtros */}
             {activeTab !== 'talleres' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
                 <label className="block text-body font-body font-medium mb-2">
-                  Filtrar por fecha
+                  Desde
                 </label>
                 <input
                   type="date"
                   value={filterDate}
                   onChange={(e) => {
                     setFilterDate(e.target.value)
+                    if (!e.target.value) setFilterDateEnd('')
                     setSelectedGroup(null)
                   }}
                   className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body text-body"
+                />
+              </div>
+              <div>
+                <label className="block text-body font-body font-medium mb-2">
+                  Hasta <span className="text-neutral-500 font-normal">(opcional, para un rango)</span>
+                </label>
+                <input
+                  type="date"
+                  value={filterDateEnd}
+                  min={filterDate || undefined}
+                  disabled={!filterDate}
+                  onChange={(e) => {
+                    setFilterDateEnd(e.target.value)
+                    setSelectedGroup(null)
+                  }}
+                  className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body text-body disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
               <div>
@@ -868,28 +899,36 @@ function Admin() {
               </div>
             )}
 
-            {/* Estadísticas (operadores no ven ingresos) */}
+            {/* Estadísticas (operadores no ven ingresos). Si hay filtro de fecha, solo cuentan lo del rango. */}
             <div className={`grid grid-cols-1 gap-4 mb-6 ${canViewRevenue() ? 'md:grid-cols-4' : 'md:grid-cols-2'}`}>
               <div className="bg-quaternary rounded-lg p-4">
-                <p className="text-body font-body text-sm mb-1">Total Reservas</p>
-                <p className="text-h2 font-heading text-primary">{bookings.length}</p>
+                <p className="text-body font-body text-sm mb-1">
+                  Total Reservas{filterDate && <span className="text-neutral-500"> (rango)</span>}
+                </p>
+                <p className="text-h2 font-heading text-primary">{bookingsForStats.length}</p>
               </div>
               <div className="bg-quaternary rounded-lg p-4">
-                <p className="text-body font-body text-sm mb-1">Total Paquetes</p>
-                <p className="text-h2 font-heading text-primary">{packages.length}</p>
+                <p className="text-body font-body text-sm mb-1">
+                  Total Paquetes{filterDate && <span className="text-neutral-500"> (rango)</span>}
+                </p>
+                <p className="text-h2 font-heading text-primary">{packagesForStats.length}</p>
               </div>
               {canViewRevenue() && (
                 <>
                   <div className="bg-quaternary rounded-lg p-4">
-                    <p className="text-body font-body text-sm mb-1">Ingresos por Clases</p>
+                    <p className="text-body font-body text-sm mb-1">
+                      Ingresos por Clases{filterDate && <span className="text-neutral-500"> (rango)</span>}
+                    </p>
                     <p className="text-h2 font-heading text-primary">
-                      {formatCurrency(bookings.filter(b => b.paymentMethod !== 'package').reduce((sum, b) => sum + (b.payment?.amount || 0), 0))}
+                      {formatCurrency(bookingsForStats.filter(b => b.paymentMethod !== 'package').reduce((sum, b) => sum + (b.payment?.amount || 0), 0))}
                     </p>
                   </div>
                   <div className="bg-quaternary rounded-lg p-4">
-                    <p className="text-body font-body text-sm mb-1">Ingresos por Paquetes</p>
+                    <p className="text-body font-body text-sm mb-1">
+                      Ingresos por Paquetes{filterDate && <span className="text-neutral-500"> (rango)</span>}
+                    </p>
                     <p className="text-h2 font-heading text-primary">
-                      {formatCurrency(packages.reduce((sum, p) => sum + (p.payment?.amount || 0), 0))}
+                      {formatCurrency(packagesForStats.reduce((sum, p) => sum + (p.payment?.amount || 0), 0))}
                     </p>
                   </div>
                 </>
@@ -1024,7 +1063,7 @@ function Admin() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {groupList.length === 0 ? (
                           <div className="col-span-2 text-center py-12">
-                            <p className="text-body font-body">No hay reservas para esta fecha.</p>
+                            <p className="text-body font-body">No hay reservas para {filterDateEnd ? 'este rango de fechas' : 'esta fecha'}.</p>
                           </div>
                         ) : (
                           groupList.map((group) => (

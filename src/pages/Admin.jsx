@@ -32,7 +32,7 @@ function Admin() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterDate, setFilterDate] = useState('')
   const [filterDateEnd, setFilterDateEnd] = useState('')
-  const [bookingsViewMode, setBookingsViewMode] = useState('class') // 'class' | 'teacher'
+  const [bookingsViewMode, setBookingsViewMode] = useState('general') // 'general' | 'class' | 'teacher'
   const [selectedGroup, setSelectedGroup] = useState(null) // { type: 'class'|'teacher', name: string } | null
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [selectedPackage, setSelectedPackage] = useState(null)
@@ -180,6 +180,15 @@ function Admin() {
     ? (selectedGroup.type === 'class' ? byClass[selectedGroup.name] : byTeacher[selectedGroup.name]) || []
     : []
 
+  // Vista general (con filtro de fecha): reservas de clases sueltas y paquetes comprados en el
+  // rango, mezclados en una sola lista ordenada por fecha de compra (más recientes primero).
+  const combinedRecentList = filterDate
+    ? [
+        ...bookingsByDate.map(b => ({ type: 'booking', data: b, sortDate: new Date(b.createdAt || `${b.date}T${b.time || '00:00'}`) })),
+        ...filteredPackages.map(p => ({ type: 'package', data: p, sortDate: new Date(p.createdAt || p.purchaseDate) }))
+      ].sort((a, b) => b.sortDate - a.sortDate)
+    : []
+
   // Lista de todas las reservas para la vista inicial (sin filtro de fecha): orden por fecha de
   // reservación/compra (más recientes primero), igual que la pestaña de Paquetes, para que una
   // reserva de clase suelta recién pagada sea fácil de ubicar sin importar cuándo sea la clase.
@@ -202,12 +211,21 @@ function Admin() {
     // Filtrar por búsqueda
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
-      filtered = filtered.filter(pkg => 
+      filtered = filtered.filter(pkg =>
         pkg.customer?.fullName?.toLowerCase().includes(term) ||
         pkg.customer?.email?.toLowerCase().includes(term) ||
         pkg.customer?.phone?.includes(term) ||
         pkg.packageName?.toLowerCase().includes(term)
       )
+    }
+
+    // Filtrar por fecha (rango: sin "hasta", se compara solo el día exacto)
+    if (filterDate) {
+      const end = filterDateEnd || filterDate
+      filtered = filtered.filter(pkg => {
+        const day = (pkg.createdAt || pkg.purchaseDate || '').slice(0, 10)
+        return day && day >= filterDate && day <= end
+      })
     }
 
     setFilteredPackages(filtered)
@@ -1001,8 +1019,20 @@ function Admin() {
                   </div>
                 ) : (
                   <>
-                    {/* Tabs Por clase / Por coach (solo cuando hay fecha) */}
+                    {/* Tabs Vista general / Por clase / Por coach (solo cuando hay fecha) */}
                     <div className="flex gap-2 border-b border-neutral pb-2">
+                      <button
+                        type="button"
+                        onClick={() => { setBookingsViewMode('general'); setSelectedGroup(null) }}
+                        className={`px-4 py-2 rounded-t-lg font-body font-medium transition-colors ${
+                          bookingsViewMode === 'general'
+                            ? 'text-white'
+                            : 'bg-quaternary text-body hover:bg-gray-200'
+                        }`}
+                        style={bookingsViewMode === 'general' ? { backgroundColor: '#B73D37' } : {}}
+                      >
+                        Vista general
+                      </button>
                       <button
                         type="button"
                         onClick={() => { setBookingsViewMode('class'); setSelectedGroup(null) }}
@@ -1029,7 +1059,67 @@ function Admin() {
                       </button>
                     </div>
 
-                    {selectedGroup ? (
+                    {bookingsViewMode === 'general' ? (
+                      /* Vista general: reservas y paquetes del rango, mezclados, más recientes primero */
+                      <div className="overflow-x-auto">
+                        {combinedRecentList.length === 0 ? (
+                          <div className="text-center py-12 bg-quaternary rounded-lg">
+                            <p className="text-body font-body">No hay reservas ni paquetes para {filterDateEnd ? 'este rango de fechas' : 'esta fecha'}.</p>
+                          </div>
+                        ) : (
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="border-b-2 border-neutral">
+                                <th className="text-left py-3 px-2 font-body font-medium text-body">Fecha</th>
+                                <th className="text-left py-3 px-2 font-body font-medium text-body">Tipo</th>
+                                <th className="text-left py-3 px-2 font-body font-medium text-body">Clase / Paquete</th>
+                                <th className="text-left py-3 px-2 font-body font-medium text-body">Cliente</th>
+                                <th className="text-left py-3 px-2 font-body font-medium text-body hidden sm:table-cell">Estado</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {combinedRecentList.map(({ type, data }) => {
+                                const isBooking = type === 'booking'
+                                const status = isBooking
+                                  ? data.status
+                                  : (data.payment?.status === 'succeeded' || data.status === 'confirmed' ? 'confirmed' : 'pending')
+                                return (
+                                  <tr
+                                    key={`${type}-${data.id}`}
+                                    onClick={() => isBooking ? setSelectedBooking(data) : setSelectedPackage(data)}
+                                    className="border-b border-neutral hover:bg-quaternary/50 cursor-pointer transition-colors"
+                                  >
+                                    <td className="py-3 px-2 font-body text-body whitespace-nowrap">
+                                      {isBooking
+                                        ? (data.date ? format(new Date(data.date + 'T12:00:00'), 'EEE d MMM yyyy', { locale: es }) : '—')
+                                        : format(new Date(data.createdAt || data.purchaseDate), 'EEE d MMM yyyy', { locale: es })}
+                                    </td>
+                                    <td className="py-3 px-2 font-body text-body">
+                                      <span className={`px-2 py-0.5 rounded-full text-xs ${isBooking ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                                        {isBooking ? 'Clase suelta' : 'Paquete'}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-2 font-body text-body">{isBooking ? (data.className || '—') : (data.packageName || '—')}</td>
+                                    <td className="py-3 px-2 font-body text-body">
+                                      {data.customer?.fullName || [data.customer?.firstName, data.customer?.lastName].filter(Boolean).join(' ') || '—'}
+                                    </td>
+                                    <td className="py-3 px-2 font-body text-sm hidden sm:table-cell">
+                                      <span className={`px-2 py-0.5 rounded-full ${
+                                        status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                        status === 'cancelled' ? 'bg-gray-200 text-gray-700' :
+                                        'bg-amber-100 text-amber-800'
+                                      }`}>
+                                        {status === 'confirmed' ? 'Confirmada' : status === 'cancelled' ? 'Cancelada' : 'Pendiente'}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    ) : selectedGroup ? (
                       /* Vista: lista de reservas del grupo seleccionado (click → detalle) */
                       <div>
                         <button

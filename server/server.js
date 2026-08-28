@@ -145,6 +145,42 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
           } catch (pkgErr) {
             console.error('⚠️ [webhook] Error en respaldo de paquete:', paymentIntent.id, pkgErr.message)
           }
+        } else if (paymentIntent.metadata?.purchase_type === 'class') {
+          // Respaldo: si el pago de una clase suelta se cobró pero el navegador no
+          // logró registrar la reserva (sesión caída, red, etc.), la registramos aquí
+          // desde el servidor. saveBooking es idempotente por Payment Intent, así que
+          // si la reserva ya existe simplemente la devuelve sin duplicarla.
+          try {
+            const email = (paymentIntent.metadata.customer_email || '').trim().toLowerCase()
+            const className = paymentIntent.metadata.class_name || ''
+            const date = paymentIntent.metadata.date || ''
+            const time = paymentIntent.metadata.time || ''
+            if (!email || !className || !date || !time) {
+              console.error('⚠️ [webhook] Pago de clase sin datos suficientes en metadata:', paymentIntent.id)
+            } else {
+              const [nameFirst, ...nameRest] = (paymentIntent.metadata.customer_name || '').trim().split(' ')
+              const backupBooking = await saveBooking({
+                className,
+                date,
+                time,
+                customer: {
+                  firstName: paymentIntent.metadata.customer_first_name || nameFirst || '',
+                  lastName: paymentIntent.metadata.customer_last_name || nameRest.join(' ') || '',
+                  email,
+                  phone: paymentIntent.metadata.customer_phone || '',
+                },
+                type: 'class',
+                status: 'confirmed',
+                paymentMethod: 'card',
+                payment: { amount: paymentIntent.amount, status: 'succeeded' },
+                stripeInfo: { paymentIntentId: paymentIntent.id },
+              })
+              console.log('✅ [webhook] Clase registrada como respaldo:', paymentIntent.id, email, className)
+              if (backupBooking?.customer?.email) sendBookingConfirmationEmail(backupBooking).catch(() => {})
+            }
+          } catch (classErr) {
+            console.error('⚠️ [webhook] Error en respaldo de clase:', paymentIntent.id, classErr.message)
+          }
         }
         break
       }
@@ -465,6 +501,8 @@ app.post('/api/create-payment-intent', async (req, res) => {
       // No adjuntamos payment_method aquí - se hará desde el frontend con confirmCardPayment
       metadata: {
         customer_name: `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim(),
+        customer_first_name: customerInfo?.firstName || '',
+        customer_last_name: customerInfo?.lastName || '',
         customer_email: customerInfo?.email || '',
         customer_phone: customerInfo?.phone || '',
         ...safeExtra,

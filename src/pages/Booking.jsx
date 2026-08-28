@@ -420,6 +420,9 @@ function Booking() {
             phone: customerInfo.phone
           }, {
             purchase_type: 'class',
+            class_name: className,
+            date: dateString,
+            time: selectedTime,
           })
         } catch (paymentError) {
           console.error('Error al crear Payment Intent:', paymentError)

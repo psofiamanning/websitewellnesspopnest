@@ -181,7 +181,7 @@ export const classSchedules = {
     }
   },
   'tai-chi': {
-    days: ['Miércoles'],
+    days: ['Lunes', 'Miércoles'],
     times: ['19:30']
   },
   'power-yoga-1': {

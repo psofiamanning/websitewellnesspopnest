@@ -162,10 +162,9 @@ export const classTypes = [
 // Horarios disponibles por clase
 export const classSchedules = {
   'hatha-yoga': {
-    days: ['Miércoles', 'Jueves', 'Domingo'],
-    times: ['08:00', '19:00', '19:30'],
+    days: ['Jueves', 'Domingo'],
+    times: ['08:00', '19:00'],
     timesByDay: {
-      Miércoles: ['19:30'],
       Jueves: ['19:00'],
       Domingo: ['08:00']
     }
@@ -182,7 +181,7 @@ export const classSchedules = {
     }
   },
   'tai-chi': {
-    days: ['Lunes'],
+    days: ['Miércoles'],
     times: ['19:30']
   },
   'power-yoga-1': {

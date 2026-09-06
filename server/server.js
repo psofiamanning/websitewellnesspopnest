@@ -33,6 +33,28 @@ import {
 } from './db/talleres.js'
 import { isTalleresAiConfigured, generateTallerFromPrompt } from './talleresAi.js'
 import {
+  checkSalonOverlap,
+  listBookedRangesForDate,
+  createPendingSalonBooking,
+  attachStripeSessionToBooking,
+  markSalonBookingPaid,
+  expireSalonBooking,
+  getSalonBookingBySessionId,
+  listAllSalonBookings,
+  createSalonSpecialRequest,
+  listSalonSpecialRequests,
+  updateSalonSpecialRequestStatus,
+} from './db/salonRentals.js'
+import {
+  SALON_SLOTS,
+  computeSalonPrice,
+  getSlotForDayAndTime,
+  dayOfWeekFromDateStr,
+  addHoursToTime,
+  SALON_MAX_CAPACITY,
+  SALON_MIN_HOURS,
+} from './config/salonPricing.js'
+import {
   isUsingSupabaseForUsers,
   getProfileByEmail,
   profileToApiUser,
@@ -189,6 +211,32 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
         console.log('PaymentIntent failed:', failedPayment.id)
         const failedBooking = await findBookingByStripePaymentIntentId(failedPayment.id)
         if (failedBooking) await updateBooking(failedBooking.id, { paymentStatus: 'failed', status: 'pending' })
+        break
+      }
+      case 'checkout.session.completed': {
+        const session = event.data.object
+        if (session.metadata?.purchase_type === 'salon_rental') {
+          try {
+            const updated = await markSalonBookingPaid({
+              stripeCheckoutSessionId: session.id,
+              stripePaymentIntentId: session.payment_intent,
+            })
+            if (updated) {
+              console.log('✅ [webhook] Renta de salón pagada:', session.id)
+              sendSalonBookingConfirmationEmail(updated).catch(() => {})
+              notifyOwnerOfSalonBooking(updated).catch(() => {})
+            }
+          } catch (salonErr) {
+            console.error('⚠️ [webhook] Error confirmando renta de salón:', session.id, salonErr.message)
+          }
+        }
+        break
+      }
+      case 'checkout.session.expired': {
+        const session = event.data.object
+        if (session.metadata?.purchase_type === 'salon_rental') {
+          await expireSalonBooking(session.id).catch(() => {})
+        }
         break
       }
       default:
@@ -417,6 +465,56 @@ async function sendPackageConfirmationEmail(purchase) {
     console.log('✅ Email de confirmación de paquete enviado a:', email)
   } catch (err) {
     console.error('❌ Error enviando email de confirmación de paquete:', err.message)
+  }
+}
+
+/** Envía correo de confirmación al cliente que pagó la renta del salón. */
+async function sendSalonBookingConfirmationEmail(booking) {
+  const email = booking?.customer_email
+  if (!email) return
+  if (!mailerSend && !mailTransporter) return
+  const name = booking.customer_name || ''
+  const slotLabel = SALON_SLOTS[booking.slot_key]?.label || booking.slot_key
+  const dateTimeLine = `${booking.booking_date} · ${booking.start_time}–${booking.end_time} (${slotLabel})`
+  const subject = 'Renta de salón confirmada - Estudio Popnest Wellness'
+  const text = `Hola ${name ? name + ',' : ''}\n\nTu renta del salón fue confirmada.\n\nFecha y horario: ${dateTimeLine}\nPersonas: ${booking.num_people}\nTotal pagado: $${Number(booking.total_amount).toFixed(2)} MXN\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>Hola ${name ? `<strong>${name}</strong>,` : ''}</p><p>Tu renta del salón fue <strong>confirmada</strong>.</p><p><strong>Fecha y horario:</strong> ${dateTimeLine}<br><strong>Personas:</strong> ${booking.num_people}<br><strong>Total pagado:</strong> $${Number(booking.total_amount).toFixed(2)} MXN</p><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
+  try {
+    await sendEmail({ to: email, toName: name, subject, text, html })
+    console.log('✅ Email de confirmación de renta de salón enviado a:', email)
+  } catch (err) {
+    console.error('❌ Error enviando email de confirmación de renta de salón:', err.message)
+  }
+}
+
+/** Aviso interno a la dueña de una renta de salón recién pagada. */
+async function notifyOwnerOfSalonBooking(booking) {
+  if (!mailerSend && !mailTransporter) return
+  const slotLabel = SALON_SLOTS[booking.slot_key]?.label || booking.slot_key
+  try {
+    await sendEmail({
+      to: MAILERSEND_FROM_EMAIL,
+      toName: 'Estudio Popnest Wellness',
+      subject: `💰 Renta de salón pagada — ${booking.booking_date}`,
+      text: `Nueva renta de salón pagada.\n\nCliente: ${booking.customer_name}\nCorreo: ${booking.customer_email}\nTeléfono: ${booking.customer_phone || ''}\nFecha y horario: ${booking.booking_date} ${booking.start_time}–${booking.end_time} (${slotLabel})\nPersonas: ${booking.num_people}\nExtras: ${booking.extra_proyector ? 'Proyector ' : ''}${booking.extra_montaje ? 'Montaje/desmontaje' : ''}\nTotal: $${Number(booking.total_amount).toFixed(2)} MXN`,
+    })
+  } catch (err) {
+    console.error('❌ No se pudo avisar a la dueña de la renta de salón:', err.message)
+  }
+}
+
+/** Aviso interno a la dueña de una solicitud especial ("sobre horario de clase"). */
+async function notifyOwnerOfSalonSpecialRequest(request) {
+  if (!mailerSend && !mailTransporter) return
+  try {
+    await sendEmail({
+      to: MAILERSEND_FROM_EMAIL,
+      toName: 'Estudio Popnest Wellness',
+      subject: `📋 Solicitud especial de renta de salón — ${request.customer_name}`,
+      text: `Nueva solicitud de horario especial (implica mover una clase, requiere coordinación manual).\n\nCliente: ${request.customer_name}\nCorreo: ${request.customer_email}\nTeléfono: ${request.customer_phone || ''}\nFecha deseada: ${request.desired_date || ''}\nHora deseada: ${request.desired_time || ''}\nDuración: ${request.duration_hours || ''} hrs\nPersonas: ${request.num_people || ''}\nNotas: ${request.notes || ''}`,
+    })
+  } catch (err) {
+    console.error('❌ No se pudo avisar a la dueña de la solicitud especial:', err.message)
   }
 }
 
@@ -2125,6 +2223,214 @@ app.post('/api/admin/talleres/ai', async (req, res) => {
   } catch (error) {
     console.error('Error en editor IA de talleres:', error)
     res.status(400).json({ error: error.message || 'Error al generar con IA' })
+  }
+})
+
+// =====================================================================
+//  RENTA DE SALÓN al público — reserva + pago con Stripe Checkout
+// =====================================================================
+
+/** Public: rangos ya ocupados ese día (para pintar el selector de horario). */
+app.get('/api/salon/disponibilidad', async (req, res) => {
+  try {
+    const date = String(req.query.date || '').trim()
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Falta una fecha válida (YYYY-MM-DD).' })
+    }
+    const bookedRanges = await listBookedRangesForDate(date)
+    res.json({ bookedRanges })
+  } catch (error) {
+    console.error('Error obteniendo disponibilidad de salón:', error)
+    res.status(500).json({ error: error.message || 'Error al obtener disponibilidad' })
+  }
+})
+
+/** Public: crea la reserva (pendiente) y la Checkout Session de Stripe. */
+app.post('/api/salon/checkout', async (req, res) => {
+  try {
+    const { date, startTime, hours, numPeople, extras = {}, customer = {} } = req.body || {}
+
+    if (!date || !startTime || !hours || !numPeople) {
+      return res.status(400).json({ error: 'Faltan datos de la reserva.' })
+    }
+    const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || customer.name || ''
+    const customerEmail = String(customer.email || '').trim().toLowerCase()
+    if (!customerName || !customerEmail) {
+      return res.status(400).json({ error: 'Nombre y correo son obligatorios.' })
+    }
+
+    const endTime = addHoursToTime(startTime, hours)
+    const dayOfWeek = dayOfWeekFromDateStr(date)
+    if (dayOfWeek === null || !endTime) {
+      return res.status(400).json({ error: 'Fecha u horario inválidos.' })
+    }
+
+    const slotKey = getSlotForDayAndTime(dayOfWeek, startTime, endTime)
+    if (!slotKey) {
+      return res.status(400).json({
+        error: 'Ese horario no aplica a renta automática. Usa el formulario de solicitud especial.',
+      })
+    }
+
+    const conflict = await checkSalonOverlap({ date, startTime, endTime })
+    if (conflict) {
+      return res.status(409).json({ error: 'Ese horario ya no está disponible.' })
+    }
+
+    let priced
+    try {
+      priced = computeSalonPrice({ slotKey, numPeople, hours, extras })
+    } catch (priceErr) {
+      return res.status(400).json({ error: priceErr.message })
+    }
+    const { hourlyRate, baseAmount, extrasAmount, totalAmount } = priced
+
+    const booking = await createPendingSalonBooking({
+      customerName,
+      customerEmail,
+      customerPhone: customer.phone || null,
+      date,
+      startTime,
+      endTime,
+      slotKey,
+      numPeople,
+      hours,
+      hourlyRate,
+      baseAmount,
+      extraProyector: !!extras.proyector,
+      extraMontaje: !!extras.montaje,
+      extrasAmount,
+      totalAmount,
+    })
+
+    const lineItems = [
+      {
+        price_data: {
+          currency: 'mxn',
+          unit_amount: Math.round(baseAmount * 100),
+          product_data: { name: `Renta de salón — ${SALON_SLOTS[slotKey].label} (${hours}h, ${numPeople} personas)` },
+        },
+        quantity: 1,
+      },
+    ]
+    if (extras.proyector) {
+      lineItems.push({
+        price_data: { currency: 'mxn', unit_amount: 30000, product_data: { name: 'Proyector' } },
+        quantity: 1,
+      })
+    }
+    if (extras.montaje) {
+      lineItems.push({
+        price_data: { currency: 'mxn', unit_amount: 30000, product_data: { name: 'Montaje y desmontaje de mesas y sillas' } },
+        quantity: 1,
+      })
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: lineItems,
+      customer_email: customerEmail,
+      success_url: `${FRONTEND_URL}/renta-salon/confirmacion?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${FRONTEND_URL}/renta-salon?cancelado=1`,
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+      metadata: {
+        purchase_type: 'salon_rental',
+        salon_booking_id: String(booking.id),
+        date,
+        startTime,
+        endTime,
+        slotKey,
+        numPeople: String(numPeople),
+      },
+    })
+
+    await attachStripeSessionToBooking(booking.id, session.id)
+
+    res.json({ url: session.url })
+  } catch (error) {
+    console.error('Error creando checkout de renta de salón:', error)
+    res.status(500).json({ error: error.message || 'Error al iniciar el pago' })
+  }
+})
+
+/** Public: para la página de confirmación (mientras aterriza el webhook). */
+app.get('/api/salon/checkout/:sessionId/status', async (req, res) => {
+  try {
+    const booking = await getSalonBookingBySessionId(req.params.sessionId)
+    if (!booking) return res.status(404).json({ error: 'Reserva no encontrada.' })
+    res.json({ status: booking.status, booking })
+  } catch (error) {
+    console.error('Error consultando estatus de renta de salón:', error)
+    res.status(500).json({ error: error.message || 'Error al consultar el estatus' })
+  }
+})
+
+/** Public: solicitud manual para "sobre horario de clase" (sin pago automático). */
+app.post('/api/salon/solicitud-especial', async (req, res) => {
+  try {
+    const { customer = {}, desiredDate, desiredTime, durationHours, numPeople, notes } = req.body || {}
+    const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || customer.name || ''
+    const customerEmail = String(customer.email || '').trim().toLowerCase()
+    if (!customerName || !customerEmail) {
+      return res.status(400).json({ error: 'Nombre y correo son obligatorios.' })
+    }
+
+    const request = await createSalonSpecialRequest({
+      customerName,
+      customerEmail,
+      customerPhone: customer.phone || null,
+      desiredDate,
+      desiredTime,
+      durationHours,
+      numPeople,
+      notes,
+    })
+
+    notifyOwnerOfSalonSpecialRequest(request).catch(() => {})
+    sendEmail({
+      to: customerEmail,
+      toName: customerName,
+      subject: 'Recibimos tu solicitud — Estudio Popnest Wellness',
+      text: `¡Hola ${customerName}!\n\nRecibimos tu solicitud de horario especial para rentar el salón. Como implica mover una clase del horario regular, nuestro equipo te contactará para confirmar disponibilidad y coordinar el pago.\n\nGracias,\nEl equipo de Estudio Popnest Wellness`,
+    }).catch(() => {})
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Error registrando solicitud especial de salón:', error)
+    res.status(400).json({ error: error.message || 'Error al registrar la solicitud' })
+  }
+})
+
+// ---- Admin (protegido con parseAdminToken) ----
+
+app.get('/api/admin/salon-bookings', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const bookings = await listAllSalonBookings()
+    res.json({ bookings })
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Error al listar reservas de salón' })
+  }
+})
+
+app.get('/api/admin/salon-special-requests', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const requests = await listSalonSpecialRequests()
+    res.json({ requests })
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Error al listar solicitudes especiales' })
+  }
+})
+
+app.patch('/api/admin/salon-special-requests/:id', async (req, res) => {
+  if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+  try {
+    const { status } = req.body || {}
+    const request = await updateSalonSpecialRequestStatus(req.params.id, status)
+    res.json({ success: true, request })
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Error al actualizar la solicitud' })
   }
 })
 

@@ -13,6 +13,8 @@ import Home from './pages/Home'
 import Classes from './pages/Classes'
 import Schedule from './pages/Schedule'
 import Talleres from './pages/Talleres'
+import RentaSalon from './pages/RentaSalon'
+import RentaSalonConfirmacion from './pages/RentaSalonConfirmacion'
 import TallerDetalle from './pages/TallerDetalle'
 import Booking from './pages/Booking'
 import Admin from './pages/Admin'
@@ -109,6 +111,7 @@ export function AppContent() {
     pathname.startsWith('/clases/') ||
     pathname === '/horario' ||
     pathname === '/talleres' ||
+    pathname === '/renta-salon' ||
     pathname === '/packages' ||
     pathname === '/ubicacion'
 
@@ -131,6 +134,8 @@ export function AppContent() {
         <Route path="/horario" element={<Schedule />} />
         <Route path="/talleres" element={<Talleres />} />
         <Route path="/talleres/:id" element={<TallerDetalle />} />
+        <Route path="/renta-salon" element={<RentaSalon />} />
+        <Route path="/renta-salon/confirmacion" element={<RentaSalonConfirmacion />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/booking/package/:id" element={<PackagePurchase />} />
         <Route path="/booking/:type/:id" element={<Booking />} />

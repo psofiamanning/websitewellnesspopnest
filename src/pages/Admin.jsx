@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale'
 
 import { BACKEND_URL } from '../config/api.js'
 import TalleresAdmin from '../components/admin/TalleresAdmin'
+import SalonRentalAdmin from '../components/admin/SalonRentalAdmin'
 
 // Verificar si el usuario es administrador
 const isAdminAuthenticated = () => {
@@ -640,11 +641,21 @@ function Admin() {
                 >
                   Talleres
                 </button>
+                <button
+                  onClick={() => setActiveTab('salon')}
+                  className={`px-4 py-2 font-body font-medium transition-colors ${
+                    activeTab === 'salon'
+                      ? 'text-primary border-b-2 border-primary'
+                      : 'text-body hover:text-primary'
+                  }`}
+                >
+                  Renta de salón
+                </button>
               </div>
             </div>
 
             {/* Filtros */}
-            {activeTab !== 'talleres' && (
+            {activeTab !== 'talleres' && activeTab !== 'salon' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
                 <label className="block text-body font-body font-medium mb-2">
@@ -956,6 +967,8 @@ function Admin() {
             {/* Contenido según tab activo */}
             {activeTab === 'talleres' ? (
               <TalleresAdmin />
+            ) : activeTab === 'salon' ? (
+              <SalonRentalAdmin />
             ) : activeTab === 'bookings' ? (
               /* Reservas: filtrar por fecha → por clase o por coach → detalle */
               <div className="space-y-6">

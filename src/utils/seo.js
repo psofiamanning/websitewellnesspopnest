@@ -20,6 +20,7 @@ const PUBLIC_STATIC_ROUTES = [
   '/classes',
   '/horario',
   '/talleres',
+  '/renta-salon',
   '/packages',
   '/ubicacion',
   '/privacidad',
@@ -38,6 +39,7 @@ const SITEMAP_META_BY_ROUTE = {
   '/classes': { changefreq: 'weekly', priority: 0.9 },
   '/horario': { changefreq: 'weekly', priority: 0.8 },
   '/talleres': { changefreq: 'weekly', priority: 0.8 },
+  '/renta-salon': { changefreq: 'monthly', priority: 0.7 },
   '/packages': { changefreq: 'monthly', priority: 0.8 },
   '/ubicacion': { changefreq: 'monthly', priority: 0.8 },
   '/privacidad': { changefreq: 'yearly', priority: 0.4 },
@@ -55,7 +57,7 @@ export function getSitemapMeta(pathname) {
 /** Rutas estáticas conocidas de la app (deben coincidir con las de App.jsx). */
 const KNOWN_STATIC_PATHS = new Set([
   '/', '/classes', '/coaches', '/coaches/login', '/coaches/panel', '/teachers',
-  '/horario', '/talleres', '/packages', '/ubicacion', '/espacios',
+  '/horario', '/talleres', '/renta-salon', '/renta-salon/confirmacion', '/packages', '/ubicacion', '/espacios',
   '/privacidad', '/terminos', '/login', '/signup', '/forgot-password', '/reset-password',
   '/admin', '/admin/login', '/admin/forgot-password', '/admin/reset-password',
   '/profesores', '/profesores/login', '/mis-reservas', '/mis-paquetes',
@@ -91,7 +93,8 @@ const NOINDEX_PREFIXES = [
   '/mis-reservas-redesign',
   '/classes-redesign',
   '/previews',
-  '/espacios'
+  '/espacios',
+  '/renta-salon/confirmacion'
 ]
 
 /** Rutas de cuenta, reserva, admin y previews: no indexar en buscadores. */
@@ -149,6 +152,10 @@ export const ROUTE_SEO = {
   '/talleres': {
     title: 'Talleres y Experiencias en Coyoacán | Estudio Popnest Wellness',
     description: 'Talleres y experiencias especiales de bienestar en Coyoacán. Temas, comida y ambiente únicos. Reserva tu lugar en línea en Estudio Popnest Wellness.'
+  },
+  '/renta-salon': {
+    title: 'Renta de Salón en Coyoacán | Estudio Popnest Wellness',
+    description: 'Renta nuestro salón en Coyoacán para tu evento, clase privada o celebración. Precios por hora, paga en línea y reserva al instante.'
   },
   '/packages': {
     title: 'Paquetes de Clases | Yoga en Coyoacán | Estudio Popnest Wellness',
@@ -266,6 +273,7 @@ export function getBreadcrumbItems(pathname) {
   const labels = {
     horario: 'Horario',
     talleres: 'Talleres',
+    'renta-salon': 'Renta de salón',
     packages: 'Planes',
     ubicacion: 'Ubicación',
     espacios: 'Espacios',

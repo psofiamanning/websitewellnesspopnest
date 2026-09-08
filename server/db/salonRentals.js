@@ -22,11 +22,12 @@ const SALON_BOOKING_COLUMNS =
   'stripe_payment_intent_id, created_at, updated_at, paid_at'
 
 /**
- * Reservas que bloquean disponibilidad ese día: pagadas, o pendientes creadas
- * en los últimos 30 minutos (ventana de vigencia de la Checkout Session).
- * Las pendientes más viejas ya vencieron en Stripe y dejan de contar solas.
+ * Reservas de salón que bloquean disponibilidad ese día: pagadas, o pendientes
+ * creadas en los últimos 30 minutos (ventana de vigencia de la Checkout
+ * Session). Las pendientes más viejas ya vencieron en Stripe y dejan de
+ * contar solas.
  */
-async function listBlockingBookingsForDate(date) {
+async function listSalonBookingRangesForDate(date) {
   const supabase = getSupabaseAdmin()
   const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
   const { data, error } = await supabase
@@ -38,23 +39,66 @@ async function listBlockingBookingsForDate(date) {
     if (isMissingTable(error)) return []
     throw error
   }
-  return data || []
+  return (data || []).map((b) => ({ startTime: b.start_time, endTime: b.end_time }))
+}
+
+function timeStrToMinutes(t) {
+  const [h, m] = String(t || '0:0').split(':').map(Number)
+  return h * 60 + m
+}
+
+function minutesToTimeStr(totalMinutes) {
+  const h = Math.floor(totalMinutes / 60) % 24
+  const m = totalMinutes % 60
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+/**
+ * Clases del horario regular ese día (activas y vigentes): el salón ya está
+ * ocupado durante su horario, sin importar la franja de renta elegida.
+ */
+async function listClassScheduleRangesForDate(date) {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('schedules')
+    .select('scheduled_time, status, valid_from, valid_until, classes(duration_minutes)')
+    .eq('scheduled_date', date)
+    .eq('status', 'active')
+  if (error) {
+    if (isMissingTable(error)) return []
+    throw error
+  }
+  return (data || [])
+    .filter((s) => (!s.valid_from || date >= s.valid_from) && (!s.valid_until || date <= s.valid_until))
+    .map((s) => {
+      const startMin = timeStrToMinutes(s.scheduled_time)
+      const duration = Number(s.classes?.duration_minutes) || 60
+      return { startTime: minutesToTimeStr(startMin), endTime: minutesToTimeStr(startMin + duration) }
+    })
+}
+
+/** Todo lo que ocupa el salón ese día: reservas de salón vigentes + clases activas del horario regular. */
+async function listBlockingRangesForDate(date) {
+  const [bookings, classes] = await Promise.all([
+    listSalonBookingRangesForDate(date),
+    listClassScheduleRangesForDate(date),
+  ])
+  return [...bookings, ...classes]
 }
 
 function rangesOverlap(aStart, aEnd, bStart, bEnd) {
   return aStart < bEnd && aEnd > bStart
 }
 
-/** true si [startTime, endTime) traslapa alguna reserva vigente ese día. */
+/** true si [startTime, endTime) traslapa una reserva vigente o una clase ese día. */
 export async function checkSalonOverlap({ date, startTime, endTime }) {
-  const existing = await listBlockingBookingsForDate(date)
-  return existing.some((b) => rangesOverlap(startTime, endTime, b.start_time, b.end_time))
+  const existing = await listBlockingRangesForDate(date)
+  return existing.some((b) => rangesOverlap(startTime, endTime, b.startTime, b.endTime))
 }
 
-/** Público: rangos ya ocupados ese día (para pintar el selector de horario). */
+/** Público: rangos ya ocupados ese día (reservas + clases), para pintar el selector de horario. */
 export async function listBookedRangesForDate(date) {
-  const existing = await listBlockingBookingsForDate(date)
-  return existing.map((b) => ({ startTime: b.start_time, endTime: b.end_time }))
+  return listBlockingRangesForDate(date)
 }
 
 export async function createPendingSalonBooking(fields) {

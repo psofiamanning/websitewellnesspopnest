@@ -133,7 +133,7 @@ function PricingTable() {
         <p>Extras opcionales: {SALON_EXTRAS.proyector.label} {formatMoney(SALON_EXTRAS.proyector.amount)} · {SALON_EXTRAS.montaje.label} {formatMoney(SALON_EXTRAS.montaje.amount)}.</p>
         <p>Las horas rentadas son de puerta a puerta: incluyen tu montaje y recogida, no solo la actividad.</p>
         <p>El precio se cotiza según el número de personas contratado. Si llegan más personas de las declaradas, se cobra la diferencia al cierre.</p>
-        <p>Horarios: Valle L–V 09:30–16:00 · Tarde L–V 16:00–19:00 · Fin de semana día Sáb/Dom 11:30–19:00 · Noche L–D 19:00–21:30.</p>
+        <p>Horarios: Mañana L–V 09:30–16:00 · Tarde L–V 16:00–19:00 · Fin de semana día Sáb/Dom 11:30–19:00 · Noche L–D 19:00–21:30.</p>
       </div>
     </div>
   )

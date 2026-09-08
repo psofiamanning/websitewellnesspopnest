@@ -4,7 +4,7 @@
 
 // days usa Date.getUTCDay(): 0=domingo, 1=lunes, ..., 6=sábado.
 export const SALON_SLOTS = {
-  valle: { label: 'Valle', days: [1, 2, 3, 4, 5], startTime: '09:30', endTime: '16:00' },
+  valle: { label: 'Mañana', days: [1, 2, 3, 4, 5], startTime: '09:30', endTime: '16:00' },
   tarde: { label: 'Tarde', days: [1, 2, 3, 4, 5], startTime: '16:00', endTime: '19:00' },
   fin_semana_dia: { label: 'Fin de semana día', days: [0, 6], startTime: '11:30', endTime: '19:00' },
   noche: { label: 'Noche', days: [0, 1, 2, 3, 4, 5, 6], startTime: '19:00', endTime: '21:30' },

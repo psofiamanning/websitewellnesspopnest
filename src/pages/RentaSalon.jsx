@@ -15,6 +15,7 @@ import { fetchSalonAvailability, createSalonCheckout, submitSalonSpecialRequest 
 const RED = '#B73D37'
 const DARK = '#1F2937'
 const GRAY = '#6B7280'
+const AMBER = '#9A5B13'
 
 function formatMoney(n) {
   return `$${Number(n || 0).toLocaleString('es-MX')} MXN`
@@ -113,6 +114,9 @@ function PricingTable() {
                 {SALON_SLOTS[k].label}
               </th>
             ))}
+            <th className="text-left py-2 pr-3 font-semibold" style={{ color: AMBER }}>
+              Sobre horario de clase
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -126,6 +130,9 @@ function PricingTable() {
                   {formatMoney(tier.prices[k])}/hr
                 </td>
               ))}
+              <td className="py-2 pr-3" style={{ color: AMBER }}>
+                {formatMoney(tier.sobreHorarioClase)}/hr
+              </td>
             </tr>
           ))}
         </tbody>
@@ -135,6 +142,10 @@ function PricingTable() {
         <p>Las horas rentadas son de puerta a puerta: incluyen tu montaje y recogida, no solo la actividad.</p>
         <p>El precio se cotiza según el número de personas contratado. Si llegan más personas de las declaradas, se cobra la diferencia al cierre.</p>
         <p>Horarios: Mañana L–V 09:30–16:00 · Tarde L–V 16:00–19:00 · Fin de semana día Sáb/Dom 11:30–19:00 · Noche L–D 19:00–21:30.</p>
+        <p className="font-semibold" style={{ color: AMBER }}>
+          No se puede reservar en línea durante un horario donde ya hay una clase. Si necesitas ese horario, usa la
+          pestaña "Sobre horario de clase" — el precio es el de esa columna, y se confirma y cobra directamente contigo.
+        </p>
       </div>
     </div>
   )

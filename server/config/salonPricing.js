@@ -12,14 +12,17 @@ export const SALON_SLOTS = {
 }
 
 // Cada fila: rango de personas -> precio por hora (MXN) en cada franja.
+// "sobreHorarioClase" es solo informativo (no es una franja reservable en
+// línea): el precio que se cobra cuando la solicitud especial se confirma
+// manualmente, porque implica desplazar una clase real del horario.
 export const SALON_PRICE_TIERS = [
-  { minPeople: 1, maxPeople: 2, prices: { valle: 150, tarde: 200, fin_semana_dia: 250, noche: 450 } },
-  { minPeople: 3, maxPeople: 4, prices: { valle: 250, tarde: 300, fin_semana_dia: 350, noche: 500 } },
-  { minPeople: 5, maxPeople: 6, prices: { valle: 350, tarde: 400, fin_semana_dia: 450, noche: 600 } },
-  { minPeople: 7, maxPeople: 8, prices: { valle: 450, tarde: 500, fin_semana_dia: 550, noche: 700 } },
-  { minPeople: 9, maxPeople: 12, prices: { valle: 550, tarde: 600, fin_semana_dia: 650, noche: 800 } },
-  { minPeople: 13, maxPeople: 16, prices: { valle: 650, tarde: 700, fin_semana_dia: 750, noche: 900 } },
-  { minPeople: 17, maxPeople: 20, prices: { valle: 750, tarde: 800, fin_semana_dia: 850, noche: 1000 } },
+  { minPeople: 1, maxPeople: 2, prices: { valle: 150, tarde: 200, fin_semana_dia: 250, noche: 450 }, sobreHorarioClase: 800 },
+  { minPeople: 3, maxPeople: 4, prices: { valle: 250, tarde: 300, fin_semana_dia: 350, noche: 500 }, sobreHorarioClase: 900 },
+  { minPeople: 5, maxPeople: 6, prices: { valle: 350, tarde: 400, fin_semana_dia: 450, noche: 600 }, sobreHorarioClase: 1000 },
+  { minPeople: 7, maxPeople: 8, prices: { valle: 450, tarde: 500, fin_semana_dia: 550, noche: 700 }, sobreHorarioClase: 1100 },
+  { minPeople: 9, maxPeople: 12, prices: { valle: 550, tarde: 600, fin_semana_dia: 650, noche: 800 }, sobreHorarioClase: 1200 },
+  { minPeople: 13, maxPeople: 16, prices: { valle: 650, tarde: 700, fin_semana_dia: 750, noche: 900 }, sobreHorarioClase: 1300 },
+  { minPeople: 17, maxPeople: 20, prices: { valle: 750, tarde: 800, fin_semana_dia: 850, noche: 1000 }, sobreHorarioClase: 1400 },
 ]
 
 // Extras opcionales, monto fijo por reserva (no por hora).

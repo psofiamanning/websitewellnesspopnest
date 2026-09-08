@@ -101,7 +101,8 @@ function PricingTable() {
         Precios por hora (MXN)
       </h2>
       <p className="text-sm font-body mb-4" style={{ color: GRAY }}>
-        Capacidad máxima {SALON_MAX_CAPACITY} personas · renta mínima {SALON_MIN_HOURS} hora.
+        Capacidad máxima {SALON_MAX_CAPACITY} personas · renta mínima {SALON_MIN_HOURS} hora. ¿Tu grupo es más
+        grande? <a href="https://wa.me/525554379644" target="_blank" rel="noopener noreferrer" className="underline font-semibold" style={{ color: RED }}>Contáctanos</a> para cotizarlo.
       </p>
       <table className="w-full text-sm font-body min-w-[520px]">
         <thead>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { signup, getCurrentUser } from '../services/authService'
+import { PENDING_FREE_CLASS_CODE_KEY } from '../config/freeClassPromo'
 import { trackMetaLead } from '../utils/metaPixel'
 import AuthEditorialLayout from '../components/auth/AuthEditorialLayout'
 import AuthPasswordField from '../components/auth/AuthPasswordField'
@@ -45,10 +46,13 @@ function SignUpAside() {
 
 function SignUp() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const promoCode = searchParams.get('promoCode') || ''
+  const promoEmail = searchParams.get('promoEmail') || ''
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
+    email: promoEmail,
     phone: '',
     password: '',
   })
@@ -100,6 +104,13 @@ function SignUp() {
       if (result.success) {
         trackMetaLead({ content_name: 'registro', value: 0, currency: 'MXN' })
         getCurrentUser()
+        if (promoCode) {
+          try {
+            window.localStorage.setItem(PENDING_FREE_CLASS_CODE_KEY, promoCode)
+          } catch {
+            /* almacenamiento no disponible: se puede aplicar el código a mano */
+          }
+        }
         setShowSuccess(true)
         setTimeout(() => {
           const from = new URLSearchParams(window.location.search).get('from') || '/'
@@ -183,7 +194,11 @@ function SignUp() {
                 required
                 autoComplete="email"
                 placeholder="tu@email.com"
+                readOnly={!!promoEmail}
               />
+              {promoCode ? (
+                <p className="auth-field__hint">🎁 Tu clase gratis se reservará con este correo.</p>
+              ) : null}
             </div>
 
             <div className="auth-field">

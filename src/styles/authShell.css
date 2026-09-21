@@ -128,6 +128,17 @@
   outline-offset: 1px;
 }
 
+.auth-field input:read-only {
+  color: var(--pn-color-text-muted);
+  cursor: not-allowed;
+}
+
+.auth-field__hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--pn-color-text-muted);
+}
+
 .auth-field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

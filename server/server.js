@@ -53,6 +53,7 @@ import {
   addHoursToTime,
   SALON_MAX_CAPACITY,
   SALON_MIN_HOURS,
+  isSalonHoliday,
 } from './config/salonPricing.js'
 import {
   isUsingSupabaseForUsers,
@@ -360,16 +361,23 @@ async function sendAdminPasswordResetEmail(email, resetToken) {
   }
 }
 
-/** Envía el correo automático de bienvenida al capturar un lead de clase gratis. */
+/**
+ * Correo automático al capturar un lead de clase gratis (popup): la persona
+ * crea su contraseña, entra, y reserva cualquier clase del horario ella misma
+ * (queda apartada sin pagar) — usa el código de descuento POPNEST, ya validado
+ * y de un solo uso por correo (ver server/db/discountCodes.js).
+ */
 async function sendFreeClassEmail(email) {
   if (!email) return
   if (!mailerSend && !mailTransporter) {
     console.warn('⚠️ Email de clase gratis no enviado (correo no configurado):', email)
     return
   }
+  const promoCode = 'POPNEST'
+  const claimLink = `${FRONTEND_URL}/signup?promoCode=${encodeURIComponent(promoCode)}&promoEmail=${encodeURIComponent(email)}&from=${encodeURIComponent('/classes')}`
   const subject = '🎁 Tu clase gratis en Estudio Popnest Wellness'
-  const text = `¡Hola!\n\nGracias por tu interés en Estudio Popnest Wellness. Aquí tienes tu clase de regalo.\n\nPara reservarla, entra a ${FRONTEND_URL}, elige el horario que prefieras y menciona este correo en recepción.\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
-  const html = `<p>¡Hola!</p><p>Gracias por tu interés en <strong>Estudio Popnest Wellness</strong>. Aquí tienes tu <strong>clase de regalo</strong> 🎁</p><p>Para reservarla, entra a <a href="${FRONTEND_URL}" style="color:#B73D37;font-weight:bold;">nuestra web</a>, elige el horario que prefieras y menciona este correo en recepción.</p><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
+  const text = `¡Hola!\n\nGracias por tu interés en Estudio Popnest Wellness. Tu clase de regalo ya te está esperando.\n\nCrea tu cuenta y resérvala tú mismo/a, sin costo, en el horario que prefieras:\n${claimLink}\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>¡Hola!</p><p>Gracias por tu interés en <strong>Estudio Popnest Wellness</strong>. Tu <strong>clase de regalo</strong> ya te está esperando 🎁</p><p>Crea tu cuenta y resérvala tú mismo/a, sin costo, en el horario que prefieras:</p><p><a href="${claimLink}" style="color:#B73D37;font-weight:bold;">Crear cuenta y reservar mi clase gratis</a></p><p>Al crear tu cuenta desde este enlace, tu clase queda apartada sin pagar — solo elige día, hora y disciplina.</p><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
   try {
     await sendEmail({ to: email, subject, text, html })
     console.log('✅ Email de clase gratis enviado a:', email)
@@ -851,15 +859,14 @@ app.post('/api/leads', async (req, res) => {
     // Solo actuar la primera vez (no en correos ya registrados).
     if (!result.alreadyRegistered) {
       // Fire-and-forget: no bloquea la respuesta al usuario.
+      // Siempre mandamos el correo transaccional con el enlace para crear cuenta
+      // y reservar la clase gratis (independiente de MailerLite, que es marketing).
+      sendFreeClassEmail(email)
       if (isMailerLiteConfigured()) {
-        // Preferido: alta en MailerLite → su automatización manda la clase gratis
-        // y desde ahí puedes enviar promociones. (Marketing.)
+        // Además, alta en MailerLite para su automatización de marketing.
         upsertMailerLiteSubscriber({ email, fields: { source: source || 'popup_clase_gratis' } })
           .then(() => console.log('✅ Suscriptor agregado a MailerLite:', email))
           .catch((err) => console.error('❌ Error agregando a MailerLite', email, ':', err.message))
-      } else {
-        // Respaldo mientras MailerLite no esté configurado: envío directo actual.
-        sendFreeClassEmail(email)
       }
     }
     res.json(result)
@@ -2237,6 +2244,9 @@ app.get('/api/salon/disponibilidad', async (req, res) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return res.status(400).json({ error: 'Falta una fecha válida (YYYY-MM-DD).' })
     }
+    if (isSalonHoliday(date)) {
+      return res.json({ bookedRanges: [], isHoliday: true })
+    }
     const bookedRanges = await listBookedRangesForDate(date)
     res.json({ bookedRanges })
   } catch (error) {
@@ -2252,6 +2262,9 @@ app.post('/api/salon/checkout', async (req, res) => {
 
     if (!date || !startTime || !hours || !numPeople) {
       return res.status(400).json({ error: 'Faltan datos de la reserva.' })
+    }
+    if (isSalonHoliday(date)) {
+      return res.status(409).json({ error: 'Esa fecha no está disponible para reservar (día feriado).' })
     }
     const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || customer.name || ''
     const customerEmail = String(customer.email || '').trim().toLowerCase()
@@ -2373,6 +2386,9 @@ app.post('/api/salon/solicitud-especial', async (req, res) => {
     const customerEmail = String(customer.email || '').trim().toLowerCase()
     if (!customerName || !customerEmail) {
       return res.status(400).json({ error: 'Nombre y correo son obligatorios.' })
+    }
+    if (isSalonHoliday(desiredDate)) {
+      return res.status(409).json({ error: 'Esa fecha no está disponible para reservar (día feriado).' })
     }
 
     const request = await createSalonSpecialRequest({

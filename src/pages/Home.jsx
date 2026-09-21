@@ -20,6 +20,17 @@ const MAPS_URL =
 const WA_WELLNESS =
   'https://wa.me/525554379644?text=' + encodeURIComponent('Hola, me interesa wellness corporativo para equipos.')
 
+const HERO_TICKER_ITEMS = [
+  'Hatha Yoga',
+  'Pilates',
+  'Power Yoga',
+  'Meditación',
+  'Sound Healing',
+  'Tai Chi',
+  'Stretching',
+  'Belly Dance',
+]
+
 const SPACE_SLIDES = [
   { src: studioPhoto1, alt: 'Espacio de meditación y práctica', ey: 'Amplitud y luz', em: 'Para verse y sentirse mejor' },
   { src: studioPhoto3, alt: 'Espacio tranquilo', ey: 'Acústica cuidada', em: 'Silencio que sostiene la práctica' },
@@ -70,6 +81,20 @@ function Home() {
 
         <main>
           <section id="inicio" className="home-hero">
+            <figure className="home-hero__visual">
+              <video
+                className="home-hero__video"
+                src="/videos/hero-classes.mp4"
+                poster={studioHeroMirrors}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                aria-label="Práctica de yoga en el Estudio Popnest"
+              />
+            </figure>
+
             <div className="home-hero__copy">
               <div className="pn-eyebrow" style={{ marginBottom: 20 }}>
                 Estudio de bienestar en Coyoacán
@@ -83,6 +108,7 @@ function Home() {
                   reconectar.
                 </span>
               </h1>
+              <p className="home-hero__tagline">Técnicas para volver a ti</p>
               <p className="pn-text-lg home-hero__body">
                 Un estudio boutique de yoga, pilates y meditación para volver al cuerpo, bajar el ritmo y practicar con
                 calma.
@@ -96,16 +122,17 @@ function Home() {
                 </a>
               </div>
             </div>
-
-            <figure className="home-hero__visual">
-              <img
-                src={studioHeroMirrors}
-                alt="Salón del Estudio Popnest en Coyoacán: espejos de piso a techo, iluminación cálida y concreto pulido"
-                loading="eager"
-                decoding="async"
-              />
-            </figure>
           </section>
+
+          <div className="home-ticker" aria-hidden="true">
+            <div className="home-ticker__track">
+              {[...HERO_TICKER_ITEMS, ...HERO_TICKER_ITEMS].map((item, i) => (
+                <span className="home-ticker__item" key={i}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
 
           <section id="clases" className="home-section pn-section--bg-secondary">
             <div className="home-section__head">

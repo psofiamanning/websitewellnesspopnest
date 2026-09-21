@@ -47,6 +47,13 @@ function BookingClassEditorialView({
   onClearTime,
   referredBy,
   onReferredByChange,
+  appliedDiscount,
+  discountCodeInput,
+  onDiscountCodeInputChange,
+  discountError,
+  isValidatingDiscount,
+  onApplyDiscountCode,
+  onRemoveDiscountCode,
 }) {
   const classSlug = classInfo.name.toLowerCase()
   const descParagraphs = (classInfo.fullDescription || classInfo.description || '')
@@ -76,7 +83,9 @@ function BookingClassEditorialView({
     ? `${selectedPackage.packageName} (${formatPackageAvailability(selectedPackage)})`
     : null
 
-  const paymentSummary = packageLabel
+  const paymentSummary = appliedDiscount
+    ? `Gratis · código ${appliedDiscount.code}`
+    : packageLabel
     ? packageLabel
     : `Pago con tarjeta · ${SINGLE_CLASS_PRICE_LABEL}`
 
@@ -305,7 +314,9 @@ function BookingClassEditorialView({
                   </div>
                 </dl>
 
-                {usePackage && packageLabel ? (
+                {appliedDiscount ? (
+                  <p className="bk-package-note">🎁 Esta clase no tiene costo</p>
+                ) : usePackage && packageLabel ? (
                   <p className="bk-package-note">Descuenta 1 clase de tu paquete</p>
                 ) : null}
 
@@ -397,7 +408,48 @@ function BookingClassEditorialView({
                     />
                   </div>
 
-                  {userPackages?.hasActivePackages ? (
+                  <div className="bk-discount">
+                    {appliedDiscount ? (
+                      <div className="bk-discount-applied">
+                        <p className="bk-discount-applied__text">
+                          🎁 <strong>{appliedDiscount.label}</strong> — código {appliedDiscount.code}, esta clase es
+                          gratis
+                        </p>
+                        <button type="button" className="bk-confirm-change" onClick={onRemoveDiscountCode}>
+                          Quitar
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <label htmlFor="bk-discount">¿Tienes un código de clase gratis?</label>
+                        <div className="bk-discount-row">
+                          <input
+                            id="bk-discount"
+                            type="text"
+                            value={discountCodeInput}
+                            onChange={(e) => onDiscountCodeInputChange(e.target.value)}
+                            placeholder="Código de descuento"
+                            disabled={isValidatingDiscount}
+                          />
+                          <button
+                            type="button"
+                            className="pn-btn pn-btn--outline-primary"
+                            disabled={isValidatingDiscount || !discountCodeInput.trim()}
+                            onClick={onApplyDiscountCode}
+                          >
+                            {isValidatingDiscount ? 'Validando…' : 'Aplicar'}
+                          </button>
+                        </div>
+                        {discountError ? (
+                          <p className="bk-alert" role="alert" style={{ marginTop: 8 }}>
+                            {discountError}
+                          </p>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+
+                  {!appliedDiscount && userPackages?.hasActivePackages ? (
                     <div style={{ marginTop: 20 }}>
                       <p className="pn-text-sm" style={{ marginBottom: 12, color: 'var(--pn-color-text-muted)' }}>
                         Método de pago
@@ -441,7 +493,7 @@ function BookingClassEditorialView({
                     </div>
                   ) : null}
 
-                  {!usePackage ? (
+                  {!usePackage && !appliedDiscount ? (
                     <div style={{ marginTop: 20 }}>
                       <StripeCardElement
                         onCardReady={setStripeCardData}
@@ -472,6 +524,8 @@ function BookingClassEditorialView({
                       <span className="bk-spinner" aria-hidden />
                       Procesando tu reserva…
                     </>
+                  ) : appliedDiscount ? (
+                    'Reservar mi clase gratis →'
                   ) : usePackage ? (
                     'Confirmar reserva →'
                   ) : (

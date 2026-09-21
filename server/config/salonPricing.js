@@ -39,6 +39,13 @@ export const SALON_EXTRAS = {
 export const SALON_MAX_CAPACITY = 20
 export const SALON_MIN_HOURS = 1
 
+// Fechas 'YYYY-MM-DD' en las que no se puede reservar el salón (feriados).
+export const SALON_HOLIDAY_DATES = new Set(['2026-09-15', '2026-09-16'])
+
+export function isSalonHoliday(dateStr) {
+  return SALON_HOLIDAY_DATES.has(String(dateStr || ''))
+}
+
 function timeToMinutes(time) {
   const [h, m] = String(time || '').split(':').map(Number)
   if (!Number.isFinite(h) || !Number.isFinite(m)) return null

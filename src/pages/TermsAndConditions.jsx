@@ -34,7 +34,7 @@ function TermsAndConditions() {
             Términos y Condiciones
           </h1>
           <p className="text-sm font-body mb-8" style={{ color: '#6B7280' }}>
-            Última actualización: 28 de septiembre de 2026
+            Última actualización: 30 de septiembre de 2026
           </p>
 
           <div className="space-y-8 font-body text-base leading-relaxed" style={{ color: '#4B5563' }}>
@@ -88,7 +88,7 @@ function TermsAndConditions() {
 
             <Section title="6. Inasistencia, cambios y reposiciones">
               <Clause n="6.1" title="Sin reposiciones">
-                No ofrecemos reposiciones ni reembolsos por inasistencia. Si reservaste una clase y no puedes asistir, la clase se considera tomada. Para asistir en otra fecha u horario, necesitas comprar una nueva clase.
+                No ofrecemos reposiciones ni reembolsos por inasistencia. Si reservaste una clase y no puedes asistir, la clase se considera tomada, salvo que la hayas reagendado conforme a la cláusula 6.4.
               </Clause>
               <Clause n="6.2" title="El motivo no cambia la regla">
                 Esta política aplica sin importar la causa de la inasistencia, incluidas enfermedad, emergencias, tráfico, clima, trabajo, olvido o cualquier otro motivo personal. No se solicitan ni se aceptan justificantes.
@@ -97,7 +97,7 @@ function TermsAndConditions() {
                 Cada clase reservada y no asistida se descuenta del paquete. Las clases que no hayas reservado podrás usarlas dentro del periodo de validez del paquete. No se devuelve el importe de clases no utilizadas.
               </Clause>
               <Clause n="6.4" title="Cambios de clase">
-                Una reserva confirmada no se puede mover a otra clase, fecha u horario. Si quieres asistir a otra clase, debes hacer una nueva reserva, sujeta a disponibilidad.
+                Puedes reagendar por tu cuenta una reserva confirmada desde la sección «Mis reservas» de la plataforma, con al menos 48 horas de anticipación al inicio de la clase. El cambio es a otra fecha u horario de la misma clase, sujeto a disponibilidad. Con menos de 48 horas de anticipación la reserva ya no se puede mover y aplica la cláusula 6.1. Los cambios solicitados por otros medios, como WhatsApp, redes sociales o en recepción, no se consideran válidos.
               </Clause>
               <Clause n="6.5" title="Reserva personal">
                 No puedes ceder tu lugar ni enviar a otra persona en tu nombre, salvo cuando el paquete, plan o promoción permita expresamente compartir la reserva, conforme a sus reglas.

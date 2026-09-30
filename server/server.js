@@ -1069,38 +1069,59 @@ app.get('/api/bookings/:id', async (req, res) => {
 // Anticipación mínima para reagendar (48 horas)
 const RESCHEDULE_MIN_HOURS = 48
 
+// Inicio de una clase en hora de CDMX (UTC-6, sin horario de verano desde 2022).
+// El servidor corre en UTC: sin el offset explícito, `new Date('YYYY-MM-DDTHH:mm')`
+// se interpreta como UTC y el cálculo de las 48 h queda 6 horas corrido.
+const classStartMs = (date, time) =>
+  new Date(`${String(date).slice(0, 10)}T${String(time).trim().padStart(5, '0').slice(0, 5)}:00-06:00`).getTime()
+
 // Endpoint: Reagendar una reserva (solo si queda al menos 48 h para la clase)
 app.patch('/api/bookings/:id/reschedule', async (req, res) => {
   try {
     const { id } = req.params
-    const { newDate, newTime, userEmail } = req.body
+    const { newDate, newTime } = req.body
 
     if (!newDate || !newTime) {
       return res.status(400).json({ error: 'Debes indicar la nueva fecha y hora (newDate, newTime).' })
     }
 
-    const bookings = await getBookings()
-    const booking = bookings.find(b => b.id === id)
+    // La sesión es obligatoria: solo la dueña de la reserva puede moverla.
+    const authUser = await verifyAuthJwt(req.headers.authorization?.replace(/^Bearer\s+/i, ''))
+    if (!authUser?.email) {
+      return res.status(401).json({
+        error: 'Tu sesión expiró. Inicia sesión de nuevo para reagendar.',
+        code: 'SESSION_EXPIRED',
+      })
+    }
+
+    const booking = await getBookingById(id)
     if (!booking) {
       return res.status(404).json({ error: 'Reserva no encontrada.' })
     }
 
     const ownerEmail = booking.customer?.email?.toLowerCase()
-    if (!ownerEmail || (userEmail && userEmail.toLowerCase() !== ownerEmail)) {
+    if (!ownerEmail || authUser.email.toLowerCase() !== ownerEmail) {
       return res.status(403).json({ error: 'No puedes reagendar esta reserva.' })
     }
 
-    const bookingDateTime = new Date(`${booking.date}T${booking.time}`)
-    const now = new Date()
-    const hoursUntil = (bookingDateTime - now) / (1000 * 60 * 60)
-    if (hoursUntil < RESCHEDULE_MIN_HOURS) {
+    if (booking.status !== 'confirmed') {
+      return res.status(400).json({ error: 'Solo se pueden reagendar reservas confirmadas.' })
+    }
+
+    const now = Date.now()
+    const hoursUntil = (classStartMs(booking.date, booking.time) - now) / (1000 * 60 * 60)
+    if (!(hoursUntil >= RESCHEDULE_MIN_HOURS)) {
       return res.status(400).json({
         error: `Solo puedes reagendar con al menos ${RESCHEDULE_MIN_HOURS} horas de anticipación a la clase. Esta clase es en menos de ${RESCHEDULE_MIN_HOURS} horas.`
       })
     }
 
-    if (booking.date === newDate && booking.time === newTime) {
+    if (booking.date === newDate && String(booking.time).trim().padStart(5, '0').slice(0, 5) === String(newTime).trim().padStart(5, '0').slice(0, 5)) {
       return res.status(400).json({ error: 'La nueva fecha y hora son iguales a la actual. Elige otra opción.' })
+    }
+
+    if (!(classStartMs(newDate, newTime) > now)) {
+      return res.status(400).json({ error: 'Ese horario ya pasó. Elige otra fecha u hora.' })
     }
 
     const cap = await assertSlotAvailable(booking.className, newDate, newTime)

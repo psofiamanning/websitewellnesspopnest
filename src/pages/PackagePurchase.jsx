@@ -14,7 +14,7 @@ import { BACKEND_URL } from '../config/api.js'
 const packages = PACKAGE_OFFERS
 
 // Versión de los Términos que se registra en el cobro de Stripe al aceptar.
-const TERMS_VERSION = '2026-09-28'
+const TERMS_VERSION = '2026-09-30'
 
 function PackagePurchase() {
   const { id } = useParams()
@@ -817,7 +817,7 @@ function PackagePurchase() {
               <ul className="list-disc pl-5 space-y-1 text-sm font-body mb-3" style={{ color: '#4B5563' }}>
                 <li>Los paquetes no son reembolsables ni canjeables, y las clases no usadas vencen con la vigencia del paquete.</li>
                 <li>Una clase reservada a la que no asistas se considera tomada. No hay reposiciones.</li>
-                <li>Una reserva confirmada no se puede mover a otra clase, fecha u horario.</li>
+                <li>Puedes reagendar desde «Mis reservas» con al menos 48 horas de anticipación; después ya no se puede mover.</li>
                 <li>La tolerancia de llegada es de 5 minutos; después del minuto 10 no se permite la entrada.</li>
                 <li>El material básico (como mat de yoga) es obligatorio: trae el tuyo o réntalo en efectivo en la caja del estudio.</li>
               </ul>

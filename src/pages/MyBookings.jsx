@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser, isAuthenticated } from '../services/authService'
-import { getBookingsByUser, rescheduleBooking } from '../services/bookingService'
+import { getCurrentUser, isAuthenticated, isTokenExpired } from '../services/authService'
+import { getBookingsByUser, rescheduleBooking, checkAvailability } from '../services/bookingService'
 import { classTypes, classSchedules } from '../data/classes'
 import { addDays, eachDayOfInterval, isSameDay, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { format } from 'date-fns'
 
 const RESCHEDULE_MIN_HOURS = 48
+
+// Inicio de la clase en hora de CDMX (UTC-6), igual que valida el servidor.
+const classStartMs = (date, time) =>
+  new Date(`${String(date).slice(0, 10)}T${String(time).trim().padStart(5, '0').slice(0, 5)}:00-06:00`).getTime()
+
+const hhmm = (time) => String(time || '').trim().padStart(5, '0').slice(0, 5)
 
 function MyBookings() {
   const navigate = useNavigate()
@@ -18,11 +24,15 @@ function MyBookings() {
   const [newTime, setNewTime] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [slotStatus, setSlotStatus] = useState({}) // { 'HH:mm': 'loading' | 'ok' | 'full' | 'unavailable' }
+  const [successMsg, setSuccessMsg] = useState('')
 
   const user = getCurrentUser()
 
   useEffect(() => {
-    if (!isAuthenticated() || !user?.email) {
+    // Los tokens de sesión vencen en ~1 h: si ya venció, pedir login antes de que
+    // la persona intente reagendar y le falle al confirmar.
+    if (!isAuthenticated() || isTokenExpired() || !user?.email) {
       navigate('/login?from=/mis-reservas', { replace: true })
       return
     }
@@ -41,9 +51,7 @@ function MyBookings() {
   }, [navigate, user?.email])
 
   const canReschedule = (booking) => {
-    const bookingDateTime = new Date(`${booking.date}T${booking.time}`)
-    const now = new Date()
-    const hoursUntil = (bookingDateTime - now) / (1000 * 60 * 60)
+    const hoursUntil = (classStartMs(booking.date, booking.time) - Date.now()) / (1000 * 60 * 60)
     return hoursUntil >= RESCHEDULE_MIN_HOURS
   }
 
@@ -78,19 +86,49 @@ function MyBookings() {
     setNewDate(null)
     setNewTime(null)
     setError('')
+    setSlotStatus({})
+    setSuccessMsg('')
   }
 
   const getTimesForDate = (date) => {
-    if (!rescheduleModal?.schedule) return []
-    if (rescheduleModal.schedule.timesByDay && date) {
-      const dayName = rescheduleModal.dayNames[date.getDay()]
-      return rescheduleModal.schedule.timesByDay[dayName] || []
-    }
-    return rescheduleModal.availableTimes
+    if (!rescheduleModal?.schedule || !date) return []
+    const all = rescheduleModal.schedule.timesByDay
+      ? rescheduleModal.schedule.timesByDay[rescheduleModal.dayNames[date.getDay()]] || []
+      : rescheduleModal.availableTimes
+    const dateStr = format(date, 'yyyy-MM-dd')
+    const { booking } = rescheduleModal
+    // Solo horarios futuros y distintos al que ya tiene reservado
+    return all.filter(
+      (t) =>
+        classStartMs(dateStr, t) > Date.now() &&
+        !(dateStr === booking.date && hhmm(t) === hhmm(booking.time))
+    )
   }
 
-  const showTimeSlots = rescheduleModal?.schedule?.timesByDay ? !!newDate : true
-  const timeSlots = newDate ? getTimesForDate(newDate) : (rescheduleModal?.availableTimes || [])
+  const timeSlots = getTimesForDate(newDate)
+
+  // Al elegir fecha, consultar lugares reales de cada horario (tabla schedules)
+  useEffect(() => {
+    if (!rescheduleModal || !newDate) return
+    const dateStr = format(newDate, 'yyyy-MM-dd')
+    const times = getTimesForDate(newDate)
+    let cancelled = false
+    setSlotStatus(Object.fromEntries(times.map((t) => [t, 'loading'])))
+    times.forEach(async (t) => {
+      const res = await checkAvailability(rescheduleModal.booking.className, dateStr, t)
+      if (cancelled) return
+      let status = 'ok' // si no se pudo verificar, dejar elegir: el servidor valida el cupo
+      if (!res.verificationFailed) {
+        if (!res.maxBookings) status = 'unavailable'
+        else if (!res.available) status = 'full'
+      }
+      setSlotStatus((prev) => ({ ...prev, [t]: status }))
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rescheduleModal, newDate])
 
   const handleConfirmReschedule = async () => {
     if (!rescheduleModal?.booking || !newDate || !newTime) return
@@ -98,23 +136,25 @@ function MyBookings() {
     setError('')
     try {
       const dateStr = format(newDate, 'yyyy-MM-dd')
-      await rescheduleBooking(
-        rescheduleModal.booking.id,
-        { newDate: dateStr, newTime },
-        user?.email
-      )
+      await rescheduleBooking(rescheduleModal.booking.id, { newDate: dateStr, newTime })
       const updated = await getBookingsByUser(user.email)
       setBookings(updated)
+      setSuccessMsg(
+        `Listo: tu clase de ${rescheduleModal.booking.className} quedó el ${format(newDate, "EEEE d 'de' MMMM", { locale: es })} a las ${hhmm(newTime)}.`
+      )
       setRescheduleModal(null)
     } catch (e) {
+      if (e.code === 'SESSION_EXPIRED') {
+        navigate('/login?from=/mis-reservas', { replace: true })
+        return
+      }
       setError(e.message || 'Error al reagendar')
     } finally {
       setSaving(false)
     }
   }
 
-  const now = new Date()
-  const upcomingBookings = bookings.filter(b => new Date(`${b.date}T${b.time}`) >= now)
+  const upcomingBookings = bookings.filter((b) => classStartMs(b.date, b.time) >= Date.now())
 
   if (!user) return null
 
@@ -127,6 +167,16 @@ function MyBookings() {
         <p className="text-sm font-body mb-8" style={{ color: '#6B7280' }}>
           Aquí puedes ver tus clases reservadas y reagendar con al menos 48 horas de anticipación.
         </p>
+
+        {successMsg && (
+          <div
+            role="status"
+            className="mb-6 p-4 rounded-lg border font-body text-sm"
+            style={{ backgroundColor: '#ECFDF5', borderColor: '#A7F3D0', color: '#065F46' }}
+          >
+            {successMsg}
+          </div>
+        )}
 
         {loading ? (
           <p className="font-body" style={{ color: '#6B7280' }}>Cargando...</p>
@@ -147,7 +197,6 @@ function MyBookings() {
         ) : (
           <ul className="space-y-4">
             {upcomingBookings.map((booking) => {
-              const bookingDateTime = new Date(`${booking.date}T${booking.time}`)
               const canReagendar = canReschedule(booking)
               return (
                 <li
@@ -161,7 +210,7 @@ function MyBookings() {
                         {booking.className}
                       </p>
                       <p className="font-body text-sm mt-1" style={{ color: '#6B7280' }}>
-                        {booking.formattedDate} · {booking.time}
+                        {booking.formattedDate} · {hhmm(booking.time)}
                       </p>
                       {booking.teacherName && (
                         <p className="font-body text-sm mt-0.5" style={{ color: '#6B7280' }}>
@@ -234,26 +283,37 @@ function MyBookings() {
             </div>
 
             <p className="font-body text-sm font-medium mb-2" style={{ color: '#374151' }}>Nueva hora</p>
-            {!showTimeSlots && (
-              <p className="text-sm font-body mb-2" style={{ color: '#6B7280' }}>Selecciona primero una fecha para ver los horarios.</p>
+            {!newDate ? (
+              <p className="text-sm font-body mb-4" style={{ color: '#6B7280' }}>Selecciona primero una fecha para ver los horarios.</p>
+            ) : timeSlots.length === 0 ? (
+              <p className="text-sm font-body mb-4" style={{ color: '#6B7280' }}>No quedan horarios disponibles ese día. Elige otra fecha.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {timeSlots.map((time) => {
+                  const st = slotStatus[time]
+                  const blocked = st === 'full' || st === 'unavailable' || st === 'loading'
+                  const selected = newTime === time
+                  return (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => setNewTime(time)}
+                      disabled={blocked}
+                      className="px-3 py-2 rounded-lg font-body text-sm border-2 transition-colors disabled:cursor-not-allowed"
+                      style={{
+                        borderColor: selected ? '#B73D37' : '#E5E7EB',
+                        backgroundColor: selected ? '#FDF2F2' : blocked ? '#F9FAFB' : '#fff',
+                        color: selected ? '#B73D37' : blocked ? '#9CA3AF' : '#4B5563'
+                      }}
+                    >
+                      {hhmm(time)}
+                      {st === 'full' && ' · Lleno'}
+                      {st === 'unavailable' && ' · No disponible'}
+                    </button>
+                  )
+                })}
+              </div>
             )}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {timeSlots.map((time) => (
-                <button
-                  key={time}
-                  type="button"
-                  onClick={() => setNewTime(time)}
-                  className="px-3 py-2 rounded-lg font-body text-sm border-2 transition-colors"
-                  style={{
-                    borderColor: newTime === time ? '#B73D37' : '#E5E7EB',
-                    backgroundColor: newTime === time ? '#FDF2F2' : '#fff',
-                    color: newTime === time ? '#B73D37' : '#4B5563'
-                  }}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
 
             {error && (
               <p className="text-sm font-body text-red-600 mb-4">{error}</p>

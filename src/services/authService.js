@@ -42,6 +42,18 @@ export const isAuthenticated = () => {
   return !!getToken()
 }
 
+/** true si el token de Supabase ya venció (los tokens de sesión duran ~1 h y no se renuevan). */
+export const isTokenExpired = () => {
+  const token = getToken()
+  if (!token || !token.includes('.')) return false
+  try {
+    const { exp } = JSON.parse(atob(token.split('.')[1]))
+    return typeof exp === 'number' && Date.now() >= exp * 1000
+  } catch {
+    return false
+  }
+}
+
 export const logout = () => {
   localStorage.removeItem('auth_token')
   try {

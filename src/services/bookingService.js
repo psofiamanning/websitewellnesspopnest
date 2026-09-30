@@ -146,15 +146,21 @@ export const getBookingsByUser = async (email) => {
 }
 
 // Reagendar una reserva (nueva fecha y hora; solo permitido con 48 h de anticipación)
-export const rescheduleBooking = async (bookingId, { newDate, newTime }, userEmail) => {
+export const rescheduleBooking = async (bookingId, { newDate, newTime }) => {
+  const token = localStorage.getItem('auth_token')
   const response = await fetch(`${BACKEND_URL}/api/bookings/${bookingId}/reschedule`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ newDate, newTime, userEmail })
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ newDate, newTime })
   })
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data.error || 'Error al reagendar')
+    const err = new Error(data.error || 'Error al reagendar')
+    if (response.status === 401) err.code = 'SESSION_EXPIRED'
+    throw err
   }
   return await response.json()
 }

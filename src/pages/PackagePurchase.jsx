@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { createPaymentIntent, validatePackageDiscountCode } from '../services/bookingService'
@@ -12,6 +12,9 @@ import { shouldShowProposalPlans } from '../config/proposalPlans'
 import { BACKEND_URL } from '../config/api.js'
 
 const packages = PACKAGE_OFFERS
+
+// Versión de los Términos que se registra en el cobro de Stripe al aceptar.
+const TERMS_VERSION = '2026-09-28'
 
 function PackagePurchase() {
   const { id } = useParams()
@@ -38,6 +41,7 @@ function PackagePurchase() {
   const [discountError, setDiscountError] = useState('')
   const [isValidatingDiscount, setIsValidatingDiscount] = useState(false)
   const [referredBy, setReferredBy] = useState('')
+  const [acceptTerms, setAcceptTerms] = useState(false)
 
   const handleApplyDiscountCode = async () => {
     setDiscountError('')
@@ -179,6 +183,11 @@ function PackagePurchase() {
       alert('Por favor completa la información de la tarjeta')
       return
     }
+
+    if (!acceptTerms) {
+      alert('Debes aceptar los Términos y Condiciones y la Política de Privacidad para continuar.')
+      return
+    }
     
     if (stripeCardData.error) {
       alert(`Error en la tarjeta: ${stripeCardData.error.message}`)
@@ -211,6 +220,9 @@ function PackagePurchase() {
           // precio con descuento, no confiar en el monto que manda el navegador.
           discount_code: appliedDiscount?.code || '',
           referred_by: referredBy?.trim() || '',
+          // Registro de aceptación de términos (queda en el cobro de Stripe).
+          terms_version: TERMS_VERSION,
+          terms_accepted_at: new Date().toISOString(),
         })
       } catch (paymentError) {
         console.error('Error al crear Payment Intent:', paymentError)
@@ -797,6 +809,40 @@ function PackagePurchase() {
               </div>
             </div>
 
+            {/* Aceptación de términos */}
+            <div className="mb-4 p-4 rounded-lg border" style={{ backgroundColor: '#FDF6F5', borderColor: '#E5B3B0' }}>
+              <p className="text-sm font-body font-medium mb-2" style={{ color: '#1F2937' }}>
+                Antes de pagar, ten en cuenta:
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-sm font-body mb-3" style={{ color: '#4B5563' }}>
+                <li>Los paquetes no son reembolsables ni canjeables, y las clases no usadas vencen con la vigencia del paquete.</li>
+                <li>Una clase reservada a la que no asistas se considera tomada. No hay reposiciones.</li>
+                <li>Una reserva confirmada no se puede mover a otra clase, fecha u horario.</li>
+                <li>La tolerancia de llegada es de 5 minutos; después del minuto 10 no se permite la entrada.</li>
+                <li>El material básico (como mat de yoga) es obligatorio: trae el tuyo o réntalo en efectivo en la caja del estudio.</li>
+              </ul>
+              <label className="flex items-start gap-2 text-sm font-body cursor-pointer" style={{ color: '#1F2937' }}>
+                <input
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-1"
+                  style={{ accentColor: '#B73D37' }}
+                />
+                <span>
+                  He leído y acepto los{' '}
+                  <Link to="/terminos" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>
+                    Términos y Condiciones
+                  </Link>{' '}
+                  y la{' '}
+                  <Link to="/privacidad" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>
+                    Política de Privacidad
+                  </Link>
+                  .
+                </span>
+              </label>
+            </div>
+
             {/* Botón de pagar */}
             {(() => {
               // Verificar condiciones para mostrar el botón
@@ -820,6 +866,7 @@ function PackagePurchase() {
               })
               
               const canShowButton = hasCustomerInfo && hasStripeInfo
+
               
               if (!canShowButton) {
                 // Mostrar mensaje indicando qué falta
@@ -872,17 +919,17 @@ function PackagePurchase() {
                 <div className="mb-4">
                   <button
                     onClick={handlePurchase}
-                    disabled={isProcessing}
+                    disabled={isProcessing || !acceptTerms}
                     className="w-full py-4 rounded-lg text-lg font-semibold transition-all shadow-xl font-body disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                     style={{ 
                       background: 'linear-gradient(135deg, #B73D37 0%, #8B2E29 100%)',
                       color: '#FFFFFF',
                       border: 'none',
-                      cursor: isProcessing ? 'not-allowed' : 'pointer',
+                      cursor: isProcessing || !acceptTerms ? 'not-allowed' : 'pointer',
                       boxShadow: '0 10px 25px rgba(183, 61, 55, 0.3)'
                     }}
                     onMouseEnter={(e) => {
-                      if (!isProcessing) {
+                      if (!isProcessing && acceptTerms) {
                         e.target.style.background = 'linear-gradient(135deg, #C76661 0%, #B73D37 100%)'
                         e.target.style.boxShadow = '0 12px 30px rgba(183, 61, 55, 0.4)'
                       }
@@ -897,7 +944,9 @@ function PackagePurchase() {
                     {isProcessing ? 'Procesando pago...' : `Pagar $${finalPrice.toLocaleString()} MXN`}
                   </button>
                   <p className="text-xs text-body font-body text-center mt-2 opacity-75">
-                    Al hacer clic, procesaremos tu pago de forma segura
+                    {acceptTerms
+                      ? 'Al hacer clic, procesaremos tu pago de forma segura'
+                      : 'Acepta los Términos y Condiciones para continuar'}
                   </p>
                 </div>
               )

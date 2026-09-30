@@ -142,17 +142,17 @@ a.home-practice-card {
   max-width: 540px;
 }
 
-.home-hero__tagline {
-  margin: 22px 0 0;
-  font-family: var(--pn-font-serif);
-  font-style: italic;
-  font-size: 24px;
-  color: var(--pn-color-text-muted);
+.home-hero__logo {
+  display: block;
+  width: min(100%, 420px);
+  height: auto;
+  margin-bottom: 36px;
 }
+
 
 .home-hero__title {
   font-family: var(--pn-font-sans);
-  font-size: clamp(58px, 7vw, 104px);
+  font-size: clamp(48px, 5.4vw, 80px);
   font-weight: 400;
   line-height: 0.91;
   letter-spacing: -0.055em;
@@ -165,7 +165,7 @@ a.home-practice-card {
 
 .home-hero__body {
   max-width: 430px;
-  margin-top: 28px;
+  margin-top: 20px;
 }
 
 .home-hero__actions {
@@ -1044,24 +1044,29 @@ a.home-about-locate__visual {
 
   .home-hero {
     min-height: auto;
-    padding-top: 52px;
+    padding-top: 0;
     padding-bottom: 44px;
     display: block;
   }
 
   .home-hero__title {
-    font-size: 58px;
+    font-size: 44px;
+  }
+
+  .home-hero__body {
+    margin-top: 16px;
   }
 
   .home-hero__actions {
     flex-direction: column;
+    margin-top: 24px;
   }
 
   .home-hero__visual {
     margin: 0 -24px 32px;
     width: calc(100% + 48px);
     min-height: 0;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 4 / 3;
     border-radius: 0;
   }
 
@@ -1070,8 +1075,10 @@ a.home-about-locate__visual {
     min-height: 0;
   }
 
-  .home-hero__tagline {
-    font-size: 20px;
+
+  .home-hero__logo {
+    width: min(100%, 240px);
+    margin-bottom: 18px;
   }
 
   .home-ticker__item {

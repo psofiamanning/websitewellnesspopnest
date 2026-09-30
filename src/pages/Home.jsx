@@ -5,6 +5,7 @@ import studioPhoto2 from '../assets/studio-photo-2.png'
 import studioPhoto3 from '../assets/studio-photo-3.png'
 import studioPhoto4 from '../assets/studio-photo-4.png'
 import studioHeroMirrors from '../assets/studio-hero-mirrors.jpg'
+import logoEstudioPopnest from '../assets/logo-estudio-popnest.png'
 import { classTypes } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
@@ -96,22 +97,22 @@ function Home() {
             </figure>
 
             <div className="home-hero__copy">
-              <div className="pn-eyebrow" style={{ marginBottom: 20 }}>
-                Estudio de bienestar en Coyoacán
-              </div>
+              <img
+                src={logoEstudioPopnest}
+                alt="Estudio Popnest"
+                className="home-hero__logo"
+                width="900"
+                height="353"
+              />
               <h1 className="home-hero__title">
-                Respirar,
-                <br />
-                mover,
+                Tu pausa diaria
                 <br />
                 <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>
-                  reconectar.
+                  en Coyoacán.
                 </span>
               </h1>
-              <p className="home-hero__tagline">Técnicas para volver a ti</p>
               <p className="pn-text-lg home-hero__body">
-                Un estudio boutique de yoga, pilates y meditación para volver al cuerpo, bajar el ritmo y practicar con
-                calma.
+                Clases de pilates, yoga, tai chi, sound bath y belly dance para bajar el ritmo, todos los días.
               </p>
               <div className="home-hero__actions">
                 <Link to="/classes" className="pn-btn pn-btn--primary">

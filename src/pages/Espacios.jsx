@@ -94,7 +94,6 @@ function Espacios() {
             <ul className="esp-door__list">
               <li>Yoga</li>
               <li>Sound bath</li>
-              <li>Meditación</li>
               <li>Pilates</li>
               <li>Tai chi</li>
               <li>Belly dance</li>

@@ -164,9 +164,6 @@ function YogaCoyoacan() {
               <Link to="/clases/pilates-coyoacan">Pilates</Link>
             </li>
             <li>
-              <Link to="/clases/meditacion-coyoacan">Meditación</Link>
-            </li>
-            <li>
               <Link to="/clases/sound-healing-coyoacan">Sound Healing</Link>
             </li>
             <li>

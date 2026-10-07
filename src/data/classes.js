@@ -1,10 +1,8 @@
 import blancaBearPhoto from '../assets/blanca-bear.png'
-import madelineRojasPhoto from '../assets/madeline-rojas.png'
 import rocioEncisoPhoto from '../assets/rocio-enciso.png'
 import classIconHatha from '../assets/class-hatha-yoga.png'
 import classIconPilates from '../assets/class-pilates.png'
 import classIconSound from '../assets/class-sound-healing.png'
-import classIconMeditacion from '../assets/class-meditacion.png'
 import classIconPower from '../assets/class-power-yoga.png'
 import classIconTaiChi from '../assets/class-tai-chi.png'
 
@@ -20,14 +18,6 @@ export const teachers = [
     image: blancaBearPhoto,
     bio: 'Maestra de movimiento con más de diez años de experiencia y una formación profunda y continua en yoga, tai chi, meditación, pilates y movimiento somático. Su práctica une estructura y sensibilidad, observando con atención, ajustando con cuidado y acompañando cada práctica desde la escucha corporal. Sus clases se sienten contenidas, claras y humanas, invitando al movimiento con presencia, estabilidad y confianza.',
     classes: ['Hatha Yoga', 'Pilates', 'Tai Chi']
-  },
-  {
-    id: 3,
-    name: 'Madeline Rojas Givaudan',
-    specialty: 'Meditación',
-    image: madelineRojasPhoto,
-    bio: 'Guía holística y facilitadora de espacios de conexión, conciencia y transformación personal. Su camino comenzó hace más de diez años, a través de cursos y certificaciones en herramientas de crecimiento personal, energía y prácticas meditativas. Actualmente acompaña procesos de transición, expansión y reconexión interna, integrando meditación, trabajo energético y rituales conscientes. Facilita meditaciones grupales.',
-    classes: ['Meditación']
   },
   {
     id: 5,
@@ -111,16 +101,6 @@ export const classTypes = [
     image: classIconSound,
   },
   {
-    id: 'meditacion',
-    name: 'Meditación',
-    teacher: 'Madeline Rojas Givaudan',
-    teacherId: 3,
-    duration: 60,
-    description: 'Práctica de meditación guiada en Coyoacán que integra técnicas contemplativas, trabajo energético y rituales conscientes para desarrollar atención plena y reducir estrés.',
-    fullDescription: 'La Meditación es una práctica contemplativa milenaria que entrena la mente para desarrollar atención plena, presencia y conciencia del momento presente. En esta clase guiada, explorarás diversas técnicas meditativas que incluyen meditación de atención plena (mindfulness), visualización, trabajo con la respiración, y prácticas de conexión energética.\n\nLa sesión se desarrolla en un ambiente sagrado y acogedor, donde cada práctica se adapta a tu nivel de experiencia. Puedes esperar una experiencia transformadora donde aprenderás herramientas prácticas para calmar la mente, observar tus pensamientos sin juicio, y desarrollar una relación más consciente contigo mismo y con el mundo.\n\nLa meditación reduce significativamente el estrés, la ansiedad y la depresión, mejora la concentración y la memoria, aumenta la capacidad de autorregulación emocional, fortalece el sistema inmunológico, reduce la presión arterial y mejora la salud cardiovascular, promueve la neuroplasticidad y el crecimiento de materia gris en el cerebro, mejora la calidad del sueño, desarrolla la compasión y empatía, y proporciona una sensación de paz interior y bienestar duradero, transformando tu relación con los desafíos de la vida cotidiana.',
-    image: classIconMeditacion,
-  },
-  {
     id: 'belly-dance',
     name: 'Belly Dance',
     teacher: 'Nadia Navarrete',
@@ -189,10 +169,6 @@ export const classSchedules = {
       Domingo: ['09:00']
     }
   },
-  'meditacion': {
-    days: ['Domingo'],
-    times: ['10:30']
-  },
   'belly-dance': {
     days: ['Miércoles', 'Viernes'],
     times: ['18:00'],
@@ -226,11 +202,6 @@ export const teacherSchedules = {
       Sábado: ['08:00', '10:30'],
       Domingo: ['08:00']
     }
-  },
-  3: { // Madeline Rojas Givaudan (Made)
-    classes: ['meditacion'],
-    days: ['Domingo'],
-    times: ['10:30']
   },
   5: { // Rocío Enciso
     classes: ['power-yoga-1', 'stretching'],

@@ -6,7 +6,6 @@ export const LANDING_SLUG_TO_CLASS_ID = {
   'hatha-yoga-coyoacan': 'hatha-yoga',
   'pilates-coyoacan': 'pilates',
   'sound-healing-coyoacan': 'sound-healing',
-  'meditacion-coyoacan': 'meditacion',
   'power-yoga-coyoacan': 'power-yoga-1',
   'tai-chi-coyoacan': 'tai-chi',
   'belly-dance-coyoacan': 'belly-dance',
@@ -21,7 +20,6 @@ export const LANDING_SEO_TITLE = {
   'hatha-yoga': 'Hatha Yoga en Coyoacán | Clases y Reserva | Estudio Popnest Wellness',
   pilates: 'Pilates en Coyoacán | Clases y Reserva | Estudio Popnest Wellness',
   'sound-healing': 'Sound Healing en Coyoacán | Sanación Sonora | Estudio Popnest',
-  meditacion: 'Meditación en Coyoacán | Clases Guiadas | Estudio Popnest Wellness',
   'power-yoga-1': 'Power Yoga en Coyoacán | Clases Dinámicas | Estudio Popnest Wellness',
   'tai-chi': 'Tai Chi en Coyoacán | Clases y Reserva | Estudio Popnest Wellness',
   'belly-dance': 'Belly Dance en Coyoacán | Danza Árabe y Reserva | Estudio Popnest Wellness',
@@ -32,7 +30,6 @@ export const LANDING_CLASS_NAME = {
   'hatha-yoga': 'Hatha Yoga',
   pilates: 'Pilates',
   'sound-healing': 'Sound Healing',
-  meditacion: 'Meditación',
   'power-yoga-1': 'Power Yoga',
   'tai-chi': 'Tai Chi',
   'belly-dance': 'Belly Dance',
@@ -46,8 +43,6 @@ export const LANDING_SEO_DESCRIPTION = {
     'Clase de Pilates en Coyoacán enfocada en core, alineación y control del movimiento. Ideal para fortalecer el centro del cuerpo y mejorar postura.',
   'sound-healing':
     'Experiencia de sanación sonora en Coyoacán con cuencos tibetanos, gongs y vibraciones terapéuticas para relajación profunda y equilibrio energético.',
-  meditacion:
-    'Meditación guiada en Coyoacán que integra técnicas contemplativas y prácticas conscientes para desarrollar atención plena y reducir estrés.',
   'power-yoga-1':
     'Clase dinámica en Coyoacán que combina fuerza, resistencia y alineación en secuencias exigentes con guía experta.',
   'tai-chi':
@@ -62,7 +57,6 @@ export const LANDING_H1_PREFIX = {
   'hatha-yoga': 'Hatha Yoga en Coyoacán',
   pilates: 'Pilates en Coyoacán',
   'sound-healing': 'Sound Healing en Coyoacán',
-  meditacion: 'Meditación en Coyoacán',
   'power-yoga-1': 'Power Yoga en Coyoacán',
   'tai-chi': 'Tai Chi en Coyoacán',
   'belly-dance': 'Belly Dance en Coyoacán',
@@ -122,16 +116,6 @@ export const LANDING_FAQ_BY_CLASS_ID = {
     {
       q: '¿Puedo asistir si nunca he meditado?',
       a: 'Sí. No requiere posturas ni experiencia previa; solo llegar con ropa cómoda y apertura a descansar.'
-    }
-  ],
-  meditacion: [
-    {
-      q: '¿Cómo son las clases de meditación en Coyoacán?',
-      a: 'Sesiones guiadas de 60 minutos con técnicas de atención plena, respiración y prácticas contemplativas en un espacio tranquilo.'
-    },
-    {
-      q: '¿Es en grupo o individual?',
-      a: 'Las clases regulares son en grupo reducido. Puedes reservar en línea según el horario publicado.'
     }
   ],
   'power-yoga-1': [

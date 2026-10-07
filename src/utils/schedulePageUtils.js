@@ -6,7 +6,6 @@ export const SCHEDULE_FILTERS = [
   { id: 'all', label: 'Todas', practice: null },
   { id: 'yoga', label: 'Yoga', practice: 'yoga' },
   { id: 'pilates', label: 'Pilates', practice: 'pilates' },
-  { id: 'meditation', label: 'Meditación', practice: 'meditation' },
   { id: 'sound', label: 'Sound healing', practice: 'sound' },
   { id: 'taichi', label: 'Tai chi', practice: 'taichi' },
   { id: 'dance', label: 'Belly Dance', practice: 'dance' },

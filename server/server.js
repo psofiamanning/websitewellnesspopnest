@@ -977,11 +977,13 @@ app.get('/api/bookings/user/:email', async (req, res) => {
 // --- Maestras: cuentas y token ---
 const DEFAULT_TEACHERS = [
   { id: 'teacher-1', email: 'blanca@estudiopopnest.com', password: 'Blanca2026', name: 'Blanca Bear', teacherId: 1 },
-  { id: 'teacher-3', email: 'maderogiv@gmail.com', password: 'Madeline2026', name: 'Madeline Rojas Givaudan', teacherId: 3 }
 ]
 // Coaches que ya no colaboran: sin acceso al portal aunque sigan en teachers.json
 // o tengan un token vigente. Su historial de reservas no se toca.
-const REMOVED_TEACHER_ACCOUNT_IDS = new Set(['teacher-2']) // Brenda Granados Segovia (última clase 2026-10-04)
+const REMOVED_TEACHER_ACCOUNT_IDS = new Set([
+  'teacher-2', // Brenda Granados Segovia (última clase 2026-10-04)
+  'teacher-3', // Madeline Rojas Givaudan (Meditación se dejó de ofrecer 2026-10-07)
+])
 const getTeachers = () => {
   try {
     if (fs.existsSync(TEACHERS_FILE)) {

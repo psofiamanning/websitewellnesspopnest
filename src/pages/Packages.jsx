@@ -19,7 +19,7 @@ const FAQ_ITEMS = [
   },
   {
     q: '¿Puedo usar el paquete en cualquier clase?',
-    a: 'Sí. Los paquetes aplican para todas las prácticas del horario regular: yoga, pilates, meditación, sound healing y tai chi.',
+    a: 'Sí. Los paquetes aplican para todas las prácticas del horario regular: yoga, pilates, tai chi, sound healing, belly dance y stretching.',
   },
   {
     q: '¿Cuánto tiempo tengo para usar mis clases?',

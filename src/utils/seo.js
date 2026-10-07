@@ -114,7 +114,7 @@ export function getCanonicalUrl(pathname) {
 }
 
 const DEFAULT_TITLE = 'Yoga y Bienestar en Coyoacán | Estudio Popnest Wellness'
-const DEFAULT_DESCRIPTION = 'Clases de yoga, pilates, meditación y sound healing en Coyoacán. Reserva en línea en Estudio Popnest Wellness. Estudio boutique en el corazón de la ciudad.'
+const DEFAULT_DESCRIPTION = 'Clases de yoga, pilates, tai chi y sound healing en Coyoacán. Reserva en línea en Estudio Popnest Wellness. Estudio boutique en el corazón de la ciudad.'
 
 export const ROUTE_SEO = {
   '/': {
@@ -123,7 +123,7 @@ export const ROUTE_SEO = {
   },
   '/classes': {
     title: 'Clases de Yoga y Bienestar en Coyoacán | Estudio Popnest Wellness',
-    description: 'Descubre clases de yoga, pilates, tai chi, belly dance, stretching, meditación y sound healing en Coyoacán. Reserva en línea. Estudio boutique en CDMX.'
+    description: 'Descubre clases de yoga, pilates, tai chi, belly dance, stretching y sound healing en Coyoacán. Reserva en línea. Estudio boutique en CDMX.'
   },
   '/clases/yoga-coyoacan': {
     title: 'Yoga en Coyoacán | Hatha Yoga y Power Yoga | Estudio Popnest Wellness',
@@ -147,7 +147,7 @@ export const ROUTE_SEO = {
   },
   '/horario': {
     title: 'Horario de Clases en Coyoacán | Estudio Popnest Wellness',
-    description: 'Consulta el horario de yoga, pilates, meditación y sound healing en Coyoacán. Reserva tu clase en Estudio Popnest Wellness.'
+    description: 'Consulta el horario de yoga, pilates, tai chi y sound healing en Coyoacán. Reserva tu clase en Estudio Popnest Wellness.'
   },
   '/talleres': {
     title: 'Talleres y Experiencias en Coyoacán | Estudio Popnest Wellness',
@@ -163,7 +163,7 @@ export const ROUTE_SEO = {
   },
   '/ubicacion': {
     title: 'Ubicación - Estudio de yoga en Coyoacán | Estudio Popnest Wellness',
-    description: 'Estudio Popnest Wellness en Del Carmen, Coyoacán, CDMX. Dirección, cómo llegar y clases de yoga, pilates, meditación y sound healing en Coyoacán.'
+    description: 'Estudio Popnest Wellness en Del Carmen, Coyoacán, CDMX. Dirección, cómo llegar y clases de yoga, pilates, tai chi y sound healing en Coyoacán.'
   },
   '/privacidad': {
     title: 'Política de Privacidad | Estudio Popnest Wellness',
@@ -301,7 +301,7 @@ export function getSeoForPath(pathname) {
   if (pathname.startsWith('/booking/class/')) {
     return {
       title: 'Reservar clase | Yoga en Coyoacán | Estudio Popnest Wellness',
-      description: 'Reserva tu clase de yoga, meditación o sound healing en Coyoacán. Estudio Popnest Wellness.'
+      description: 'Reserva tu clase de yoga, pilates o sound healing en Coyoacán. Estudio Popnest Wellness.'
     }
   }
   if (pathname.startsWith('/booking/')) {

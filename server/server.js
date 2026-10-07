@@ -721,10 +721,35 @@ app.post('/api/confirm-payment', async (req, res) => {
   }
 })
 
+/**
+ * Una reserva con paquete solo la puede hacer la dueña del paquete con su sesión.
+ * Sin esto, bastaba el correo de otra clienta y el número de su paquete.
+ * Devuelve null si está bien, o { status, error } para responder.
+ */
+async function assertPackageBookingOwner(req, bookingData) {
+  if (bookingData?.paymentMethod !== 'package') return null
+  const authUser = await verifyAuthJwt(req.headers.authorization?.replace(/^Bearer\s+/i, ''))
+  if (!authUser?.email) {
+    return {
+      status: 401,
+      error: 'Tu sesión expiró. Inicia sesión de nuevo para reservar con tu paquete.',
+      code: 'SESSION_EXPIRED',
+    }
+  }
+  const customerEmail = String(bookingData.customer?.email || '').trim().toLowerCase()
+  if (!customerEmail || authUser.email.trim().toLowerCase() !== customerEmail) {
+    return { status: 403, error: 'Solo puedes reservar con tu propio paquete.' }
+  }
+  return null
+}
+
 // Endpoint: Confirmar pago y guardar reserva
 app.post('/api/confirm-booking', async (req, res) => {
   try {
     const { paymentIntentId, bookingData } = req.body
+
+    const ownerErr = await assertPackageBookingOwner(req, bookingData)
+    if (ownerErr) return res.status(ownerErr.status).json({ error: ownerErr.error, code: ownerErr.code })
 
     // Si es reserva con paquete o código de descuento, no requiere paymentIntentId
     if (
@@ -883,6 +908,9 @@ app.post('/api/leads', async (req, res) => {
 app.post('/api/bookings', async (req, res) => {
   try {
     const bookingData = req.body
+
+    const ownerErr = await assertPackageBookingOwner(req, bookingData)
+    if (ownerErr) return res.status(ownerErr.status).json({ error: ownerErr.error, code: ownerErr.code })
 
     if (bookingData.className && bookingData.date && bookingData.time) {
       const cap = await assertSlotAvailable(bookingData.className, bookingData.date, bookingData.time)

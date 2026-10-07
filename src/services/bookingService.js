@@ -44,10 +44,12 @@ export const saveBooking = async (bookingData) => {
   ) {
     // Intentar guardar en el backend primero
     try {
+      const token = localStorage.getItem('auth_token')
       const response = await fetch(`${BACKEND_URL}/api/bookings`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(bookingData)
       })
@@ -319,10 +321,12 @@ export const getUserPackagesAll = async (email) => {
 // Confirmar reserva después del pago exitoso
 export const confirmBooking = async (paymentIntentId, bookingData) => {
   try {
+    const token = localStorage.getItem('auth_token')
     const response = await fetch(`${BACKEND_URL}/api/confirm-booking`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({ paymentIntentId, bookingData })
     })

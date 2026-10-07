@@ -150,15 +150,15 @@ export const classTypes = [
 export const classSchedules = {
   'hatha-yoga': {
     days: ['Jueves', 'Domingo'],
-    times: ['08:00', '08:30'],
+    times: ['08:00', '20:30'],
     timesByDay: {
-      Jueves: ['08:30'],
+      Jueves: ['20:30'],
       Domingo: ['08:00']
     }
   },
   'pilates': {
     days: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Sábado'],
-    times: ['08:00', '08:30', '09:30', '10:30', '19:30'],
+    times: ['08:00', '08:30', '09:30', '10:30', '19:30', '20:30'],
     timesByDay: {
       Lunes: ['08:30'],
       Martes: ['09:30', '19:30'],
@@ -217,12 +217,12 @@ export const teacherSchedules = {
   1: { // Blanca Bear
     classes: ['pilates', 'hatha-yoga', 'tai-chi'],
     days: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Sábado', 'Domingo'],
-    times: ['08:00', '08:30', '09:30', '10:30', '19:30'],
+    times: ['08:00', '08:30', '09:30', '10:30', '19:30', '20:30'],
     timesByDay: {
       Lunes: ['08:30', '19:30'],
       Martes: ['09:30', '19:30'],
       Miércoles: ['08:30', '19:30'],
-      Jueves: ['08:30', '09:30'],
+      Jueves: ['09:30', '20:30'],
       Sábado: ['08:00', '10:30'],
       Domingo: ['08:00']
     }

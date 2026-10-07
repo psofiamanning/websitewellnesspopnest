@@ -1963,12 +1963,50 @@ app.post('/api/packages/purchase', async (req, res) => {
       })
     }
 
+    // No confiar en el "pago exitoso" que manda el navegador: confirmarlo con Stripe.
+    // Sin esto, cualquiera con sesión podía registrar un paquete sin pagar.
+    let packageName = purchaseData.packageName
+    let amountPaid = purchaseData.payment?.amount ?? 0
+    const claimsPaid = purchaseData.payment?.status === 'succeeded'
+    const paymentIntentId = purchaseData.stripeInfo?.paymentIntentId ?? null
+    if (claimsPaid) {
+      if (!paymentIntentId) {
+        return res.status(400).json({ success: false, error: 'No se encontró el pago de este paquete.' })
+      }
+      let pi
+      try {
+        pi = await stripe.paymentIntents.retrieve(paymentIntentId)
+      } catch (e) {
+        console.error('⚠️ No se pudo verificar el pago del paquete con Stripe:', paymentIntentId, e.message)
+        // Si el cobro sí se hizo, el webhook lo registra como respaldo.
+        return res.status(502).json({
+          success: false,
+          error: 'No pudimos confirmar tu pago en este momento. Si se realizó el cargo, tu paquete aparecerá en unos minutos.',
+        })
+      }
+      const piEmail = (pi.metadata?.customer_email || '').trim().toLowerCase()
+      if (
+        pi.status !== 'succeeded' ||
+        pi.metadata?.purchase_type !== 'package' ||
+        !pi.metadata?.package_name ||
+        pi.metadata.package_name !== packageName ||
+        (piEmail && piEmail !== customerEmail)
+      ) {
+        console.error('⚠️ Compra de paquete rechazada: el pago no corresponde', {
+          paymentIntentId, status: pi.status, meta: pi.metadata, packageName, customerEmail,
+        })
+        return res.status(400).json({ success: false, error: 'El pago no corresponde a este paquete.' })
+      }
+      packageName = pi.metadata.package_name
+      amountPaid = pi.amount // centavos, lo realmente cobrado
+    }
+
     const savedPurchase = await insertCustomerPackageAfterPayment({
       profileId,
-      packageName: purchaseData.packageName,
-      amountPaid: purchaseData.payment?.amount ?? 0,
-      stripePaymentIntentId: purchaseData.stripeInfo?.paymentIntentId ?? null,
-      paymentStatus: purchaseData.payment?.status === 'succeeded' ? 'succeeded' : 'pending',
+      packageName,
+      amountPaid,
+      stripePaymentIntentId: paymentIntentId,
+      paymentStatus: claimsPaid ? 'succeeded' : 'pending',
       referredBy: purchaseData.referredBy ?? null,
     })
 

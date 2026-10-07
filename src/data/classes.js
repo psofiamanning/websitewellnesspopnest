@@ -1,5 +1,4 @@
 import blancaBearPhoto from '../assets/blanca-bear.png'
-import brendaGranadosPhoto from '../assets/brenda-granados.png'
 import madelineRojasPhoto from '../assets/madeline-rojas.png'
 import rocioEncisoPhoto from '../assets/rocio-enciso.png'
 import classIconHatha from '../assets/class-hatha-yoga.png'
@@ -23,20 +22,12 @@ export const teachers = [
     classes: ['Hatha Yoga', 'Pilates', 'Tai Chi']
   },
   {
-    id: 2,
-    name: 'Brenda Granados Segovia',
-    specialty: 'Sound Healing',
-    image: brendaGranadosPhoto,
-    bio: 'Artista sonora y facilitadora de procesos de escucha con formación sólida y multidisciplinaria que integra música, arquitectura, cuerpo y prácticas contemporáneas de sound healing. Años de estudio continuo en musicoterapia, exploración vocal, cuencos y gongs, con certificaciones avaladas por la SEP. Ha desarrollado experiencias sonoras en espacios culturales y museos. Su método se caracteriza por escucha atenta.',
-    classes: ['Sound Healing']
-  },
-  {
     id: 3,
     name: 'Madeline Rojas Givaudan',
     specialty: 'Meditación',
     image: madelineRojasPhoto,
     bio: 'Guía holística y facilitadora de espacios de conexión, conciencia y transformación personal. Su camino comenzó hace más de diez años, a través de cursos y certificaciones en herramientas de crecimiento personal, energía y prácticas meditativas. Actualmente acompaña procesos de transición, expansión y reconexión interna, integrando meditación, trabajo energético y rituales conscientes. Facilita meditaciones grupales.',
-    classes: ['Meditación', 'Meditación y Sound Healing']
+    classes: ['Meditación']
   },
   {
     id: 5,
@@ -53,6 +44,14 @@ export const teachers = [
     image: null, // Sin foto por ahora — la tarjeta muestra un avatar con iniciales.
     bio: 'Bailarina y facilitadora de danza árabe con más de 25 años de trayectoria y 22 años impartiendo clases grupales y particulares, presenciales y en línea, en academias, gimnasios, centros culturales y espacios independientes. Fundadora del programa Bellydance Wellness y creadora de Mujeres Inspiración, una comunidad de apoyo y bienestar femenino a través de la danza y el movimiento. Se ha presentado en foros como el Teatro Ana María Hernández, el Teatro Coyoacán y la Feria del Hogar, y participó en la Gala de Clausura Copa Qatar–México 2021 y en proyectos culturales de la UAM y la UNAM. Su formación incluye estudios con Tamalyn Dallal, el percusionista Hossam Ramzy y el compositor Francisco Bringas, además de una base desde la infancia en gimnasia rítmica, danza regional y jazz, y más de diez años de práctica continua de yoga y entrenamiento funcional. Sus clases integran técnica, coordinación y expresión corporal para fortalecer el cuerpo, mejorar la postura y reconectar con la confianza y la feminidad.',
     classes: ['Belly Dance']
+  },
+  {
+    id: 7,
+    name: 'Juan Martínez',
+    specialty: 'Sound Healing',
+    image: null, // Sin foto por ahora — la tarjeta muestra un avatar con iniciales.
+    bio: 'Facilitador de Sound Healing. Acompaña sesiones de sanación sonora con cuencos, gongs y vibraciones para una relajación profunda.', // TODO: bio definitiva pendiente.
+    classes: ['Sound Healing']
   }
 ]
 
@@ -104,8 +103,8 @@ export const classTypes = [
   {
     id: 'sound-healing',
     name: 'Sound Healing',
-    teacher: 'Brenda Granados Segovia',
-    teacherId: 2,
+    teacher: 'Juan Martínez',
+    teacherId: 7,
     duration: 60,
     description: 'Experiencia de sanación sonora en Coyoacán que utiliza cuencos tibetanos, gongs y vibraciones terapéuticas para facilitar relajación profunda, reducir ansiedad y promover equilibrio energético.',
     fullDescription: 'El Sound Healing o Sanación Sonora es una terapia vibracional que utiliza instrumentos ancestrales como cuencos tibetanos, gongs, campanas, diapasones y la voz para crear frecuencias curativas que resuenan con el cuerpo y la mente.\n\nDurante la sesión, te recostarás cómodamente mientras te envuelves en un baño de sonidos que penetran profundamente en tus células y tejidos. La experiencia es completamente pasiva, permitiendo que el cuerpo entre en un estado de relajación profunda mientras las vibraciones trabajan a nivel celular.\n\nPuedes esperar una experiencia transformadora donde los sonidos te guían hacia estados de conciencia expandida, liberando tensiones físicas y emocionales almacenadas.\n\nEl Sound Healing reduce significativamente el estrés y la ansiedad, mejora la calidad del sueño, equilibra el sistema nervioso, libera bloqueos emocionales y traumas almacenados, reduce el dolor crónico y la inflamación, mejora la concentración y claridad mental, promueve la producción de ondas cerebrales alfa y theta asociadas con la relajación profunda, fortalece el sistema inmunológico, y facilita estados meditativos profundos, proporcionando una experiencia de sanación holística que integra cuerpo, mente y espíritu.',
@@ -145,27 +144,15 @@ export const classTypes = [
       'Stretching es una clase enfocada en mejorar la flexibilidad, la movilidad y la postura mediante estiramientos conscientes y progresivos. Libera la tensión acumulada, amplía tu rango de movimiento y disfruta una sensación de ligereza y bienestar.\n\nLa sesión avanza de forma gradual, con respiración guiada y opciones para cada cuerpo. Es una práctica apta para todos los niveles, ideal para complementar tu entrenamiento o para tus días de recuperación.',
     image: classIconPilates, // TODO: ícono placeholder — reemplazar por arte de Stretching.
   },
-  {
-    id: 'meditacion-sound-healing',
-    name: 'Meditación y Sound Healing',
-    teacher: 'Made y Brenda',
-    teacherId: 3, // Coach principal: Madeline (Made). Brenda co-facilita el trabajo sonoro.
-    duration: 60,
-    description:
-      'Experiencia en Coyoacán que combina meditación guiada y sanación con sonido para calmar la mente y relajar el cuerpo profundamente. Impartida por Made y Brenda.',
-    fullDescription:
-      'Una experiencia que combina meditación guiada y sanación con sonido para calmar la mente y relajar profundamente el cuerpo. A través de la respiración y las vibraciones sonoras, liberarás tensiones y encontrarás un espacio de conexión, equilibrio y bienestar.\n\nLa sesión une la guía meditativa de Made con el trabajo sonoro de Brenda (cuencos, gongs y frecuencias), en una práctica pasiva y contenida. No requiere experiencia previa; solo llegar con ropa cómoda y disposición a descansar.',
-    image: classIconSound, // Comparte ícono con Sound Healing por ahora.
-  },
 ]
 
 // Horarios disponibles por clase
 export const classSchedules = {
   'hatha-yoga': {
     days: ['Jueves', 'Domingo'],
-    times: ['08:00', '19:00'],
+    times: ['08:00', '08:30'],
     timesByDay: {
-      Jueves: ['19:00'],
+      Jueves: ['08:30'],
       Domingo: ['08:00']
     }
   },
@@ -189,10 +176,11 @@ export const classSchedules = {
     times: ['08:30']
   },
   'sound-healing': {
-    days: ['Jueves', 'Domingo'],
-    times: ['09:00', '20:00'],
+    days: ['Martes', 'Miércoles', 'Domingo'],
+    times: ['09:00', '20:30'],
     timesByDay: {
-      Jueves: ['20:00'],
+      Martes: ['20:30'],
+      Miércoles: ['20:30'],
       Domingo: ['09:00']
     }
   },
@@ -215,10 +203,6 @@ export const classSchedules = {
       Viernes: ['08:30'],
       Sábado: ['09:00']
     }
-  },
-  'meditacion-sound-healing': {
-    days: ['Sábado'],
-    times: ['10:30']
   }
 }
 
@@ -228,33 +212,20 @@ export const teacherSchedules = {
   1: { // Blanca Bear
     classes: ['pilates', 'hatha-yoga', 'tai-chi'],
     days: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Sábado', 'Domingo'],
-    times: ['08:00', '08:30', '09:30', '19:00', '19:30'],
+    times: ['08:00', '08:30', '09:30', '19:30'],
     timesByDay: {
       Lunes: ['08:30', '19:30'],
       Martes: ['09:30', '19:30'],
       Miércoles: ['08:30', '19:30'],
-      Jueves: ['09:30', '19:00'],
+      Jueves: ['08:30', '09:30'],
       Sábado: ['08:00'],
       Domingo: ['08:00']
     }
   },
-  2: { // Brenda Granados Segovia
-    classes: ['sound-healing'],
-    days: ['Jueves', 'Domingo'],
-    times: ['09:00', '20:00'],
-    timesByDay: {
-      Jueves: ['20:00'],
-      Domingo: ['09:00']
-    }
-  },
   3: { // Madeline Rojas Givaudan (Made)
-    classes: ['meditacion', 'meditacion-sound-healing'],
-    days: ['Sábado', 'Domingo'],
-    times: ['10:30'],
-    timesByDay: {
-      Sábado: ['10:30'],
-      Domingo: ['10:30']
-    }
+    classes: ['meditacion'],
+    days: ['Domingo'],
+    times: ['10:30']
   },
   5: { // Rocío Enciso
     classes: ['power-yoga-1', 'stretching'],
@@ -273,6 +244,16 @@ export const teacherSchedules = {
     timesByDay: {
       Miércoles: ['18:00'],
       Viernes: ['18:00']
+    }
+  },
+  7: { // Juan Martínez
+    classes: ['sound-healing'],
+    days: ['Martes', 'Miércoles', 'Domingo'],
+    times: ['09:00', '20:30'],
+    timesByDay: {
+      Martes: ['20:30'],
+      Miércoles: ['20:30'],
+      Domingo: ['09:00']
     }
   }
 }

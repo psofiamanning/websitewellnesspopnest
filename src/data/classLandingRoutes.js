@@ -10,8 +10,7 @@ export const LANDING_SLUG_TO_CLASS_ID = {
   'power-yoga-coyoacan': 'power-yoga-1',
   'tai-chi-coyoacan': 'tai-chi',
   'belly-dance-coyoacan': 'belly-dance',
-  'stretching-coyoacan': 'stretching',
-  'meditacion-sound-healing-coyoacan': 'meditacion-sound-healing'
+  'stretching-coyoacan': 'stretching'
 }
 
 export const CLASS_LANDING_PATHS = Object.keys(LANDING_SLUG_TO_CLASS_ID).map(
@@ -26,8 +25,7 @@ export const LANDING_SEO_TITLE = {
   'power-yoga-1': 'Power Yoga en Coyoacán | Clases Dinámicas | Estudio Popnest Wellness',
   'tai-chi': 'Tai Chi en Coyoacán | Clases y Reserva | Estudio Popnest Wellness',
   'belly-dance': 'Belly Dance en Coyoacán | Danza Árabe y Reserva | Estudio Popnest Wellness',
-  stretching: 'Stretching en Coyoacán | Clases de Estiramiento | Estudio Popnest Wellness',
-  'meditacion-sound-healing': 'Meditación y Sound Healing en Coyoacán | Estudio Popnest Wellness'
+  stretching: 'Stretching en Coyoacán | Clases de Estiramiento | Estudio Popnest Wellness'
 }
 
 export const LANDING_CLASS_NAME = {
@@ -38,8 +36,7 @@ export const LANDING_CLASS_NAME = {
   'power-yoga-1': 'Power Yoga',
   'tai-chi': 'Tai Chi',
   'belly-dance': 'Belly Dance',
-  stretching: 'Stretching',
-  'meditacion-sound-healing': 'Meditación y Sound Healing'
+  stretching: 'Stretching'
 }
 
 export const LANDING_SEO_DESCRIPTION = {
@@ -58,9 +55,7 @@ export const LANDING_SEO_DESCRIPTION = {
   'belly-dance':
     'Clases de Belly Dance (danza árabe) en Coyoacán: técnica, coordinación y expresión corporal. Fortalece el cuerpo y mejora la postura. Sin experiencia previa.',
   stretching:
-    'Clases de Stretching en Coyoacán para mejorar flexibilidad, movilidad y postura con estiramientos conscientes y progresivos. Aptas para todos los niveles.',
-  'meditacion-sound-healing':
-    'Experiencia en Coyoacán que combina meditación guiada y sanación con sonido (cuencos, gongs) para calmar la mente y relajar el cuerpo profundamente.'
+    'Clases de Stretching en Coyoacán para mejorar flexibilidad, movilidad y postura con estiramientos conscientes y progresivos. Aptas para todos los niveles.'
 }
 
 export const LANDING_H1_PREFIX = {
@@ -71,8 +66,7 @@ export const LANDING_H1_PREFIX = {
   'power-yoga-1': 'Power Yoga en Coyoacán',
   'tai-chi': 'Tai Chi en Coyoacán',
   'belly-dance': 'Belly Dance en Coyoacán',
-  stretching: 'Stretching en Coyoacán',
-  'meditacion-sound-healing': 'Meditación y Sound Healing en Coyoacán'
+  stretching: 'Stretching en Coyoacán'
 }
 
 export function getClassIdFromLandingSlug(slug) {
@@ -178,16 +172,6 @@ export const LANDING_FAQ_BY_CLASS_ID = {
     {
       q: '¿Es apta si soy principiante?',
       a: 'Sí. Los estiramientos se adaptan a tu nivel y avanzan de forma gradual. Cada sesión dura 60 minutos en Estudio Popnest Wellness, Coyoacán.'
-    }
-  ],
-  'meditacion-sound-healing': [
-    {
-      q: '¿En qué se diferencia de una clase de Meditación o de Sound Healing por separado?',
-      a: 'Combina ambas en una sola sesión: la guía meditativa de Made y el trabajo sonoro de Brenda (cuencos, gongs y frecuencias), en una práctica pasiva y contenida.'
-    },
-    {
-      q: '¿Necesito experiencia previa?',
-      a: 'No. Solo llegar con ropa cómoda y disposición a descansar; no requiere posturas ni práctica meditativa previa.'
     }
   ]
 }

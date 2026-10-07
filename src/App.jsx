@@ -126,6 +126,8 @@ export function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<Classes />} />
         <Route path="/clases/yoga-coyoacan" element={<YogaCoyoacan />} />
+        {/* Meditación y Sound Healing se archivó en oct 2026 (salida de Brenda); conserva el link viejo. */}
+        <Route path="/clases/meditacion-sound-healing-coyoacan" element={<Navigate to="/clases/sound-healing-coyoacan" replace />} />
         <Route path="/clases/:slug" element={<ClassLanding />} />
         <Route path="/coaches/login" element={<TeacherLogin />} />
         <Route path="/coaches/panel" element={<TeacherDashboard />} />

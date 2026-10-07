@@ -977,9 +977,11 @@ app.get('/api/bookings/user/:email', async (req, res) => {
 // --- Maestras: cuentas y token ---
 const DEFAULT_TEACHERS = [
   { id: 'teacher-1', email: 'blanca@estudiopopnest.com', password: 'Blanca2026', name: 'Blanca Bear', teacherId: 1 },
-  { id: 'teacher-2', email: 'brenda@estudiopopnest.com', password: 'Brenda2026', name: 'Brenda Granados Segovia', teacherId: 2 },
   { id: 'teacher-3', email: 'maderogiv@gmail.com', password: 'Madeline2026', name: 'Madeline Rojas Givaudan', teacherId: 3 }
 ]
+// Coaches que ya no colaboran: sin acceso al portal aunque sigan en teachers.json
+// o tengan un token vigente. Su historial de reservas no se toca.
+const REMOVED_TEACHER_ACCOUNT_IDS = new Set(['teacher-2']) // Brenda Granados Segovia (última clase 2026-10-04)
 const getTeachers = () => {
   try {
     if (fs.existsSync(TEACHERS_FILE)) {
@@ -993,7 +995,7 @@ const getTeachers = () => {
         fs.writeFileSync(TEACHERS_FILE, JSON.stringify(list, null, 2))
         console.log('✅ Correo de Madeline actualizado a', madelineNew, 'en teachers.json')
       }
-      return list
+      return list.filter(t => !REMOVED_TEACHER_ACCOUNT_IDS.has(t.id))
     }
     fs.writeFileSync(TEACHERS_FILE, JSON.stringify(DEFAULT_TEACHERS, null, 2))
     return [...DEFAULT_TEACHERS]
@@ -1018,6 +1020,7 @@ const parseTeacherToken = (req) => {
     if (!token) return null
     const payload = JSON.parse(Buffer.from(token, 'base64').toString())
     if (payload.exp && Date.now() > payload.exp) return null
+    if (REMOVED_TEACHER_ACCOUNT_IDS.has(payload.id)) return null
     return payload
   } catch (e) {
     return null
@@ -1408,6 +1411,7 @@ const parseAdminToken = (req) => {
     if (!token) return null
     const payload = JSON.parse(Buffer.from(token, 'base64').toString())
     if (payload.exp && Date.now() > payload.exp) return null
+    if (REMOVED_TEACHER_ACCOUNT_IDS.has(payload.id)) return null
     return payload
   } catch (e) {
     return null

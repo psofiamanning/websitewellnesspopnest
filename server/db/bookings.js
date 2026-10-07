@@ -303,6 +303,39 @@ async function incrementScheduleSpot(scheduleId) {
   if (fbErr) throw fbErr
 }
 
+/** Inicio de la clase en hora de CDMX (UTC-6, sin horario de verano desde 2022). */
+function classStartDate(date, time) {
+  const hhmm = String(time || '').trim().padStart(5, '0').slice(0, 5)
+  return new Date(`${String(date).slice(0, 10)}T${hhmm}:00-06:00`)
+}
+
+/** Una clase con paquete debe empezar antes de que venza el paquete. */
+export function isClassWithinPackageValidity(date, time, expiresAt) {
+  if (!expiresAt) return true
+  return classStartDate(date, time).getTime() < new Date(expiresAt).getTime()
+}
+
+export function formatPackageExpiry(expiresAt) {
+  return new Date(expiresAt).toLocaleDateString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+/** Vigencia del paquete con el que se pagó una reserva (null si no fue con paquete). */
+export async function getBookingPackageExpiry(bookingId) {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('bookings_new')
+    .select('customer_packages (expires_at)')
+    .eq('id', bookingId)
+    .maybeSingle()
+  if (error) throw error
+  return data?.customer_packages?.expires_at ?? null
+}
+
 /**
  * Persist a booking from the legacy flat payload used by POST /api/bookings and /api/confirm-booking.
  */
@@ -428,6 +461,11 @@ export async function saveBooking(flat) {
         isUnlimited
           ? 'Tu pase ilimitado ya venció.'
           : 'Tu paquete ya venció. Las clases no usadas no se pueden reservar después de la fecha de vigencia.'
+      )
+    }
+    if (cp.expires_at && !isClassWithinPackageValidity(schedule.scheduled_date, schedule.scheduled_time, cp.expires_at)) {
+      throw new Error(
+        `Esta clase es después de la vigencia de tu paquete (vence el ${formatPackageExpiry(cp.expires_at)}). Elige una fecha dentro de la vigencia.`
       )
     }
     if (!isUnlimited && !(Number(cp.classes_remaining) > 0)) {

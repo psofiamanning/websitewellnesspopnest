@@ -56,11 +56,15 @@ export const saveBooking = async (bookingData) => {
         const result = await response.json()
         return result.booking || bookingData
       } else {
-        // Manejar errores del backend
-        const error = await response.json()
-        throw new Error(error.error || 'Error al guardar la reserva')
+        // El backend respondió y rechazó la reserva: siempre mostrar su motivo.
+        // Nunca caer al respaldo local, o la clienta vería una reserva que no existe.
+        const error = await response.json().catch(() => ({}))
+        const rejected = new Error(error.error || 'No se pudo guardar la reserva. Intenta de nuevo.')
+        rejected.serverRejected = true
+        throw rejected
       }
     } catch (error) {
+      if (error.serverRejected) throw error
       // Si es un error de disponibilidad o paquete, propagarlo
       if (error.message && (
         error.message.includes('reservaciones') || 

@@ -746,14 +746,14 @@ function Booking() {
           }
         }
       } catch (saveError) {
-        if (saveError.message && (
+        if (saveError.serverRejected || (saveError.message && (
           saveError.message.includes('reservaciones') || 
           saveError.message.includes('disponible') ||
           saveError.message.includes('clases disponibles') ||
           saveError.message.includes('paquete') ||
           saveError.message.includes('descuento') ||
           saveError.message.includes('código')
-        )) {
+        ))) {
           setIsProcessing(false)
           alert(saveError.message)
           return

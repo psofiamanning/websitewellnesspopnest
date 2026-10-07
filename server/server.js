@@ -18,6 +18,9 @@ import {
   isUsingSupabase,
   findBookingByStripePaymentIntentId,
   getAvailabilityForSlot,
+  getBookingPackageExpiry,
+  isClassWithinPackageValidity,
+  formatPackageExpiry,
 } from './db/bookings.js'
 import {
   listActiveTalleres,
@@ -1127,6 +1130,13 @@ app.patch('/api/bookings/:id/reschedule', async (req, res) => {
 
     if (!(classStartMs(newDate, newTime) > now)) {
       return res.status(400).json({ error: 'Ese horario ya pasó. Elige otra fecha u hora.' })
+    }
+
+    const pkgExpiry = await getBookingPackageExpiry(id)
+    if (pkgExpiry && !isClassWithinPackageValidity(newDate, newTime, pkgExpiry)) {
+      return res.status(400).json({
+        error: `Esa fecha es después de la vigencia de tu paquete (vence el ${formatPackageExpiry(pkgExpiry)}). Elige una fecha dentro de la vigencia.`,
+      })
     }
 
     const cap = await assertSlotAvailable(booking.className, newDate, newTime)

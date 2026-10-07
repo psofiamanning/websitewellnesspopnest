@@ -141,7 +141,7 @@ export const PACKAGE_OFFERS = [
     // vigencia (30 días). En la tabla packages su total_classes es 0.
     classes: 0,
     unlimited: true,
-    price: 2990,
+    price: 1800,
     validityDays: 30,
     isProposal: true,
     description: 'Clases ilimitadas durante un mes completo. Acceso a todas las disciplinas.',

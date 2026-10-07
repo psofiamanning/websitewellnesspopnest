@@ -422,12 +422,15 @@ export async function saveBooking(flat) {
 
     const pkgName = cp.packages?.name?.trim() || ''
     const isUnlimited = pkgName === PAQUETE_ILIMITADO_NOMBRE
-    if (isUnlimited) {
-      // Ilimitado: solo se valida que no haya vencido; NO consume cupo.
-      if (cp.expires_at && new Date(cp.expires_at) <= new Date()) {
-        throw new Error('Tu pase ilimitado ya venció.')
-      }
-    } else if (!(Number(cp.classes_remaining) > 0)) {
+    // Ningún paquete vencido puede reservar, aunque le queden clases.
+    if (cp.expires_at && new Date(cp.expires_at) <= new Date()) {
+      throw new Error(
+        isUnlimited
+          ? 'Tu pase ilimitado ya venció.'
+          : 'Tu paquete ya venció. Las clases no usadas no se pueden reservar después de la fecha de vigencia.'
+      )
+    }
+    if (!isUnlimited && !(Number(cp.classes_remaining) > 0)) {
       throw new Error('No tienes clases disponibles en este paquete o el paquete no existe.')
     }
 

@@ -6,6 +6,17 @@ const STORAGE_KEY = 'estudio_popnest_bookings'
 // Backend URL
 import { BACKEND_URL } from '../config/api.js'
 
+/** Sesión de la clienta (los datos de reservas y paquetes ya no son públicos). */
+const customerAuthHeaders = () => {
+  const token = localStorage.getItem('auth_token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+/** Sesión del admin (listado completo de reservas). */
+const adminAuthHeaders = () => {
+  const token = localStorage.getItem('admin_token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 // Validar código de descuento (un uso por correo y por código)
 export const validateDiscountCode = async (email, code) => {
   const response = await fetch(`${BACKEND_URL}/api/discount-codes/validate`, {
@@ -109,7 +120,7 @@ export const saveBooking = async (bookingData) => {
 // Obtener todas las reservas (desde el backend)
 export const getBookings = async () => {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/bookings`)
+    const response = await fetch(`${BACKEND_URL}/api/bookings`, { headers: adminAuthHeaders() })
     if (response.ok) {
       return await response.json()
     }
@@ -125,7 +136,9 @@ export const getBookings = async () => {
 // Obtener reserva por ID
 export const getBookingById = async (id) => {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/bookings/${id}`)
+    const response = await fetch(`${BACKEND_URL}/api/bookings/${id}`, {
+      headers: localStorage.getItem('admin_token') ? adminAuthHeaders() : customerAuthHeaders(),
+    })
     if (response.ok) {
       return await response.json()
     }
@@ -141,7 +154,9 @@ export const getBookingById = async (id) => {
 // Obtener reservas de un usuario por email
 export const getBookingsByUser = async (email) => {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/bookings/user/${encodeURIComponent(email)}`)
+    const response = await fetch(`${BACKEND_URL}/api/bookings/user/${encodeURIComponent(email)}`, {
+      headers: customerAuthHeaders(),
+    })
     if (response.ok) {
       return await response.json()
     }
@@ -257,11 +272,18 @@ export const checkAvailability = async (className, date, time) => {
 // Obtener paquetes activos de un usuario
 export const getUserPackages = async (email) => {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/packages/user/${encodeURIComponent(email)}`)
+    const response = await fetch(`${BACKEND_URL}/api/packages/user/${encodeURIComponent(email)}`, {
+      headers: customerAuthHeaders(),
+    })
     if (response.ok) {
       return await response.json()
     }
-    return { packages: [], totalClassesRemaining: 0, hasActivePackages: false }
+    return {
+      packages: [],
+      totalClassesRemaining: 0,
+      hasActivePackages: false,
+      sessionExpired: response.status === 401,
+    }
   } catch (error) {
     console.warn('Error getting user packages:', error)
     return { packages: [], totalClassesRemaining: 0, hasActivePackages: false }
@@ -298,6 +320,7 @@ export const getUserPackagesAll = async (email) => {
   try {
     const response = await fetch(
       `${BACKEND_URL}/api/packages/user/${encodeURIComponent(email)}/all`,
+      { headers: customerAuthHeaders() },
     )
     if (response.ok) {
       return await response.json()
@@ -306,7 +329,7 @@ export const getUserPackagesAll = async (email) => {
       const active = await getUserPackages(email)
       return packagesAllFromActiveOnly(active)
     }
-    return { ...EMPTY_PACKAGES_ALL }
+    return { ...EMPTY_PACKAGES_ALL, sessionExpired: response.status === 401 }
   } catch (error) {
     console.warn('Error getting user packages (all):', error)
     try {

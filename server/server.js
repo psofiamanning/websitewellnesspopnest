@@ -975,8 +975,29 @@ app.post('/api/bookings', async (req, res) => {
 })
 
 // Endpoint: Obtener todas las reservas
+/**
+ * Datos de una clienta (reservas, perfil, paquetes): solo ella con su sesión,
+ * o un admin. Antes estos endpoints respondían a cualquiera que supiera el correo.
+ * Responde 401/403 y devuelve false si no tiene permiso.
+ */
+async function allowCustomerData(req, res, email) {
+  if (parseAdminToken(req)) return true
+  const authUser = await verifyAuthJwt(req.headers.authorization?.replace(/^Bearer\s+/i, ''))
+  if (!authUser?.email) {
+    res.status(401).json({ error: 'Tu sesión expiró. Inicia sesión de nuevo.', code: 'SESSION_EXPIRED' })
+    return false
+  }
+  if (!email || authUser.email.trim().toLowerCase() !== String(email).trim().toLowerCase()) {
+    res.status(403).json({ error: 'No tienes permiso para ver estos datos.' })
+    return false
+  }
+  return true
+}
+
+// Todas las reservas (con datos de contacto): solo admin.
 app.get('/api/bookings', async (req, res) => {
   try {
+    if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
     const bookings = await getBookings()
     res.json(bookings)
   } catch (error) {
@@ -989,6 +1010,7 @@ app.get('/api/bookings', async (req, res) => {
 app.get('/api/bookings/user/:email', async (req, res) => {
   try {
     const email = decodeURIComponent(req.params.email)
+    if (!(await allowCustomerData(req, res, email))) return
     const bookings = await getBookings()
     const userBookings = bookings.filter(
       b => b.customer?.email?.toLowerCase() === email.toLowerCase() && b.status === 'confirmed'
@@ -1004,6 +1026,34 @@ app.get('/api/bookings/user/:email', async (req, res) => {
     res.status(500).json({ error: error.message })
   }
 })
+
+// --- Tokens firmados (admin y coaches) ---
+// Antes eran JSON en base64 sin firma: cualquiera podía fabricar un token de
+// super_admin. Ahora llevan una firma HMAC; sin el secreto no se pueden falsificar.
+// El secreto por defecto deriva de la service role key (ya existe en Railway);
+// se puede fijar uno propio con TOKEN_SIGNING_SECRET.
+const TOKEN_SIGNING_SECRET =
+  process.env.TOKEN_SIGNING_SECRET ||
+  (process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY).update('popnest-staff-tokens-v1').digest('hex')
+    : crypto.randomBytes(32).toString('hex'))
+const signStaffToken = (payload) => {
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
+  const sig = crypto.createHmac('sha256', TOKEN_SIGNING_SECRET).update(body).digest('base64url')
+  return `${body}.${sig}`
+}
+/** Devuelve el payload si la firma es válida y no ha vencido; si no, null. */
+const verifyStaffToken = (token) => {
+  const [body, sig, extra] = String(token || '').split('.')
+  if (!body || !sig || extra !== undefined) return null
+  const expected = crypto.createHmac('sha256', TOKEN_SIGNING_SECRET).update(body).digest('base64url')
+  const a = Buffer.from(sig)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null
+  const payload = JSON.parse(Buffer.from(body, 'base64url').toString())
+  if (!payload.exp || Date.now() > payload.exp) return null
+  return payload
+}
 
 // --- Maestras: cuentas y token ---
 const DEFAULT_TEACHERS = [
@@ -1045,14 +1095,14 @@ const generateTeacherToken = (teacher) => {
     name: teacher.name,
     exp: Date.now() + (7 * 24 * 60 * 60 * 1000)
   }
-  return Buffer.from(JSON.stringify(payload)).toString('base64')
+  return signStaffToken(payload)
 }
 const parseTeacherToken = (req) => {
   try {
     const token = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.body?.token
     if (!token) return null
-    const payload = JSON.parse(Buffer.from(token, 'base64').toString())
-    if (payload.exp && Date.now() > payload.exp) return null
+    const payload = verifyStaffToken(token)
+    if (!payload) return null
     if (REMOVED_TEACHER_ACCOUNT_IDS.has(payload.id)) return null
     return payload
   } catch (e) {
@@ -1090,11 +1140,11 @@ app.get('/api/bookings/teacher/upcoming', async (req, res) => {
 // Endpoint: Obtener reserva por ID
 app.get('/api/bookings/:id', async (req, res) => {
   try {
-    const bookings = await getBookings()
-    const booking = bookings.find(b => b.id === req.params.id)
+    const booking = await getBookingById(req.params.id)
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' })
     }
+    if (!(await allowCustomerData(req, res, booking.customer?.email))) return
     res.json(booking)
   } catch (error) {
     console.error('Error getting booking:', error)
@@ -1217,6 +1267,7 @@ app.get('/api/bookings/availability/:className/:date/:time', async (req, res) =>
 app.get('/api/users/email/:email', async (req, res) => {
   try {
     const { email } = req.params
+    if (!(await allowCustomerData(req, res, decodeURIComponent(email)))) return
     const profile = await getProfileByEmail(decodeURIComponent(email))
     if (!profile) {
       return res.status(404).json({ error: 'Usuario no encontrado' })
@@ -1238,7 +1289,7 @@ const generateAdminToken = (admin) => {
     role,
     exp: Date.now() + (24 * 60 * 60 * 1000) // 24 horas
   }
-  return Buffer.from(JSON.stringify(payload)).toString('base64')
+  return signStaffToken(payload)
 }
 
 // Operador wellness: se asegura que exista en cada servidor (Railway, etc.)
@@ -1449,9 +1500,8 @@ const parseAdminToken = (req) => {
   try {
     const token = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.body?.token
     if (!token) return null
-    const payload = JSON.parse(Buffer.from(token, 'base64').toString())
-    if (payload.exp && Date.now() > payload.exp) return null
-    if (REMOVED_TEACHER_ACCOUNT_IDS.has(payload.id)) return null
+    const payload = verifyStaffToken(token)
+    if (!payload || !payload.adminId || !payload.role) return null
     return payload
   } catch (e) {
     return null
@@ -2079,6 +2129,7 @@ app.get('/api/packages', async (req, res) => {
 app.get('/api/packages/user/:email', async (req, res) => {
   try {
     const { email } = req.params
+    if (!(await allowCustomerData(req, res, decodeURIComponent(email)))) return
     const activePackages = await getUserActivePackagesByEmail(decodeURIComponent(email))
     const totalClassesRemaining = activePackages.reduce((sum, pkg) => sum + (pkg.classesRemaining || 0), 0)
 
@@ -2097,6 +2148,7 @@ app.get('/api/packages/user/:email', async (req, res) => {
 app.get('/api/packages/user/:email/all', async (req, res) => {
   try {
     const { email } = req.params
+    if (!(await allowCustomerData(req, res, decodeURIComponent(email)))) return
     const data = await getUserAllPackagesByEmail(decodeURIComponent(email))
     res.json(data)
   } catch (error) {

@@ -56,7 +56,9 @@ function AdminLogin() {
       if (data.token) {
         localStorage.setItem('admin_token', data.token)
         try {
-          const payload = JSON.parse(atob(data.token))
+          // Token firmado: «payload.firma» (payload en base64url).
+          const body = data.token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/')
+          const payload = JSON.parse(atob(body))
           if (payload.role) localStorage.setItem('admin_role', payload.role)
         } catch (_) {}
       }

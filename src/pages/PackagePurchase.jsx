@@ -136,7 +136,10 @@ function PackagePurchase() {
   const fetchUserInfoFromBackend = async (email) => {
     try {
       console.log('Obteniendo información del usuario desde el backend para:', email)
-      const response = await fetch(`${BACKEND_URL}/api/users/email/${encodeURIComponent(email)}`)
+      const authToken = localStorage.getItem('auth_token')
+      const response = await fetch(`${BACKEND_URL}/api/users/email/${encodeURIComponent(email)}`, {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+      })
       if (response.ok) {
         const userData = await response.json()
         console.log('Información del usuario obtenida del backend:', userData)

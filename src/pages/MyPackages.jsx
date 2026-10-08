@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { getCurrentUser, isAuthenticated } from '../services/authService'
+import { getCurrentUser, isAuthenticated, isTokenExpired } from '../services/authService'
 import { getUserPackagesAll } from '../services/bookingService'
 import '../styles/myPackagesShell.css'
 
@@ -121,7 +121,7 @@ function MyPackages() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!isAuthenticated() || !user?.email) {
+    if (!isAuthenticated() || isTokenExpired() || !user?.email) {
       navigate('/login?from=/mis-paquetes', { replace: true })
       return
     }

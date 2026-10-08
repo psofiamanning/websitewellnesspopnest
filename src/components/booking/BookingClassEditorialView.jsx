@@ -449,6 +449,19 @@ function BookingClassEditorialView({
                     )}
                   </div>
 
+                  {!appliedDiscount && userPackages?.sessionExpired ? (
+                    <p className="pn-text-sm" role="alert" style={{ marginTop: 20, color: '#B73D37' }}>
+                      Tu sesión expiró. Para usar tu paquete,{' '}
+                      <Link
+                        to={`/login?from=${encodeURIComponent(window.location.pathname + window.location.search)}`}
+                        style={{ color: '#B73D37', textDecoration: 'underline' }}
+                      >
+                        inicia sesión de nuevo
+                      </Link>
+                      .
+                    </p>
+                  ) : null}
+
                   {!appliedDiscount && userPackages?.hasActivePackages ? (
                     <div style={{ marginTop: 20 }}>
                       <p className="pn-text-sm" style={{ marginBottom: 12, color: 'var(--pn-color-text-muted)' }}>

@@ -14,7 +14,7 @@ import {
   getUserPackages,
   validateDiscountCode,
 } from '../services/bookingService'
-import { getCurrentUser, isAuthenticated } from '../services/authService'
+import { getCurrentUser, isAuthenticated, isTokenExpired } from '../services/authService'
 import { trackMetaLead } from '../utils/metaPixel'
 import StripeCardElement from '../components/StripeCardElement'
 import { SINGLE_CLASS_AMOUNT_CENTS, SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
@@ -274,6 +274,11 @@ function Booking() {
   useEffect(() => {
     const loadUserPackages = async () => {
       if (isAuthenticated() && customerInfo.email) {
+        // Sesión vencida: no se pueden consultar ni usar paquetes hasta volver a entrar.
+        if (isTokenExpired()) {
+          setUserPackages({ packages: [], totalClassesRemaining: 0, hasActivePackages: false, sessionExpired: true })
+          return
+        }
         try {
           const packagesData = await getUserPackages(customerInfo.email)
           setUserPackages(packagesData)
@@ -1742,6 +1747,19 @@ function Booking() {
                             </p>
                           )}
                         </div>
+                      )}
+
+                      {!appliedDiscount && userPackages?.sessionExpired && (
+                        <p className="text-sm font-body mb-4" role="alert" style={{ color: '#B73D37' }}>
+                          Tu sesión expiró. Para usar tu paquete,{' '}
+                          <Link
+                            to={`/login?from=${encodeURIComponent(window.location.pathname + window.location.search)}`}
+                            className="underline"
+                          >
+                            inicia sesión de nuevo
+                          </Link>
+                          .
+                        </p>
                       )}
 
                       {/* Opción de usar paquete si tiene paquetes activos */}

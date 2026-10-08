@@ -27,6 +27,24 @@ function parseEnvDiscountCodes() {
     })
 }
 
+/**
+ * Reglas extra por código (aplican aunque los códigos vengan de DISCOUNT_CODES).
+ * validDays: días para canjearlo, contados desde que el correo se dejó en el
+ * popup (lead_emails con esa `leadOffer`).
+ * graceFrom/graceUntil: al arrancar la vigencia (oct 2026), quien dejó su correo
+ * desde graceFrom tiene al menos hasta graceUntil, aunque ya pasaran sus 14 días.
+ */
+export const FREE_CLASS_PROMO_VALID_DAYS = 14
+
+const CODE_RULES = {
+  POPNEST: {
+    validDays: FREE_CLASS_PROMO_VALID_DAYS,
+    leadOffer: 'clase_gratis',
+    graceFrom: '2026-09-01T00:00:00-06:00',
+    graceUntil: '2026-10-21T23:59:59-06:00',
+  },
+}
+
 let cachedCodes = null
 
 export function getDiscountCodes() {
@@ -46,5 +64,7 @@ export function normalizeDiscountCode(code) {
 export function findDiscountCode(code) {
   const normalized = normalizeDiscountCode(code)
   if (!normalized) return null
-  return getDiscountCodes().find((c) => normalizeDiscountCode(c.code) === normalized) || null
+  const def = getDiscountCodes().find((c) => normalizeDiscountCode(c.code) === normalized)
+  if (!def) return null
+  return { ...def, ...(CODE_RULES[normalizeDiscountCode(def.code)] || {}) }
 }

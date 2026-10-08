@@ -15,6 +15,17 @@ function isOfferWindowActive() {
   return new Date().getDate() <= OFFER_LAST_DAY
 }
 
+/** " el 21 de octubre" (o " hasta el 21 de octubre"); vacío si no hay fecha. */
+function formatDeadline(iso, prefix = 'el') {
+  if (!iso) return ''
+  const label = new Date(iso).toLocaleDateString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    day: 'numeric',
+    month: 'long',
+  })
+  return ` ${prefix} ${label}`
+}
+
 function persistResolved(value) {
   try {
     window.localStorage.setItem(RESOLVED_KEY, value)
@@ -30,7 +41,8 @@ function persistResolved(value) {
  * Se muestra una sola vez por sesión y nunca más tras resolverse.
  */
 function FreeClassPopup() {
-  const [status, setStatus] = useState('hidden') // hidden | form | loading | success | expired
+  const [status, setStatus] = useState('hidden') // hidden | form | loading | success | already | expired
+  const [already, setAlready] = useState(null) // { promoStatus, promoDeadline } si el correo ya estaba registrado
   const [seconds, setSeconds] = useState(COUNTDOWN_START)
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
@@ -115,9 +127,14 @@ function FreeClassPopup() {
     setError('')
     setStatus('loading')
     try {
-      await saveLeadEmail(value)
+      const result = await saveLeadEmail(value)
       persistResolved('submitted')
-      setStatus('success')
+      if (result.alreadyRegistered) {
+        setAlready({ promoStatus: result.promoStatus, promoDeadline: result.promoDeadline })
+        setStatus('already')
+      } else {
+        setStatus('success')
+      }
     } catch (err) {
       setError(err.message || 'No pudimos guardar tu correo. Inténtalo de nuevo.')
       setStatus('form') // reanuda la cuenta regresiva con el tiempo restante
@@ -154,6 +171,23 @@ function FreeClassPopup() {
             <p className="fcp-sub">
               Te escribiremos a <strong>{email.trim().toLowerCase()}</strong> con los pasos para reservar tu primera
               clase sin costo. ¡Nos vemos en el estudio!
+            </p>
+            <button type="button" className="fcp-btn" onClick={handleClose}>
+              Entendido
+            </button>
+          </>
+        ) : status === 'already' ? (
+          <>
+            <h2 id="fcp-title" className="fcp-title">
+              Ya tenías tu correo <span className="pn-serif">registrado</span>
+            </h2>
+            <p className="fcp-sub">
+              <strong>{email.trim().toLowerCase()}</strong> ya estaba en nuestra promoción de clase gratis.{' '}
+              {already?.promoStatus === 'redeemed'
+                ? 'Ya usaste tu clase gratis con este correo. ¡Te esperamos en tu próxima clase!'
+                : already?.promoStatus === 'expired'
+                  ? `Tu clase gratis venció${formatDeadline(already.promoDeadline)}. Puedes reservar tu próxima clase en línea cuando quieras.`
+                  : `Tu clase gratis sigue disponible${formatDeadline(already?.promoDeadline, 'hasta el')}: busca en tu correo (también en spam) el mensaje con los pasos para reservarla.`}
             </p>
             <button type="button" className="fcp-btn" onClick={handleClose}>
               Entendido

@@ -79,8 +79,9 @@ import {
   resolveProfileIdForPackagePurchase,
   getPackagePrice,
 } from './db/packages.js'
-import { getSupabaseAnon } from './db/supabaseClient.js'
-import { validateDiscountCodeForCustomer } from './db/discountCodes.js'
+import { getSupabaseAnon, getSupabaseAdmin } from './db/supabaseClient.js'
+import { validateDiscountCodeForCustomer, getFreeClassPromoStatus } from './db/discountCodes.js'
+import { FREE_CLASS_PROMO_VALID_DAYS } from './config/discountCodes.js'
 import { findPackageDiscountCode, normalizePackageDiscountCode } from './config/packageDiscountCodes.js'
 import { saveLeadEmail } from './db/leads.js'
 import { isMailerLiteConfigured, upsertMailerLiteSubscriber } from './mailerlite.js'
@@ -346,6 +347,22 @@ async function sendWelcomeEmail(user) {
   }
 }
 
+async function sendPasswordResetEmail(email, resetLink) {
+  if (!mailerSend && !mailTransporter) {
+    console.warn('⚠️ Correo no configurado: no se envía enlace de restablecimiento a', email)
+    return
+  }
+  const subject = 'Restablecer tu contraseña - Estudio Popnest Wellness'
+  const text = `Hola,\n\nRecibimos una solicitud para restablecer la contraseña de tu cuenta en Estudio Popnest Wellness. Entra a este enlace para elegir una nueva (válido 1 hora):\n\n${resetLink}\n\nSi no lo solicitaste, ignora este correo.\n\nSaludos,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>Hola,</p><p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong>Estudio Popnest Wellness</strong>.</p><p><a href="${resetLink}" style="color:#B73D37;font-weight:bold;">Elegir nueva contraseña</a></p><p>Este enlace es válido por 1 hora. Si no lo solicitaste, ignora este correo.</p><p>Saludos,<br>El equipo de Estudio Popnest Wellness</p>`
+  try {
+    await sendEmail({ to: email, subject, text, html })
+    console.log('✅ Email de restablecimiento enviado a:', email)
+  } catch (err) {
+    console.error('❌ Error enviando email de restablecimiento a', email, ':', err.message)
+  }
+}
+
 async function sendAdminPasswordResetEmail(email, resetToken) {
   if (!email) return
   if (!mailerSend && !mailTransporter) {
@@ -377,10 +394,15 @@ async function sendFreeClassEmail(email) {
     return
   }
   const promoCode = 'POPNEST'
+  const deadlineLabel = new Date(Date.now() + FREE_CLASS_PROMO_VALID_DAYS * 24 * 60 * 60 * 1000).toLocaleDateString('es-MX', {
+    timeZone: 'America/Mexico_City',
+    day: 'numeric',
+    month: 'long',
+  })
   const claimLink = `${FRONTEND_URL}/signup?promoCode=${encodeURIComponent(promoCode)}&promoEmail=${encodeURIComponent(email)}&from=${encodeURIComponent('/classes')}`
   const subject = '🎁 Tu clase gratis en Estudio Popnest Wellness'
-  const text = `¡Hola!\n\nGracias por tu interés en Estudio Popnest Wellness. Tu clase de regalo ya te está esperando.\n\nAsí la reservas:\n1. Entra a este enlace y crea tu contraseña: ${claimLink}\n2. Inicia sesión con este correo (${email}) y la contraseña que acabas de crear.\n3. Elige el día, la hora y la disciplina que prefieras — tu clase queda apartada sin costo.\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
-  const html = `<p>¡Hola!</p><p>Gracias por tu interés en <strong>Estudio Popnest Wellness</strong>. Tu <strong>clase de regalo</strong> ya te está esperando 🎁</p><p>Así la reservas:</p><ol style="padding-left:20px;line-height:1.6;"><li>Entra a este enlace y crea tu contraseña: <a href="${claimLink}" style="color:#B73D37;font-weight:bold;">Crear mi contraseña</a></li><li>Inicia sesión con este correo (<strong>${email}</strong>) y la contraseña que acabas de crear.</li><li>Elige el día, la hora y la disciplina que prefieras — tu clase queda apartada sin costo.</li></ol><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
+  const text = `¡Hola!\n\nGracias por tu interés en Estudio Popnest Wellness. Tu clase de regalo ya te está esperando.\n\nAsí la reservas:\n1. Entra a este enlace y crea tu contraseña: ${claimLink}\n2. Inicia sesión con este correo (${email}) y la contraseña que acabas de crear.\n3. Elige el día, la hora y la disciplina que prefieras — tu clase queda apartada sin costo.\n\nTienes ${FREE_CLASS_PROMO_VALID_DAYS} días para reservarla (hasta el ${deadlineLabel}).\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>¡Hola!</p><p>Gracias por tu interés en <strong>Estudio Popnest Wellness</strong>. Tu <strong>clase de regalo</strong> ya te está esperando 🎁</p><p>Así la reservas:</p><ol style="padding-left:20px;line-height:1.6;"><li>Entra a este enlace y crea tu contraseña: <a href="${claimLink}" style="color:#B73D37;font-weight:bold;">Crear mi contraseña</a></li><li>Inicia sesión con este correo (<strong>${email}</strong>) y la contraseña que acabas de crear.</li><li>Elige el día, la hora y la disciplina que prefieras — tu clase queda apartada sin costo.</li></ol><p><strong>Tienes ${FREE_CLASS_PROMO_VALID_DAYS} días para reservarla</strong> (hasta el ${deadlineLabel}).</p><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
   try {
     await sendEmail({ to: email, subject, text, html })
     console.log('✅ Email de clase gratis enviado a:', email)
@@ -895,6 +917,16 @@ app.post('/api/leads', async (req, res) => {
         upsertMailerLiteSubscriber({ email, fields: { source: source || 'popup_clase_gratis' } })
           .then(() => console.log('✅ Suscriptor agregado a MailerLite:', email))
           .catch((err) => console.error('❌ Error agregando a MailerLite', email, ':', err.message))
+      }
+    } else {
+      // Ya había dejado su correo: el popup le dice si su clase sigue vigente,
+      // si ya la usó o si venció (no se reenvía el correo).
+      try {
+        const promo = await getFreeClassPromoStatus(email)
+        result.promoStatus = promo.status
+        result.promoDeadline = promo.deadline
+      } catch (err) {
+        console.error('❌ Error consultando estado de la promo de', email, ':', err.message)
       }
     }
     res.json(result)
@@ -1846,6 +1878,16 @@ app.post('/api/auth/signup', async (req, res) => {
       return res.status(400).json({ success: false, error: error.message })
     }
 
+    // Si el correo ya tiene cuenta, Supabase no da error: devuelve un usuario sin
+    // identities y NO guarda la contraseña. Avisar en vez de fingir el registro.
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return res.status(409).json({
+        success: false,
+        code: 'EMAIL_ALREADY_REGISTERED',
+        error: 'Ya existe una cuenta con este correo. Inicia sesión, o usa «Olvidé mi contraseña» si no la recuerdas.',
+      })
+    }
+
     if (data.user) {
       try {
         await upsertProfileForAuthUser(data.user, {
@@ -1908,12 +1950,19 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     if (!email || typeof email !== 'string' || !email.trim()) {
       return res.status(400).json({ success: false, error: 'El correo es requerido' })
     }
-    const anon = getSupabaseAnon()
-    const { error } = await anon.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-      redirectTo: `${FRONTEND_URL}/reset-password`,
+    // El enlace lo genera Supabase, pero el correo sale por nuestro proveedor
+    // (MailerSend/SMTP): el correo integrado de Supabase tiene límites y no llegaba.
+    const normalizedEmail = email.trim().toLowerCase()
+    const { data, error } = await getSupabaseAdmin().auth.admin.generateLink({
+      type: 'recovery',
+      email: normalizedEmail,
+      options: { redirectTo: `${FRONTEND_URL}/reset-password` },
     })
     if (error) {
-      console.warn('Supabase resetPasswordForEmail:', error.message)
+      // Correo sin cuenta (u otro error): misma respuesta para no revelar quién tiene cuenta.
+      console.warn('Supabase generateLink (recovery):', error.message)
+    } else {
+      await sendPasswordResetEmail(normalizedEmail, data.properties.action_link)
     }
     res.json({
       success: true,

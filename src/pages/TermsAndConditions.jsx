@@ -34,7 +34,7 @@ function TermsAndConditions() {
             Términos y Condiciones
           </h1>
           <p className="text-sm font-body mb-8" style={{ color: '#6B7280' }}>
-            Última actualización: 30 de septiembre de 2026
+            Última actualización: 9 de octubre de 2026
           </p>
 
           <div className="space-y-8 font-body text-base leading-relaxed" style={{ color: '#4B5563' }}>
@@ -118,7 +118,7 @@ function TermsAndConditions() {
 
             <Section title="8. Material para la práctica">
               <Clause n="8.1" title="Material obligatorio">
-                Es obligatorio tomar cada clase con el material básico que requiere la práctica, como mat de yoga. Cada alumno debe traer su propio material. Sin el material básico no se permite tomar la clase.
+                Es obligatorio tomar cada clase con el material básico que requiere la práctica, como mat de yoga y, en las sesiones de Sound Healing, también una cobija. Cada alumno debe traer su propio material. Sin el material básico no se permite tomar la clase.
               </Clause>
               <Clause n="8.2" title="Renta de material">
                 El estudio no está obligado a proporcionar material. Cuenta con una cantidad limitada de material básico disponible para renta, sujeta a disponibilidad. La renta se paga por clase, en efectivo en la caja del estudio, antes de iniciar la práctica. Un Coordinador o Coordinadora de Operaciones de Popnest Wellness puede informarte el costo y gestionar la renta; el costo también puede consultarse en el sitio web. Si no traes tu material y no hay disponible para renta, o decides no rentarlo, la clase se considera tomada y no se ofrece reposición.

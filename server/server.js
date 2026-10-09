@@ -434,6 +434,19 @@ async function notifyAdminMissingCustomerEmail({ type, id, details }) {
   }
 }
 
+/**
+ * Material obligatorio por clase (Términos y Condiciones §8). Mantener en sync con
+ * `whatToBring` en src/data/classes.js.
+ */
+function getRequiredMaterialText(className) {
+  const n = String(className || '').toLowerCase()
+  let items = null
+  if (n.includes('sound healing')) items = 'tu propio mat de yoga y una cobija'
+  else if (/pilates|yoga|stretching/.test(n)) items = 'tu propio mat de yoga'
+  if (!items) return ''
+  return `Es obligatorio traer ${items}. Sin este material no puedes tomar la clase. El estudio tiene material limitado en renta, sujeto a disponibilidad, que se paga en efectivo antes de iniciar la clase. Si no traes tu material y no hay disponible para renta, o decides no rentarlo, la clase se considera tomada y no se ofrece reposición.`
+}
+
 /** Envía correo de confirmación de reserva al cliente. */
 async function sendBookingConfirmationEmail(booking) {
   const email = booking?.customer?.email
@@ -456,9 +469,10 @@ async function sendBookingConfirmationEmail(booking) {
   const dateStr = booking.formattedDate || booking.date || ''
   const timeStr = booking.time || ''
   const dateTimeLine = [dateStr, timeStr].filter(Boolean).join(' · ')
+  const materialText = getRequiredMaterialText(className)
   const subject = 'Reserva confirmada - Estudio Popnest Wellness'
-  const text = `Hola ${name ? name + ',' : ''}\n\nTu reserva ha sido confirmada.\n\nClase: ${className}\nFecha y hora: ${dateTimeLine || 'Ver detalles en tu panel'}\n\nPuedes ver y gestionar tus reservas en "Mis reservas" en nuestra web.\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
-  const html = `<p>Hola ${name ? `<strong>${name}</strong>,` : ''}</p><p>Tu reserva ha sido <strong>confirmada</strong>.</p><p><strong>Clase:</strong> ${className}<br><strong>Fecha y hora:</strong> ${dateTimeLine || 'Ver detalles en tu panel'}</p><p>Puedes ver y gestionar tus reservas en <strong>Mis reservas</strong> en nuestra web.</p><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
+  const text = `Hola ${name ? name + ',' : ''}\n\nTu reserva ha sido confirmada.\n\nClase: ${className}\nFecha y hora: ${dateTimeLine || 'Ver detalles en tu panel'}\n\n${materialText ? `MATERIAL OBLIGATORIO: ${materialText}\n\n` : ''}Puedes ver y gestionar tus reservas en "Mis reservas" en nuestra web.\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>Hola ${name ? `<strong>${name}</strong>,` : ''}</p><p>Tu reserva ha sido <strong>confirmada</strong>.</p><p><strong>Clase:</strong> ${className}<br><strong>Fecha y hora:</strong> ${dateTimeLine || 'Ver detalles en tu panel'}</p>${materialText ? `<p style="border-left:4px solid #B73D37;padding:8px 12px;background:#FEF3F2"><strong>Material obligatorio:</strong> ${materialText}</p>` : ''}<p>Puedes ver y gestionar tus reservas en <strong>Mis reservas</strong> en nuestra web.</p><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
   try {
     await sendEmail({ to: email, toName: name, subject, text, html })
     console.log('✅ Email de confirmación de reserva enviado a:', email)

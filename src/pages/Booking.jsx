@@ -174,11 +174,13 @@ function Booking() {
     ? (selectedClassInfo || teacherInfo)
     : classInfo
 
-  // Lo que cada persona debe traer a la clase (mat, cobija), si aplica
+  // Material obligatorio de la clase (mat, cobija), según Términos y Condiciones §8
   const whatToBring = (isCoachBooking ? selectedClassInfo : classInfo)?.whatToBring || []
   const whatToBringText = whatToBring.length
-    ? `Cada persona es responsable de traer ${whatToBring.join(' y ')}.`
+    ? `Es obligatorio traer ${whatToBring.join(' y ')}. Sin este material no puedes tomar la clase.`
     : ''
+  const materialPolicyText =
+    'El estudio tiene material limitado en renta, sujeto a disponibilidad, que se paga en efectivo antes de iniciar la clase. Si no traes tu material y no hay disponible para renta, o decides no rentarlo, la clase se considera tomada y no se ofrece reposición.'
 
   // Obtener horarios disponibles - solo cuando hay una clase seleccionada
   useEffect(() => {
@@ -778,13 +780,13 @@ function Booking() {
       if (appliedDiscount) {
         alert(`🎁 ¡Tu clase gratis quedó reservada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}\n\nNo se realizó ningún cargo.${panelMessage}`)
       } else if (usePackage) {
-        alert(`✅ ¡Reserva confirmada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${whatToBringText ? `\n\n🧘 ${whatToBringText}` : ''}\n\nSe usó una clase de tu paquete.${panelMessage}`)
+        alert(`✅ ¡Reserva confirmada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${whatToBringText ? `\n\n⚠️ MATERIAL OBLIGATORIO: ${whatToBringText} Si no lo traes y no rentas material, la clase se considera tomada y no se repone.` : ''}\n\nSe usó una clase de tu paquete.${panelMessage}`)
       } else if (stripeError) {
         const errorMessage = stripeError.message || 'Error desconocido'
         const errorType = stripeError.type || 'unknown'
         alert(`⚠️ Reserva guardada pero el pago requiere atención.\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nError: ${errorMessage}\nTipo: ${errorType}\n\nRevisa la consola del navegador (F12) para más detalles o contacta al administrador.`)
       } else if (paymentStatus === 'succeeded') {
-        alert(`✅ ¡Reserva confirmada y pagada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${whatToBringText ? `\n\n🧘 ${whatToBringText}` : ''}${panelMessage}`)
+        alert(`✅ ¡Reserva confirmada y pagada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${whatToBringText ? `\n\n⚠️ MATERIAL OBLIGATORIO: ${whatToBringText} Si no lo traes y no rentas material, la clase se considera tomada y no se repone.` : ''}${panelMessage}`)
       } else {
         alert(`⚠️ Reserva guardada pero el estado del pago es: ${paymentStatus}\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nRevisa el panel de administración para más detalles.${panelMessage}`)
       }
@@ -1561,15 +1563,21 @@ function Booking() {
                   className="mb-6 rounded-xl border-2 p-4 sm:p-5"
                   style={{
                     backgroundColor: '#FEF3F2',
-                    borderColor: '#D48D88',
+                    borderColor: '#B73D37',
                     boxShadow: '0 2px 10px rgba(183, 61, 55, 0.08)'
                   }}
                 >
-                  <p className="text-sm font-body leading-relaxed sm:text-base" style={{ color: '#374151' }}>
-                    <span className="font-heading font-semibold" style={{ color: '#1F2937' }}>
-                      Qué traer:
-                    </span>{' '}
+                  <p className="font-heading font-bold mb-2 text-base sm:text-lg" style={{ color: '#B73D37' }}>
+                    Material obligatorio
+                  </p>
+                  <p className="text-sm font-body font-semibold leading-relaxed sm:text-base mb-2" style={{ color: '#1F2937' }}>
                     {whatToBringText}
+                  </p>
+                  <p className="text-sm font-body leading-relaxed" style={{ color: '#374151' }}>
+                    {materialPolicyText}{' '}
+                    <Link to="/terminos" target="_blank" className="font-semibold underline" style={{ color: '#B73D37' }}>
+                      Ver Términos y Condiciones
+                    </Link>
                   </p>
                 </div>
               )}
@@ -2009,7 +2017,7 @@ function Booking() {
                       </p>
                       {whatToBringText && (
                         <p>
-                          <span className="font-medium">Qué traer:</span> {whatToBringText}
+                          <span className="font-medium">Material obligatorio:</span> {whatToBringText} Si no lo traes y no rentas material, la clase se considera tomada y no se repone.
                         </p>
                       )}
                       <p>

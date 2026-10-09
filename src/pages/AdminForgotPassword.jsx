@@ -82,7 +82,7 @@ function AdminForgotPassword() {
                   style={{ borderColor: '#DED5D5', backgroundColor: '#FFFFFF' }}
                   onFocus={(e) => (e.target.style.borderColor = '#B73D37')}
                   onBlur={(e) => (e.target.style.borderColor = '#DED5D5')}
-                  placeholder="info@estudiopopnest.com"
+                  placeholder="tu@email.com"
                 />
               </div>
 

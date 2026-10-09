@@ -1338,9 +1338,8 @@ const generateAdminToken = (admin) => {
   return signStaffToken(payload)
 }
 
-// Operador wellness: se asegura que exista en cada servidor (Railway, etc.)
-const WELLNESS_OPERATOR_EMAIL = 'wellness@estudiopopnest.com'
-const WELLNESS_OPERATOR_PASSWORD = 'W3lln3ss#Popn3st2026'
+// Cuentas eliminadas: se quitan de admins.json si siguen ahí (p. ej. en Railway)
+const REMOVED_ADMIN_EMAILS = ['wellness@estudiopopnest.com']
 
 // Lista inicial de administradores (se copia a admins.json la primera vez)
 const DEFAULT_ADMINS = [
@@ -1350,13 +1349,6 @@ const DEFAULT_ADMINS = [
     password: 'Wq8#nK2$pL5mR9xV',
     name: 'Administrador Principal',
     role: 'super_admin'
-  },
-  {
-    id: 'admin-wellness',
-    email: WELLNESS_OPERATOR_EMAIL,
-    password: WELLNESS_OPERATOR_PASSWORD,
-    name: 'Wellness',
-    role: 'operator'
   }
 ]
 
@@ -1366,16 +1358,9 @@ const getAdmins = () => {
     if (fs.existsSync(ADMINS_FILE)) {
       list = JSON.parse(fs.readFileSync(ADMINS_FILE, 'utf8'))
       list = list.map(a => ({ ...a, role: a.role === 'operator' ? 'operator' : 'super_admin' }))
-      // Asegurar que el operador wellness exista (migración para Railway/Vercel)
-      const hasWellness = list.some(a => a.email && a.email.toLowerCase() === WELLNESS_OPERATOR_EMAIL)
-      if (!hasWellness) {
-        list.push({
-          id: 'admin-wellness',
-          email: WELLNESS_OPERATOR_EMAIL,
-          password: WELLNESS_OPERATOR_PASSWORD,
-          name: 'Wellness',
-          role: 'operator'
-        })
+      const kept = list.filter(a => !(a.email && REMOVED_ADMIN_EMAILS.includes(a.email.trim().toLowerCase())))
+      if (kept.length !== list.length) {
+        list = kept
         fs.writeFileSync(ADMINS_FILE, JSON.stringify(list, null, 2))
       }
     } else {
@@ -1548,6 +1533,7 @@ const parseAdminToken = (req) => {
     if (!token) return null
     const payload = verifyStaffToken(token)
     if (!payload || !payload.adminId || !payload.role) return null
+    if (payload.email && REMOVED_ADMIN_EMAILS.includes(String(payload.email).toLowerCase())) return null
     return payload
   } catch (e) {
     return null

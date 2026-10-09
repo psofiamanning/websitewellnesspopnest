@@ -137,14 +137,13 @@ export const classSchedules = {
     }
   },
   'pilates': {
-    days: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Sábado'],
-    times: ['08:00', '08:30', '09:30', '10:30', '19:30', '20:30'],
+    days: ['Lunes', 'Martes', 'Miércoles', 'Jueves'],
+    times: ['08:30', '09:30', '19:30'],
     timesByDay: {
       Lunes: ['08:30'],
       Martes: ['09:30', '19:30'],
       Miércoles: ['08:30'],
-      Jueves: ['09:30'],
-      Sábado: ['08:00']
+      Jueves: ['09:30']
     }
   },
   'tai-chi': {
@@ -199,7 +198,7 @@ export const teacherSchedules = {
       Martes: ['09:30', '19:30'],
       Miércoles: ['08:30', '19:30'],
       Jueves: ['09:30', '20:30'],
-      Sábado: ['08:00', '10:30'],
+      Sábado: ['10:30'],
       Domingo: ['08:00']
     }
   },

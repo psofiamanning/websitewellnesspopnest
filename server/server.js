@@ -79,7 +79,15 @@ import {
   resolveProfileIdForPackagePurchase,
   getPackagePrice,
 } from './db/packages.js'
-import { getSupabaseAnon, getSupabaseAdmin } from './db/supabaseClient.js'
+import { getSupabaseAnon, getSupabaseAdmin, isSupabaseConfigured } from './db/supabaseClient.js'
+import {
+  isMissingTable as isMissingAdminAccountsTable,
+  verifyPassword,
+  listAdminAccounts,
+  insertAdminAccount,
+  seedAdminAccounts,
+  updateAdminAccountPassword,
+} from './db/adminAccounts.js'
 import { validateDiscountCodeForCustomer, getFreeClassPromoStatus } from './db/discountCodes.js'
 import { FREE_CLASS_PROMO_VALID_DAYS } from './config/discountCodes.js'
 import { findPackageDiscountCode, normalizePackageDiscountCode } from './config/packageDiscountCodes.js'
@@ -1384,6 +1392,39 @@ const updateAdminPassword = (email, newPassword) => {
   return admins[idx]
 }
 
+// Cuentas del panel: en Supabase (admin_accounts) si la tabla existe; si no
+// (falta correr add_admin_accounts.sql), en admins.json como antes.
+// Con la tabla vacía se copian ahí las cuentas de admins.json.
+const loadAdmins = async () => {
+  if (isSupabaseConfigured()) {
+    try {
+      let list = await listAdminAccounts()
+      if (!list.length) {
+        await seedAdminAccounts(getAdmins())
+        list = await listAdminAccounts()
+        console.log('✅ Cuentas de admin copiadas de admins.json a Supabase:', list.length)
+      }
+      return { source: 'db', list: list.filter(a => !REMOVED_ADMIN_EMAILS.includes(a.email)) }
+    } catch (e) {
+      if (!isMissingAdminAccountsTable(e)) throw e
+    }
+  }
+  return { source: 'file', list: getAdmins() }
+}
+
+const authenticateAdmin = async (email, password) => {
+  const { source, list } = await loadAdmins()
+  const admin = list.find(a => a.email && a.email.trim().toLowerCase() === email)
+  if (!admin) return null
+  const ok = source === 'db' ? verifyPassword(password, admin.passwordHash) : admin.password === password
+  return ok ? admin : null
+}
+
+const setAdminPassword = async (email, newPassword) => {
+  const { source } = await loadAdmins()
+  return source === 'db' ? updateAdminAccountPassword(email, newPassword) : updateAdminPassword(email, newPassword)
+}
+
 const getAdminResetTokens = () => {
   try {
     if (fs.existsSync(ADMIN_RESET_TOKENS_FILE)) {
@@ -1410,7 +1451,7 @@ const consumeAdminResetToken = (token) => {
 }
 
 // Endpoint: Login de administrador
-app.post('/api/auth/admin/login', (req, res) => {
+app.post('/api/auth/admin/login', async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
     
@@ -1425,8 +1466,7 @@ app.post('/api/auth/admin/login', (req, res) => {
 
     const normalizedEmail = String(email).trim().toLowerCase()
     const passwordTrimmed = String(password).trim()
-    const admins = getAdmins()
-    const admin = admins.find(a => a.email && a.email.trim().toLowerCase() === normalizedEmail && a.password === passwordTrimmed)
+    const admin = await authenticateAdmin(normalizedEmail, passwordTrimmed)
 
     if (!admin) {
       return res.status(401).json({ 
@@ -1437,7 +1477,7 @@ app.post('/api/auth/admin/login', (req, res) => {
 
     const token = generateAdminToken(admin)
     const role = admin.role === 'operator' ? 'operator' : 'super_admin'
-    const { password: _, ...adminWithoutPassword } = admin
+    const { password: _, passwordHash: __, ...adminWithoutPassword } = admin
 
     res.json({
       success: true,
@@ -1541,7 +1581,7 @@ const parseAdminToken = (req) => {
 }
 
 // Endpoint: Añadir operador (solo super_admin). Útil cuando el servidor está desplegado y no puedes editar admins.json
-app.post('/api/auth/admin/add-operator', (req, res) => {
+app.post('/api/auth/admin/add-operator', async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
     const payload = parseAdminToken(req)
@@ -1556,7 +1596,7 @@ app.post('/api/auth/admin/add-operator', (req, res) => {
       return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres.' })
     }
     const normalizedEmail = email.trim().toLowerCase()
-    const admins = getAdmins()
+    const { source, list: admins } = await loadAdmins()
     if (admins.some(a => a.email && a.email.trim().toLowerCase() === normalizedEmail)) {
       return res.status(400).json({ success: false, error: 'Ya existe un administrador u operador con ese correo.' })
     }
@@ -1564,15 +1604,19 @@ app.post('/api/auth/admin/add-operator', (req, res) => {
     if (passwordToSave.length < 6) {
       return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres (sin espacios extra).' })
     }
-    const newId = 'admin-' + Date.now()
-    admins.push({
-      id: newId,
+    const newOperator = {
+      id: 'admin-' + Date.now(),
       email: normalizedEmail,
       password: passwordToSave,
       name: (name && String(name).trim()) || 'Operador',
       role: 'operator'
-    })
-    fs.writeFileSync(ADMINS_FILE, JSON.stringify(admins, null, 2))
+    }
+    if (source === 'db') {
+      await insertAdminAccount(newOperator)
+    } else {
+      admins.push(newOperator)
+      fs.writeFileSync(ADMINS_FILE, JSON.stringify(admins, null, 2))
+    }
     res.json({ success: true, message: 'Operador añadido. Ya puede iniciar sesión en /admin/login con ' + normalizedEmail + ' y la contraseña que ingresaste.' })
   } catch (error) {
     console.error('Error in add-operator:', error)
@@ -1749,7 +1793,7 @@ app.post('/api/admin/bookings', async (req, res) => {
 })
 
 // Endpoint: Listar cuentas de admin/operador (solo super_admin, para verificar que se guardaron)
-app.get('/api/auth/admin/list', (req, res) => {
+app.get('/api/auth/admin/list', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.query?.token
     if (!token) {
@@ -1759,7 +1803,7 @@ app.get('/api/auth/admin/list', (req, res) => {
     if (!payload || payload.role !== 'super_admin') {
       return res.status(403).json({ success: false, error: 'Solo super admin puede listar cuentas' })
     }
-    const admins = getAdmins()
+    const { list: admins } = await loadAdmins()
     const list = admins.map(a => ({ email: a.email, name: a.name, role: a.role === 'operator' ? 'operator' : 'super_admin' }))
     res.json({ success: true, admins: list })
   } catch (e) {
@@ -1776,7 +1820,7 @@ app.post('/api/auth/admin/forgot-password', async (req, res) => {
       return res.status(400).json({ success: false, error: 'El correo es requerido' })
     }
     const normalizedEmail = email.trim().toLowerCase()
-    const admins = getAdmins()
+    const { list: admins } = await loadAdmins()
     const admin = admins.find(a => a.email && a.email.toLowerCase() === normalizedEmail)
     if (admin) {
       const resetToken = crypto.randomBytes(32).toString('hex')
@@ -1791,7 +1835,7 @@ app.post('/api/auth/admin/forgot-password', async (req, res) => {
 })
 
 // Endpoint: Restablecer contraseña de administrador con token del correo
-app.post('/api/auth/admin/reset-password', (req, res) => {
+app.post('/api/auth/admin/reset-password', async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
     const { token, newPassword } = req.body
@@ -1805,7 +1849,7 @@ app.post('/api/auth/admin/reset-password', (req, res) => {
     if (!email) {
       return res.status(400).json({ success: false, error: 'Enlace inválido o expirado. Solicita uno nuevo.' })
     }
-    const updated = updateAdminPassword(email, newPassword)
+    const updated = await setAdminPassword(email, newPassword)
     if (!updated) {
       return res.status(404).json({ success: false, error: 'Administrador no encontrado' })
     }
@@ -1818,7 +1862,7 @@ app.post('/api/auth/admin/reset-password', (req, res) => {
 
 // Endpoint: Restablecer contraseña de administrador SIN correo (solo si ADMIN_RESET_SECRET está configurado)
 // Uso: POST /api/auth/admin/force-reset-password { "email": "info@estudiopopnest.com", "newPassword": "tuNuevaContraseña", "secret": "el valor de ADMIN_RESET_SECRET" }
-app.post('/api/auth/admin/force-reset-password', (req, res) => {
+app.post('/api/auth/admin/force-reset-password', async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
     const expectedSecret = (process.env.ADMIN_RESET_SECRET || '').trim()
@@ -1832,7 +1876,7 @@ app.post('/api/auth/admin/force-reset-password', (req, res) => {
     if (newPassword.length < 6) {
       return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres' })
     }
-    const updated = updateAdminPassword(email.trim(), newPassword)
+    const updated = await setAdminPassword(email.trim(), newPassword)
     if (!updated) {
       return res.status(404).json({ success: false, error: 'No existe un administrador con ese correo' })
     }

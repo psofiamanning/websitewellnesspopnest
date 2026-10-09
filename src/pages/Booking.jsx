@@ -174,6 +174,12 @@ function Booking() {
     ? (selectedClassInfo || teacherInfo)
     : classInfo
 
+  // Lo que cada persona debe traer a la clase (mat, cobija), si aplica
+  const whatToBring = (isCoachBooking ? selectedClassInfo : classInfo)?.whatToBring || []
+  const whatToBringText = whatToBring.length
+    ? `Cada persona es responsable de traer ${whatToBring.join(' y ')}.`
+    : ''
+
   // Obtener horarios disponibles - solo cuando hay una clase seleccionada
   useEffect(() => {
     // Si es coach y aún no hay clase elegida, no armar calendario
@@ -772,13 +778,13 @@ function Booking() {
       if (appliedDiscount) {
         alert(`🎁 ¡Tu clase gratis quedó reservada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}\n\nNo se realizó ningún cargo.${panelMessage}`)
       } else if (usePackage) {
-        alert(`✅ ¡Reserva confirmada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}\n\nSe usó una clase de tu paquete.${panelMessage}`)
+        alert(`✅ ¡Reserva confirmada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${whatToBringText ? `\n\n🧘 ${whatToBringText}` : ''}\n\nSe usó una clase de tu paquete.${panelMessage}`)
       } else if (stripeError) {
         const errorMessage = stripeError.message || 'Error desconocido'
         const errorType = stripeError.type || 'unknown'
         alert(`⚠️ Reserva guardada pero el pago requiere atención.\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nError: ${errorMessage}\nTipo: ${errorType}\n\nRevisa la consola del navegador (F12) para más detalles o contacta al administrador.`)
       } else if (paymentStatus === 'succeeded') {
-        alert(`✅ ¡Reserva confirmada y pagada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${panelMessage}`)
+        alert(`✅ ¡Reserva confirmada y pagada!\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\nEmail: ${bookingData.customer.email}${whatToBringText ? `\n\n🧘 ${whatToBringText}` : ''}${panelMessage}`)
       } else {
         alert(`⚠️ Reserva guardada pero el estado del pago es: ${paymentStatus}\n\n${isCoachReservationType(bookingData.type) ? 'Coach' : 'Clase'}: ${bookingData.className}\nFecha: ${bookingData.formattedDate}\nHora: ${bookingData.time}\nCliente: ${bookingData.customer.fullName}\n\nRevisa el panel de administración para más detalles.${panelMessage}`)
       }
@@ -1550,6 +1556,24 @@ function Booking() {
                 </div>
               )}
 
+              {selectedTime && whatToBringText && (
+                <div
+                  className="mb-6 rounded-xl border-2 p-4 sm:p-5"
+                  style={{
+                    backgroundColor: '#FEF3F2',
+                    borderColor: '#D48D88',
+                    boxShadow: '0 2px 10px rgba(183, 61, 55, 0.08)'
+                  }}
+                >
+                  <p className="text-sm font-body leading-relaxed sm:text-base" style={{ color: '#374151' }}>
+                    <span className="font-heading font-semibold" style={{ color: '#1F2937' }}>
+                      Qué traer:
+                    </span>{' '}
+                    {whatToBringText}
+                  </p>
+                </div>
+              )}
+
               {/* Información del cliente */}
               {selectedTime && (
                 <div className="mb-6">
@@ -1983,6 +2007,11 @@ function Booking() {
                       <p>
                         <span className="font-medium">Teléfono:</span> {customerInfo.phone}
                       </p>
+                      {whatToBringText && (
+                        <p>
+                          <span className="font-medium">Qué traer:</span> {whatToBringText}
+                        </p>
+                      )}
                       <p>
                         <span className="font-medium">Precio:</span>{' '}
                         {appliedDiscount ? (

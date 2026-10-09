@@ -57,6 +57,7 @@ export const classTypes = [
     fullDescription:
       'Hatha Yoga es una práctica clásica que integra posturas sostenidas, respiración consciente y pausas de atención para fortalecer el cuerpo y calmar la mente. El ritmo es claro y accesible, ideal para construir base técnica y presencia.\n\nPuedes esperar una secuencia progresiva con movilidad suave, trabajo de alineación, respiración guiada y cierre de relajación. Es una práctica equilibrada para cultivar estabilidad, flexibilidad y enfoque.',
     image: classIconHatha,
+    whatToBring: ['tu mat de yoga'],
   },
   {
     id: 'pilates',
@@ -69,6 +70,7 @@ export const classTypes = [
     fullDescription:
       'En esta sesión trabajamos desde los principios del método: respiración, precisión y fluidez. La clase integra ejercicios en colchoneta y opciones progresivas para distintos niveles, con atención a la columna y la pelvis.\n\nPuedes esperar calentamiento articular, series de fortalecimiento del abdomen y espalda, y cierre con estiramientos. Es una práctica clara y contenida, pensada para sentir el cuerpo con más consciencia y sin prisa.',
     image: classIconPilates,
+    whatToBring: ['tu mat de yoga'],
   },
   {
     id: 'tai-chi',
@@ -89,6 +91,7 @@ export const classTypes = [
     description: 'Clase dinámica en Coyoacán que combina fuerza, resistencia y alineación en secuencias exigentes y claras, ideal para quien busca profundizar en posturas y energía atlética con guía experta.',
     fullDescription: 'Power Yoga es una práctica vigorosa en la que el calor y el ritmo sostienen secuencias fluidas entre posturas de pie, equilibrios y trabajo de fuerza. Rocío integra su experiencia en yoga deportivo y preparación física para ofrecer una clase desafiante y ordenada, con atención al detalle y opciones para distintos niveles.\n\nPuedes esperar calentamiento activo, series que desarrollan resistencia y estabilidad, y un cierre que devuelve el cuerpo a la calma. Es una propuesta para quien disfruta del movimiento intenso sin perder la consciencia respiratoria y la integridad articular.',
     image: classIconPower,
+    whatToBring: ['tu mat de yoga'],
   },
   {
     id: 'sound-healing',
@@ -99,6 +102,7 @@ export const classTypes = [
     description: 'Experiencia de sanación sonora en Coyoacán que utiliza cuencos tibetanos, gongs y vibraciones terapéuticas para facilitar relajación profunda, reducir ansiedad y promover equilibrio energético.',
     fullDescription: 'El Sound Healing o Sanación Sonora es una terapia vibracional que utiliza instrumentos ancestrales como cuencos tibetanos, gongs, campanas, diapasones y la voz para crear frecuencias curativas que resuenan con el cuerpo y la mente.\n\nDurante la sesión, te recostarás cómodamente mientras te envuelves en un baño de sonidos que penetran profundamente en tus células y tejidos. La experiencia es completamente pasiva, permitiendo que el cuerpo entre en un estado de relajación profunda mientras las vibraciones trabajan a nivel celular.\n\nPuedes esperar una experiencia transformadora donde los sonidos te guían hacia estados de conciencia expandida, liberando tensiones físicas y emocionales almacenadas.\n\nEl Sound Healing reduce significativamente el estrés y la ansiedad, mejora la calidad del sueño, equilibra el sistema nervioso, libera bloqueos emocionales y traumas almacenados, reduce el dolor crónico y la inflamación, mejora la concentración y claridad mental, promueve la producción de ondas cerebrales alfa y theta asociadas con la relajación profunda, fortalece el sistema inmunológico, y facilita estados meditativos profundos, proporcionando una experiencia de sanación holística que integra cuerpo, mente y espíritu.',
     image: classIconSound,
+    whatToBring: ['tu mat de yoga', 'una cobija'],
   },
   {
     id: 'belly-dance',
@@ -123,6 +127,7 @@ export const classTypes = [
     fullDescription:
       'Stretching es una clase enfocada en mejorar la flexibilidad, la movilidad y la postura mediante estiramientos conscientes y progresivos. Libera la tensión acumulada, amplía tu rango de movimiento y disfruta una sensación de ligereza y bienestar.\n\nLa sesión avanza de forma gradual, con respiración guiada y opciones para cada cuerpo. Es una práctica apta para todos los niveles, ideal para complementar tu entrenamiento o para tus días de recuperación.',
     image: classIconPilates, // TODO: ícono placeholder — reemplazar por arte de Stretching.
+    whatToBring: ['tu mat de yoga'],
   },
 ]
 

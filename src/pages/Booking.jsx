@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { teachers, classTypes, classSchedules } from '../data/classes'
+import { teachers, classTypes, classSchedules, getSlotTeacher, getClassTeachersLabel, getClassScheduleForTeacher } from '../data/classes'
 import Calendar from '../components/Calendar'
 import TimeSlotSelector from '../components/TimeSlotSelector'
 import { format, addDays, startOfWeek, eachDayOfInterval, isSameDay } from 'date-fns'
@@ -174,6 +174,20 @@ function Booking() {
     ? (selectedClassInfo || teacherInfo)
     : classInfo
 
+  // Coach del horario elegido (Sound Healing tiene otra coach jueves y domingo 10:30).
+  const slotTeacherName = (() => {
+    if (isCoachBooking) return teacherInfo?.name || ''
+    if (!classInfo) return ''
+    if (selectedDate && selectedTime) {
+      const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+      return getSlotTeacher(classInfo.id, dayNames[selectedDate.getDay()], selectedTime)
+    }
+    return getClassTeachersLabel(classInfo.id)
+  })()
+  // Horario de la clase; desde el perfil de una coach, solo sus días/horas.
+  const getScheduleFor = (classId) =>
+    isCoachBooking ? getClassScheduleForTeacher(classId, teacherInfo?.name) : classSchedules[classId]
+
   // Material obligatorio de la clase (mat, cobija), según Términos y Condiciones §8
   const whatToBring = (isCoachBooking ? selectedClassInfo : classInfo)?.whatToBring || []
   const whatToBringText = whatToBring.length
@@ -195,7 +209,7 @@ function Booking() {
     const classId = isCoachBooking ? selectedClassId : id
     if (!classId) return
 
-    const schedule = classSchedules[classId]
+    const schedule = getScheduleFor(classId)
     if (!schedule) return
 
     // Generar fechas disponibles para los próximos 60 días
@@ -258,7 +272,7 @@ function Booking() {
   useEffect(() => {
     const classId = isCoachBooking ? selectedClassId : id
     if (!classId) return
-    const schedule = classSchedules[classId]
+    const schedule = getScheduleFor(classId)
     if (!schedule?.timesByDay) return
     if (!selectedDate) {
       setAvailableTimes(schedule.times || [])
@@ -687,7 +701,7 @@ function Booking() {
       const bookingData = {
         type: isCoachBooking ? 'coach' : 'clase',
         className: selectedClassInfo ? selectedClassInfo.name : bookingInfo.name,
-        teacherName: type === 'class' ? bookingInfo.teacher : (teacherInfo ? teacherInfo.name : bookingInfo.name),
+        teacherName: slotTeacherName || bookingInfo.teacher,
         date: format(selectedDate, 'yyyy-MM-dd'),
         formattedDate: format(selectedDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es }),
         time: selectedTime,
@@ -852,10 +866,11 @@ function Booking() {
     )
   }
   if (type === 'class' && classInfo) {
-    const classTeacher = teachers.find((t) => t.id === classInfo.teacherId) || null
+    const classTeacher =
+      teachers.find((t) => t.name === slotTeacherName) || teachers.find((t) => t.id === classInfo.teacherId) || null
     return (
       <BookingClassEditorialView
-        classInfo={classInfo}
+        classInfo={{ ...classInfo, teacher: slotTeacherName || classInfo.teacher }}
         teacher={classTeacher}
         selectedDate={selectedDate}
         selectedTime={selectedTime}
@@ -1116,7 +1131,7 @@ function Booking() {
                   <div className="text-body font-body space-y-3">
                     <div className="space-y-2">
                       <p style={{ color: '#6B7280' }}>
-                        <span className="font-semibold" style={{ color: '#B73D37' }}>Coach:</span> {bookingInfo.teacher}
+                        <span className="font-semibold" style={{ color: '#B73D37' }}>Coach:</span> {slotTeacherName || bookingInfo.teacher}
                       </p>
                       <p style={{ color: '#6B7280' }}>
                         <span className="font-semibold" style={{ color: '#B73D37' }}>Duración:</span> {bookingInfo.duration} minutos
@@ -1251,7 +1266,7 @@ function Booking() {
                         {bookingInfo.name}
                       </h3>
                       <p className="text-sm font-body" style={{ color: '#6B7280' }}>
-                        {bookingInfo.teacher} • {bookingInfo.duration} min
+                        {slotTeacherName || bookingInfo.teacher} • {bookingInfo.duration} min
                       </p>
                     </div>
                   </div>
@@ -1431,7 +1446,7 @@ function Booking() {
                         {selectedClassInfo.name}
                       </h3>
                       <p className="text-sm font-body" style={{ color: '#6B7280' }}>
-                        {selectedClassInfo.teacher} • {selectedClassInfo.duration} min
+                        {slotTeacherName || selectedClassInfo.teacher} • {selectedClassInfo.duration} min
                       </p>
                     </div>
                   </div>

@@ -6,7 +6,7 @@ import studioPhoto3 from '../assets/studio-photo-3.png'
 import studioPhoto4 from '../assets/studio-photo-4.png'
 import studioHeroMirrors from '../assets/studio-hero-mirrors.jpg'
 import logoEstudioPopnest from '../assets/logo-estudio-popnest.png'
-import { classTypes } from '../data/classes'
+import { classTypes, getClassTeachersLabel } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
 import { shouldShowProposalPlans } from '../config/proposalPlans'
@@ -165,7 +165,7 @@ function Home() {
                           <h3 className="pn-h4">{c.name}</h3>
                         </div>
                         <p className="pn-text-sm">
-                          {c.teacher} · {c.duration} min
+                          {getClassTeachersLabel(c.id)} · {c.duration} min
                         </p>
                       </div>
                     </Link>

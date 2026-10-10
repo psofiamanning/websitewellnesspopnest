@@ -42,6 +42,14 @@ export const teachers = [
     image: null, // Sin foto por ahora — la tarjeta muestra un avatar con iniciales.
     bio: 'Facilitador de Sound Healing. Acompaña sesiones de sanación sonora con cuencos, gongs y vibraciones para una relajación profunda.', // TODO: bio definitiva pendiente.
     classes: ['Sound Healing']
+  },
+  {
+    id: 8,
+    name: 'Jimena',
+    specialty: 'Sound Healing',
+    image: null, // Sin foto por ahora — la tarjeta muestra un avatar con iniciales.
+    bio: 'Facilitadora de Sound Healing. Acompaña sesiones de sanación sonora con cuencos, gongs y vibraciones para una relajación profunda.', // TODO: apellido, foto y bio definitiva pendientes.
+    classes: ['Sound Healing']
   }
 ]
 
@@ -165,12 +173,18 @@ export const classSchedules = {
     times: ['08:30']
   },
   'sound-healing': {
-    days: ['Martes', 'Miércoles', 'Domingo'],
-    times: ['09:00', '20:30'],
+    days: ['Martes', 'Miércoles', 'Jueves', 'Domingo'],
+    times: ['09:00', '10:30', '19:30', '20:30'],
     timesByDay: {
       Martes: ['20:30'],
       Miércoles: ['20:30'],
-      Domingo: ['09:00']
+      Jueves: ['19:30'],
+      Domingo: ['09:00', '10:30']
+    },
+    // Horarios con otra coach distinta a la de la clase (Juan Martínez)
+    teachersByDayTime: {
+      Jueves: { '19:30': 'Jimena' },
+      Domingo: { '10:30': 'Jimena' }
     }
   },
   'belly-dance': {
@@ -235,5 +249,42 @@ export const teacherSchedules = {
       Miércoles: ['20:30'],
       Domingo: ['09:00']
     }
+  },
+  8: { // Jimena
+    classes: ['sound-healing'],
+    days: ['Jueves', 'Domingo'],
+    times: ['10:30', '19:30'],
+    timesByDay: {
+      Jueves: ['19:30'],
+      Domingo: ['10:30']
+    }
   }
+}
+
+/** Coach de un horario concreto (algunas clases tienen otra coach en ciertos días/horas). */
+export function getSlotTeacher(classId, day, time) {
+  const override = classSchedules[classId]?.teachersByDayTime?.[day]?.[time]
+  if (override) return override
+  return classTypes.find((c) => c.id === classId)?.teacher || ''
+}
+
+/** Todas las coaches de una clase, para mostrar antes de elegir horario (ej. "Juan Martínez y Jimena"). */
+export function getClassTeachersLabel(classId) {
+  const base = classTypes.find((c) => c.id === classId)?.teacher
+  const overrides = Object.values(classSchedules[classId]?.teachersByDayTime || {}).flatMap((byTime) => Object.values(byTime))
+  const names = [...new Set([base, ...overrides].filter(Boolean))]
+  return names.length > 1 ? `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}` : names[0] || ''
+}
+
+/** Horario de una clase con solo los días/horas de una coach (para reservar desde su perfil). */
+export function getClassScheduleForTeacher(classId, teacherName) {
+  const schedule = classSchedules[classId]
+  if (!schedule || !schedule.teachersByDayTime || !teacherName) return schedule
+  const timesByDay = {}
+  ;(schedule.days || []).forEach((day) => {
+    const times = (schedule.timesByDay?.[day] || schedule.times || []).filter((t) => getSlotTeacher(classId, day, t) === teacherName)
+    if (times.length) timesByDay[day] = times
+  })
+  const days = Object.keys(timesByDay)
+  return { ...schedule, days, times: [...new Set(days.flatMap((d) => timesByDay[d]))].sort(), timesByDay }
 }

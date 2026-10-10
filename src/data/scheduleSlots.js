@@ -1,4 +1,4 @@
-import { classTypes, classSchedules } from './classes'
+import { classTypes, classSchedules, getSlotTeacher } from './classes'
 
 /** Mismo orden que en /horario (Schedule.jsx). */
 export const DAY_ORDER = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
@@ -19,7 +19,7 @@ export function buildScheduleSlots() {
         slots.push({
           classId: cls.id,
           className: cls.name,
-          teacher: cls.teacher,
+          teacher: getSlotTeacher(cls.id, day, time),
           day,
           time,
           durationMinutes: cls.duration || 60,

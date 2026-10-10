@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { classTypes } from '../data/classes'
+import { classTypes, getClassTeachersLabel } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
 import { getLandingNavItems } from '../data/classLandingRoutes'
 import { dotClassForClassId } from '../utils/redesignScheduleFromData'
@@ -25,7 +25,7 @@ function PracticeCard({ c }) {
             <h2 className="pn-h4 cl-pcard__title-mosaic">{c.name}</h2>
           </div>
           <p className="cl-pcard__meta cl-pcard__meta--mosaic">
-            {c.teacher} · {c.duration} min
+            {getClassTeachersLabel(c.id)} · {c.duration} min
           </p>
           <p className="cl-pcard__desc cl-pcard__desc--mosaic">{c.description}</p>
           <div className="cl-pcard__mosaic-footer">

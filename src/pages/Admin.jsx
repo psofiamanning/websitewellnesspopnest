@@ -48,9 +48,12 @@ function Admin() {
   const [adminListError, setAdminListError] = useState('')
   const [showAddBooking, setShowAddBooking] = useState(false)
   const [addBookingDate, setAddBookingDate] = useState('')
-  const [addBookingTime, setAddBookingTime] = useState('')
-  const [addBookingClassName, setAddBookingClassName] = useState('')
-  const [addBookingTeacherName, setAddBookingTeacherName] = useState('')
+  const [addBookingSchedules, setAddBookingSchedules] = useState([])
+  const [addBookingSchedulesLoading, setAddBookingSchedulesLoading] = useState(false)
+  const [addBookingScheduleId, setAddBookingScheduleId] = useState('')
+  const [addBookingPackages, setAddBookingPackages] = useState(null) // null = aún no se busca
+  const [addBookingPackageId, setAddBookingPackageId] = useState('')
+  const [addBookingSubmitting, setAddBookingSubmitting] = useState(false)
   const [addBookingCustomerName, setAddBookingCustomerName] = useState('')
   const [addBookingCustomerEmail, setAddBookingCustomerEmail] = useState('')
   const [addBookingCustomerPhone, setAddBookingCustomerPhone] = useState('')
@@ -297,6 +300,55 @@ function Admin() {
     }
   }
 
+  const loadAddBookingSchedules = async (date) => {
+    setAddBookingScheduleId('')
+    setAddBookingSchedules([])
+    if (!date) return
+    setAddBookingSchedulesLoading(true)
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/schedules?date=${encodeURIComponent(date)}`, { headers: adminAuthHeaders() })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setAddBookingError(data.error || 'No se pudieron cargar las clases de ese día')
+        return
+      }
+      setAddBookingSchedules(data.schedules || [])
+    } catch (err) {
+      setAddBookingError(err.message || 'Error de conexión')
+    } finally {
+      setAddBookingSchedulesLoading(false)
+    }
+  }
+
+  // Paquetes con los que se puede registrar: pagados, vigentes y con clases (o ilimitado).
+  const isUsablePackage = (p) =>
+    p.status === 'confirmed' &&
+    (!p.expiresAt || new Date(p.expiresAt) > new Date()) &&
+    (p.isUnlimited || Number(p.classesRemaining) > 0)
+
+  const lookupAddBookingCustomer = async () => {
+    const email = addBookingCustomerEmail.trim().toLowerCase()
+    setAddBookingPackages(null)
+    setAddBookingPackageId('')
+    if (!email || !email.includes('@')) return
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/customer-packages?email=${encodeURIComponent(email)}`, { headers: adminAuthHeaders() })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setAddBookingError(data.error || 'No se pudieron cargar los paquetes')
+        return
+      }
+      const pkgs = data.packages || []
+      const usable = pkgs.filter(isUsablePackage)
+      setAddBookingPackages(usable)
+      if (usable.length > 0) setAddBookingPackageId(usable[0].id)
+      const knownName = pkgs[0]?.customer?.fullName
+      if (knownName && !addBookingCustomerName.trim()) setAddBookingCustomerName(knownName)
+    } catch (err) {
+      setAddBookingError(err.message || 'Error de conexión')
+    }
+  }
+
   const handleAddBooking = async (e) => {
     e.preventDefault()
     setAddBookingError('')
@@ -306,16 +358,22 @@ function Admin() {
       setAddBookingError('Sesión expirada. Vuelve a iniciar sesión.')
       return
     }
+    const schedule = addBookingSchedules.find((s) => String(s.id) === String(addBookingScheduleId))
+    if (!schedule) {
+      setAddBookingError('Elige la clase.')
+      return
+    }
+    setAddBookingSubmitting(true)
     try {
       const res = await fetch(`${BACKEND_URL}/api/admin/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,
-          date: addBookingDate.trim(),
-          time: addBookingTime.trim(),
-          className: addBookingClassName.trim(),
-          teacherName: addBookingTeacherName.trim(),
+          date: schedule.date,
+          time: schedule.time,
+          className: schedule.className,
+          packageId: addBookingPackageId || undefined,
           customer: {
             fullName: addBookingCustomerName.trim(),
             email: addBookingCustomerEmail.trim(),
@@ -325,20 +383,26 @@ function Admin() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setAddBookingError(data.error || 'Error al crear la reserva')
+        setAddBookingError(data.error || 'Error al registrar')
         return
       }
-      setAddBookingSuccess('Reserva creada correctamente.')
-      setAddBookingDate('')
-      setAddBookingTime('')
-      setAddBookingClassName('')
-      setAddBookingTeacherName('')
+      const pkg = (addBookingPackages || []).find((p) => p.id === addBookingPackageId)
+      setAddBookingSuccess(
+        `${addBookingCustomerName.trim()} quedó registrada en ${schedule.className} (${schedule.time}).` +
+          (pkg ? (pkg.isUnlimited ? ' Usó su pase ilimitado.' : ` Se descontó 1 clase de su ${pkg.packageName}.`) : ' No se descontó de ningún paquete.')
+      )
       setAddBookingCustomerName('')
       setAddBookingCustomerEmail('')
       setAddBookingCustomerPhone('')
+      setAddBookingPackages(null)
+      setAddBookingPackageId('')
       loadBookings()
+      loadAddBookingSchedules(addBookingDate)
+      setAddBookingScheduleId(String(schedule.id))
     } catch (err) {
       setAddBookingError(err.message || 'Error de conexión')
+    } finally {
+      setAddBookingSubmitting(false)
     }
   }
 
@@ -507,7 +571,7 @@ function Admin() {
                   className="px-4 py-2 rounded-lg font-body transition-all duration-300 border-2 whitespace-nowrap"
                   style={{ borderColor: '#B73D37', color: '#B73D37' }}
                 >
-                  {showAddBooking ? 'Ocultar reserva manual' : 'Reserva manual (con fecha)'}
+                  {showAddBooking ? 'Ocultar registro' : 'Registrar en clase'}
                 </button>
                 {canViewRevenue() && (
                   <button
@@ -707,16 +771,15 @@ function Admin() {
             {activeTab === 'bookings' && showAddBooking && (
               <div className="mb-6">
                 <div className="mt-4 p-6 rounded-lg border-2 bg-quaternary/30" style={{ borderColor: '#E5B3B0' }}>
-                    <h2 className="text-h3 font-heading text-body mb-2">Reserva manual (con fecha y hora)</h2>
+                    <h2 className="text-h3 font-heading text-body mb-2">Registrar en una clase</h2>
                     <p className="text-body font-body text-sm mb-2">
-                      Solo para registrar una clase en un día concreto. <strong>No suma clases al paquete.</strong>
+                      Para quien llega a una clase: elige el día y la clase, escribe su correo y, si tiene paquete, <strong>se le descuenta 1 clase</strong>. Se puede registrar aunque la clase esté llena.
                     </p>
                     {canViewRevenue() && (
                       <p className="text-body font-body text-sm mb-4 p-3 rounded-lg" style={{ backgroundColor: '#FEE2E2', color: '#991B1B' }}>
                         Para dar clases sin elegir fecha: usa el botón rojo <strong>«Otorgar clases (sin fecha)»</strong> arriba (email + cantidad de clases).
                       </p>
                     )}
-                    <p className="text-body font-body text-sm mb-4 text-neutral-600">Útil cuando ya asistió y quieres dejar constancia en la lista.</p>
                     {addBookingError && (
                       <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm font-body">{addBookingError}</div>
                     )}
@@ -726,35 +789,61 @@ function Admin() {
                     <form onSubmit={handleAddBooking} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
                       <div>
                         <label className="block text-body font-body font-medium mb-1">Fecha *</label>
-                        <input type="date" value={addBookingDate} onChange={(e) => setAddBookingDate(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
-                      </div>
-                      <div>
-                        <label className="block text-body font-body font-medium mb-1">Hora *</label>
-                        <input type="text" placeholder="Ej. 11:30" value={addBookingTime} onChange={(e) => setAddBookingTime(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
+                        <input type="date" value={addBookingDate} onChange={(e) => { setAddBookingDate(e.target.value); setAddBookingError(''); loadAddBookingSchedules(e.target.value) }} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
                       </div>
                       <div>
                         <label className="block text-body font-body font-medium mb-1">Clase *</label>
-                        <input type="text" placeholder="Ej. Tai Chi" value={addBookingClassName} onChange={(e) => setAddBookingClassName(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
+                        <select value={addBookingScheduleId} onChange={(e) => setAddBookingScheduleId(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body bg-white" required disabled={!addBookingDate || addBookingSchedulesLoading}>
+                          <option value="">
+                            {!addBookingDate ? 'Primero elige la fecha' : addBookingSchedulesLoading ? 'Cargando clases…' : addBookingSchedules.length === 0 ? 'No hay clases ese día' : 'Elige la clase'}
+                          </option>
+                          {addBookingSchedules.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.time} · {s.className}{s.teacherName ? ` · ${s.teacherName}` : ''} ({s.spotsAvailable > 0 ? `${s.spotsAvailable} lugares` : 'llena'})
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div>
-                        <label className="block text-body font-body font-medium mb-1">Coach</label>
-                        <input type="text" placeholder="Ej. Blanca Bear" value={addBookingTeacherName} onChange={(e) => setAddBookingTeacherName(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" />
+                        <label className="block text-body font-body font-medium mb-1">Email del cliente *</label>
+                        <input type="email" placeholder="correo@ejemplo.com" value={addBookingCustomerEmail} onChange={(e) => { setAddBookingCustomerEmail(e.target.value); setAddBookingPackages(null); setAddBookingPackageId('') }} onBlur={lookupAddBookingCustomer} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
                       </div>
-                      <div className="md:col-span-2">
+                      <div>
                         <label className="block text-body font-body font-medium mb-1">Nombre del cliente *</label>
-                        <input type="text" placeholder="Ej. Perla Ruiz" value={addBookingCustomerName} onChange={(e) => setAddBookingCustomerName(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
-                      </div>
-                      <div>
-                        <label className="block text-body font-body font-medium mb-1">Email del cliente</label>
-                        <input type="email" placeholder="ejemplo@email.com" value={addBookingCustomerEmail} onChange={(e) => setAddBookingCustomerEmail(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" />
+                        <input type="text" placeholder="Nombre y apellido" value={addBookingCustomerName} onChange={(e) => setAddBookingCustomerName(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
                       </div>
                       <div>
                         <label className="block text-body font-body font-medium mb-1">Teléfono</label>
                         <input type="text" placeholder="Opcional" value={addBookingCustomerPhone} onChange={(e) => setAddBookingCustomerPhone(e.target.value)} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" />
                       </div>
                       <div className="md:col-span-2">
-                        <button type="submit" className="px-4 py-2 rounded-lg font-body font-medium text-white" style={{ backgroundColor: '#B73D37' }}>
-                          Crear reserva
+                        <label className="block text-body font-body font-medium mb-1">Descontar de</label>
+                        {addBookingPackages === null ? (
+                          <p className="text-sm font-body text-neutral-600">Escribe el correo para ver sus paquetes.</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {addBookingPackages.map((p) => (
+                              <label key={p.id} className="flex items-center gap-2 font-body text-sm cursor-pointer">
+                                <input type="radio" name="addBookingPackage" checked={addBookingPackageId === p.id} onChange={() => setAddBookingPackageId(p.id)} />
+                                <span>
+                                  <strong>{p.packageName}</strong> — {p.isUnlimited ? 'ilimitado' : `${p.classesRemaining} clase${Number(p.classesRemaining) === 1 ? '' : 's'} disponible${Number(p.classesRemaining) === 1 ? '' : 's'}`}
+                                  {p.expiresAt ? ` · vence ${format(new Date(p.expiresAt), "d 'de' MMMM", { locale: es })}` : ''}
+                                </span>
+                              </label>
+                            ))}
+                            <label className="flex items-center gap-2 font-body text-sm cursor-pointer">
+                              <input type="radio" name="addBookingPackage" checked={addBookingPackageId === ''} onChange={() => setAddBookingPackageId('')} />
+                              <span>No descontar (sin paquete o pagó aparte)</span>
+                            </label>
+                            {addBookingPackages.length === 0 && (
+                              <p className="text-sm font-body" style={{ color: '#991B1B' }}>No tiene paquetes vigentes con clases disponibles.</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="md:col-span-2">
+                        <button type="submit" disabled={addBookingSubmitting} className="px-4 py-2 rounded-lg font-body font-medium text-white disabled:opacity-60" style={{ backgroundColor: '#B73D37' }}>
+                          {addBookingSubmitting ? 'Registrando…' : 'Registrar en la clase'}
                         </button>
                       </div>
                     </form>

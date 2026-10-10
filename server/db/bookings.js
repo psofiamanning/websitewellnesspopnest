@@ -5,7 +5,7 @@
 
 import { getSupabaseAdmin } from './supabaseClient.js'
 import { adaptBookingRow } from './bookingAdapter.js'
-import { upsertProfileFromCustomer } from './users.js'
+import { upsertProfileFromCustomer, getProfileByEmail } from './users.js'
 import { assertDiscountEligible, recordDiscountRedemption } from './discountCodes.js'
 import { normalizeDiscountCode } from '../config/discountCodes.js'
 
@@ -85,6 +85,37 @@ export async function findScheduleBySlot(className, date, time) {
       isScheduleSlotOpenForNewBookings(s, dateKey)
   )
   return row || null
+}
+
+/** Clases activas y vigentes de un día (para registrar asistencia desde el panel). */
+export async function listSchedulesForDate(date) {
+  const supabase = getSupabaseAdmin()
+  const dateKey = toYyyyMmDd(date)
+  const { data, error } = await supabase
+    .from('schedules')
+    .select(
+      `
+      id, spots_available, spots_total, scheduled_date, scheduled_time, status,
+      valid_from, valid_until,
+      classes!inner (name),
+      teachers (full_name)
+    `
+    )
+    .eq('scheduled_date', dateKey)
+    .eq('status', 'active')
+    .order('scheduled_time')
+  if (error) throw error
+  return (data || [])
+    .filter((s) => isScheduleSlotOpenForNewBookings(s, dateKey))
+    .map((s) => ({
+      id: s.id,
+      date: dateKey,
+      time: normalizeTime(s.scheduled_time).slice(0, 5),
+      className: (s.classes?.name || '').trim(),
+      teacherName: s.teachers?.full_name || '',
+      spotsAvailable: s.spots_available ?? 0,
+      spotsTotal: s.spots_total ?? 0,
+    }))
 }
 
 /** Capacity from schedules.spots_* (source of truth). */
@@ -342,14 +373,19 @@ export async function getBookingPackageExpiry(bookingId) {
 export async function saveBooking(flat) {
   const supabase = getSupabaseAdmin()
   const customer = flat.customer || {}
-  const profile = await upsertProfileFromCustomer(customer)
+  // Registro desde el panel: si la clienta ya existe no se tocan su nombre ni teléfono.
+  const existingProfile =
+    flat.keepExistingProfile && customer.email ? await getProfileByEmail(customer.email) : null
+  const profile = existingProfile || (await upsertProfileFromCustomer(customer))
   const schedule = await findScheduleBySlot(flat.className, flat.date, flat.time)
   if (!schedule) {
     throw new Error('No hay un horario activo para esa clase, fecha y hora.')
   }
 
+  // Registro desde el panel: puede entrar aunque la clase esté llena.
+  const allowOverCapacity = flat.allowOverCapacity === true
   const avail = schedule.spots_available ?? 0
-  if (flat.status === 'confirmed' && avail <= 0) {
+  if (!allowOverCapacity && flat.status === 'confirmed' && avail <= 0) {
     throw new Error(
       'Lo sentimos, esta clase ya no tiene lugares disponibles para esta fecha y hora. Por favor selecciona otra fecha u hora.'
     )
@@ -514,7 +550,7 @@ export async function saveBooking(flat) {
     }
 
     const decPkg = shouldDecrementSpotOnInsert({ ...flat, status, paymentMethod: 'package' })
-    if (decPkg && !(await decrementScheduleSpot(schedule.id, avail))) {
+    if (decPkg && !(await decrementScheduleSpot(schedule.id, avail)) && !allowOverCapacity) {
       if (deductCredit) {
         await supabase.from('customer_packages').update({ classes_remaining: cp.classes_remaining }).eq('id', cp.id)
       }
@@ -541,7 +577,7 @@ export async function saveBooking(flat) {
     if (bErr) throw bErr
 
     const decMan = shouldDecrementSpotOnInsert({ ...flat, status: manualStatus, paymentMethod: 'manual' })
-    if (decMan && !(await decrementScheduleSpot(schedule.id, avail))) {
+    if (decMan && !(await decrementScheduleSpot(schedule.id, avail)) && !allowOverCapacity) {
       await supabase.from('bookings_new').delete().eq('id', booking.id)
       throw new Error(
         'Lo sentimos, esta clase ya no tiene lugares disponibles para esta fecha y hora. Por favor selecciona otra fecha u hora.'

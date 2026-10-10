@@ -21,6 +21,7 @@ import {
   getBookingPackageExpiry,
   isClassWithinPackageValidity,
   formatPackageExpiry,
+  listSchedulesForDate,
 } from './db/bookings.js'
 import {
   listActiveTalleres,
@@ -1631,14 +1632,15 @@ app.get('/api/admin/customer-packages', async (req, res) => {
     if (!payload) {
       return res.status(401).json({ success: false, error: 'Debes iniciar sesión como administrador.' })
     }
-    if (payload.role !== 'super_admin') {
-      return res.status(403).json({ success: false, error: 'Solo un administrador principal puede otorgar paquetes o clases.' })
-    }
     const email = String(req.query.email || '').trim().toLowerCase()
     if (!email) {
       return res.status(400).json({ success: false, error: 'Query email es requerido.' })
     }
-    const list = await listCustomerPackagesByEmail(email)
+    let list = await listCustomerPackagesByEmail(email)
+    // Operadores: para registrar asistencia con paquete, sin ver montos pagados.
+    if (payload.role !== 'super_admin') {
+      list = list.map(({ payment, stripeInfo, ...p }) => p)
+    }
     res.json({ success: true, email, packages: list })
   } catch (error) {
     console.error('Error listing customer packages:', error)
@@ -1748,7 +1750,28 @@ app.post('/api/admin/customer-packages/add-classes', async (req, res) => {
   }
 })
 
-// Endpoint: Crear reserva manual (admin/operador). Para ver reservas en producción sin depender de bookings.json en repo.
+// Endpoint: Clases de un día (admin/operador), para registrar a alguien en una clase.
+app.get('/api/admin/schedules', async (req, res) => {
+  try {
+    const payload = parseAdminToken(req)
+    if (!payload) {
+      return res.status(401).json({ success: false, error: 'Debes iniciar sesión como administrador.' })
+    }
+    const date = String(req.query.date || '').trim()
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ success: false, error: 'Fecha inválida.' })
+    }
+    const schedules = await listSchedulesForDate(date)
+    res.json({ success: true, schedules })
+  } catch (error) {
+    console.error('Error listing schedules for admin:', error)
+    res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
+  }
+})
+
+// Endpoint: Registrar a alguien en una clase (admin/operador). Entra aunque la clase
+// esté llena; con packageId se descuenta del paquete con las mismas reglas que una
+// reserva normal (vigencia, saldo, ilimitado, 20 clases).
 app.post('/api/admin/bookings', async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
@@ -1756,39 +1779,48 @@ app.post('/api/admin/bookings', async (req, res) => {
     if (!payload) {
       return res.status(401).json({ success: false, error: 'Debes iniciar sesión como administrador.' })
     }
-    const { date, time, className, teacherName, customer } = req.body
+    const { date, time, className, customer, packageId } = req.body
     const fullName = (customer && customer.fullName) || (customer && [customer.firstName, customer.lastName].filter(Boolean).join(' ')) || ''
-    const email = (customer && customer.email) || ''
+    const email = String((customer && customer.email) || '').trim().toLowerCase()
     const phone = (customer && customer.phone) || ''
-    if (!date || !time || !className || !fullName.trim()) {
-      return res.status(400).json({ success: false, error: 'Faltan datos: fecha, hora, clase y nombre del cliente son obligatorios.' })
+    if (!date || !time || !className) {
+      return res.status(400).json({ success: false, error: 'Elige la fecha y la clase.' })
     }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, error: 'El correo del cliente es obligatorio.' })
+    }
+    if (!fullName.trim()) {
+      return res.status(400).json({ success: false, error: 'El nombre del cliente es obligatorio.' })
+    }
+    const usePackage = packageId != null && String(packageId).trim() !== ''
     const booking = {
       id: 'booking-' + Date.now(),
       date: String(date).trim(),
       time: String(time).trim(),
       className: String(className).trim(),
-      teacherName: (teacherName && String(teacherName).trim()) || '',
       type: 'class',
       status: 'confirmed',
       customer: {
         fullName: fullName.trim(),
         firstName: (fullName.trim().split(/\s+/)[0] || '').trim(),
         lastName: (fullName.trim().split(/\s+/).slice(1).join(' ') || '').trim(),
-        email: String(email).trim(),
+        email,
         phone: String(phone).trim()
       },
-      paymentMethod: 'manual',
-      payment: { status: 'succeeded', amount: 0, currency: 'mxn', method: 'manual' },
-      createdAt: new Date().toISOString(),
-      formattedDate: new Date(date + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+      paymentMethod: usePackage ? 'package' : 'manual',
+      packageId: usePackage ? packageId : undefined,
+      allowOverCapacity: true,
+      keepExistingProfile: true,
+      payment: { status: 'succeeded', amount: 0, currency: 'mxn', method: usePackage ? 'package' : 'manual' },
+      createdAt: new Date().toISOString()
     }
     const saved = await saveBooking(booking)
-    console.log('✅ Reserva manual creada por admin:', saved.id, saved.className, saved.customer?.fullName)
+    console.log('✅ Registro en clase desde el panel:', saved.id, saved.className, email, usePackage ? 'paquete ' + packageId : 'sin paquete', 'por', payload.email)
     res.json({ success: true, booking: saved })
   } catch (error) {
     console.error('Error creating admin booking:', error)
-    res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
+    // Errores de reglas (vigencia, saldo, horario) vienen ya en español para mostrarse tal cual.
+    res.status(400).json({ success: false, error: error.message || 'Error interno del servidor' })
   }
 })
 

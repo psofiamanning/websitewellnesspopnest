@@ -112,10 +112,13 @@ function SignUp() {
           }
         }
         setShowSuccess(true)
-        setTimeout(() => {
-          const from = new URLSearchParams(window.location.search).get('from') || '/'
-          navigate(from)
-        }, 4000)
+        // Sin token la cuenta aún no está confirmada: se queda el aviso de revisar el correo.
+        if (result.token) {
+          setTimeout(() => {
+            const from = new URLSearchParams(window.location.search).get('from') || '/'
+            navigate(from)
+          }, 4000)
+        }
       } else {
         setError(result.error || 'Error al registrarse')
       }
@@ -144,7 +147,9 @@ function SignUp() {
         <div className="auth-alert auth-alert--ok" role="status">
           <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Cuenta creada exitosamente</p>
           <p style={{ margin: 0 }}>
-            Revisa tu correo para confirmar tus datos. En unos segundos te llevamos a continuar.
+            Te enviamos un correo a <strong>{formData.email.trim()}</strong> con el enlace para
+            confirmar tu cuenta. Ábrelo y después inicia sesión con tu correo y tu contraseña.
+            Si no lo ves, revisa la carpeta de spam o promociones.
           </p>
         </div>
       ) : (

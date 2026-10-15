@@ -46,7 +46,7 @@ function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [success, setSuccess] = useState('')
   const [sessionReady, setSessionReady] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
 
@@ -94,8 +94,8 @@ function ResetPassword() {
     try {
       const result = await resetPassword(null, password)
       if (result.success) {
-        setSuccess(true)
-        setTimeout(() => navigate('/login'), 2500)
+        setSuccess(result.message || 'Contraseña actualizada.')
+        setTimeout(() => navigate('/login'), 3500)
       } else {
         setError(result.error || 'Error al restablecer contraseña')
       }
@@ -163,7 +163,7 @@ function ResetPassword() {
 
       {success ? (
         <div className="auth-alert auth-alert--ok" role="status">
-          <p style={{ margin: 0 }}>Contraseña actualizada. Redirigiendo al inicio de sesión…</p>
+          <p style={{ margin: 0 }}>{success} Te llevamos al inicio de sesión…</p>
         </div>
       ) : (
         <form onSubmit={handleSubmit}>

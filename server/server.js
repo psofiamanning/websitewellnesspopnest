@@ -372,6 +372,22 @@ async function sendPasswordResetEmail(email, resetLink) {
   }
 }
 
+async function sendConfirmEmail(email, firstName, confirmLink) {
+  if (!mailerSend && !mailTransporter) {
+    console.warn('⚠️ Correo no configurado: no se envía enlace de confirmación a', email)
+    return
+  }
+  const subject = 'Confirma tu correo - Estudio Popnest Wellness'
+  const text = `Hola ${firstName || ''},\n\nPara activar tu cuenta en Estudio Popnest Wellness confirma tu correo en este enlace:\n\n${confirmLink}\n\nDespués inicia sesión con tu correo y tu contraseña.\n\nSaludos,\nEl equipo de Estudio Popnest Wellness`
+  const html = `<p>Hola <strong>${firstName || ''}</strong>,</p><p>Para activar tu cuenta en <strong>Estudio Popnest Wellness</strong> confirma tu correo:</p><p><a href="${confirmLink}" style="color:#B73D37;font-weight:bold;">Confirmar mi correo</a></p><p>Después inicia sesión con tu correo y tu contraseña.</p><p>Saludos,<br>El equipo de Estudio Popnest Wellness</p>`
+  try {
+    await sendEmail({ to: email, toName: firstName, subject, text, html })
+    console.log('✅ Email de confirmación enviado a:', email)
+  } catch (err) {
+    console.error('❌ Error enviando email de confirmación a', email, ':', err.message)
+  }
+}
+
 async function sendAdminPasswordResetEmail(email, resetToken) {
   if (!email) return
   if (!mailerSend && !mailTransporter) {
@@ -1941,28 +1957,33 @@ app.post('/api/auth/signup', async (req, res) => {
       })
     }
 
-    const anon = getSupabaseAnon()
-    const { data, error } = await anon.auth.signUp({
-      email: email.trim(),
+    // generateLink crea la cuenta (sin confirmar) y devuelve el enlace de confirmación
+    // sin enviarlo: lo mandamos por nuestro proveedor, porque el correo integrado de
+    // Supabase no llegaba y las clientas no podían iniciar sesión.
+    const normalizedEmail = email.trim().toLowerCase()
+    const { data: linkData, error } = await getSupabaseAdmin().auth.admin.generateLink({
+      type: 'signup',
+      email: normalizedEmail,
       password,
       options: {
         data: { first_name: firstName, last_name: lastName, phone: phone.trim() },
+        redirectTo: `${FRONTEND_URL}/login`,
       },
     })
 
     if (error) {
+      if (error.code === 'email_exists' || /already (been )?registered/i.test(error.message || '')) {
+        return res.status(409).json({
+          success: false,
+          code: 'EMAIL_ALREADY_REGISTERED',
+          error: 'Ya existe una cuenta con este correo. Inicia sesión, o usa «Olvidé mi contraseña» si no la recuerdas.',
+        })
+      }
       return res.status(400).json({ success: false, error: error.message })
     }
 
-    // Si el correo ya tiene cuenta, Supabase no da error: devuelve un usuario sin
-    // identities y NO guarda la contraseña. Avisar en vez de fingir el registro.
-    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-      return res.status(409).json({
-        success: false,
-        code: 'EMAIL_ALREADY_REGISTERED',
-        error: 'Ya existe una cuenta con este correo. Inicia sesión, o usa «Olvidé mi contraseña» si no la recuerdas.',
-      })
-    }
+    const data = { user: linkData.user, session: null }
+    await sendConfirmEmail(normalizedEmail, firstName, linkData.properties.action_link)
 
     if (data.user) {
       try {
@@ -1996,7 +2017,7 @@ app.post('/api/auth/signup', async (req, res) => {
         user: userOut,
         token: null,
         message:
-          'Si tu proyecto requiere confirmar el correo, revisa tu bandeja; después podrás iniciar sesión.',
+          'Te enviamos un correo para confirmar tu cuenta. Ábrelo y después inicia sesión.',
       })
     }
 
@@ -2075,6 +2096,26 @@ app.post('/api/auth/login', async (req, res) => {
       email: email.trim(),
       password,
     })
+
+    // Supabase solo responde «Email not confirmed» cuando la contraseña es correcta:
+    // en vez de «Credenciales inválidas», reenviar el enlace de confirmación y decirlo.
+    if (error?.code === 'email_not_confirmed') {
+      const normalizedEmail = email.trim().toLowerCase()
+      const { data: linkData, error: linkError } = await getSupabaseAdmin().auth.admin.generateLink({
+        type: 'magiclink',
+        email: normalizedEmail,
+        options: { redirectTo: `${FRONTEND_URL}/login` },
+      })
+      if (linkError) {
+        console.warn('Supabase generateLink (confirmación en login):', linkError.message)
+      } else {
+        await sendConfirmEmail(normalizedEmail, linkData.user?.user_metadata?.first_name, linkData.properties.action_link)
+      }
+      return res.status(403).json({
+        code: 'EMAIL_NOT_CONFIRMED',
+        error: `Tu correo aún no está confirmado. Te enviamos un enlace a ${normalizedEmail}: ábrelo y vuelve a iniciar sesión.`,
+      })
+    }
 
     if (error || !data.session || !data.user) {
       return res.status(401).json({ error: 'Credenciales inválidas' })

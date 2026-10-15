@@ -129,6 +129,22 @@ export const forgotPassword = async (email) => {
   }
 }
 
+/** Mensajes de Supabase (en inglés) → español para la pantalla de nueva contraseña. */
+const translateUpdatePasswordError = (error) => {
+  switch (error.code) {
+    case 'weak_password':
+      return 'La contraseña es muy débil. Usa al menos 6 caracteres, mezclando letras y números.'
+    case 'session_expired':
+    case 'session_not_found':
+    case 'refresh_token_not_found':
+      return 'El enlace ya expiró. Solicita uno nuevo desde «Olvidé mi contraseña».'
+    case 'over_request_rate_limit':
+      return 'Demasiados intentos. Espera un minuto e inténtalo de nuevo.'
+    default:
+      return 'No se pudo guardar la contraseña. Solicita un enlace nuevo desde «Olvidé mi contraseña».'
+  }
+}
+
 export const resetPassword = async (_token, newPassword) => {
   if (!supabase) {
     return { success: false, error: 'Configura VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.' }
@@ -142,8 +158,12 @@ export const resetPassword = async (_token, newPassword) => {
     }
   }
   const { error } = await supabase.auth.updateUser({ password: newPassword })
+  // Quien olvidó que ya tenía esa contraseña: no es un error, ya puede entrar con ella.
+  if (error?.code === 'same_password') {
+    return { success: true, message: 'Esa ya es tu contraseña. Inicia sesión con ella.' }
+  }
   if (error) {
-    return { success: false, error: error.message || 'No se pudo actualizar la contraseña' }
+    return { success: false, error: translateUpdatePasswordError(error) }
   }
   saveToken(session.access_token)
   return { success: true, message: 'Contraseña actualizada.' }

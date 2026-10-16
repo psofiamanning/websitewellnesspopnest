@@ -1065,12 +1065,23 @@ async function allowCustomerData(req, res, email) {
   return true
 }
 
+/**
+ * Operadores no ven montos ni datos de Stripe: se quitan aquí y no solo en el
+ * frontend. Se conservan método y estatus del pago (la UI los muestra).
+ */
+const redactPaymentForRole = (role) => (item) => {
+  if (role === 'super_admin' || !item) return item
+  const { payment, stripeInfo, paymentIntentId, ...rest } = item
+  return payment ? { ...rest, payment: { method: payment.method, status: payment.status } } : rest
+}
+
 // Todas las reservas (con datos de contacto): solo admin.
 app.get('/api/bookings', async (req, res) => {
   try {
-    if (!parseAdminToken(req)) return res.status(401).json({ error: 'No autorizado.' })
+    const admin = parseAdminToken(req)
+    if (!admin) return res.status(401).json({ error: 'No autorizado.' })
     const bookings = await getBookings()
-    res.json(bookings)
+    res.json(bookings.map(redactPaymentForRole(admin.role)))
   } catch (error) {
     console.error('Error getting bookings:', error)
     res.status(500).json({ error: error.message })
@@ -2280,11 +2291,14 @@ app.post('/api/packages/purchase', async (req, res) => {
   }
 })
 
-// Endpoint: Obtener todas las compras de paquetes
+// Endpoint: Obtener todas las compras de paquetes (con datos de clientes): solo admin.
+// Las clientas usan /api/packages/user/:email con su sesión.
 app.get('/api/packages', async (req, res) => {
   try {
+    const admin = parseAdminToken(req)
+    if (!admin) return res.status(401).json({ error: 'No autorizado.' })
     const purchases = await listAllPackagePurchases()
-    res.json(purchases)
+    res.json(purchases.map(redactPaymentForRole(admin.role)))
   } catch (error) {
     console.error('Error getting packages:', error)
     res.status(500).json({ error: error.message })

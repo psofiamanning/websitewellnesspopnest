@@ -8,6 +8,7 @@ import { BACKEND_URL } from '../config/api.js'
 import TalleresAdmin from '../components/admin/TalleresAdmin'
 import SalonRentalAdmin from '../components/admin/SalonRentalAdmin'
 import DateInput from '../components/ui/DateInput'
+import MonthComparison, { cdmxDay } from '../components/admin/MonthComparison'
 
 // Verificar si el usuario es administrador
 const isAdminAuthenticated = () => {
@@ -26,7 +27,6 @@ const getAdminRole = () => localStorage.getItem('admin_role') || 'super_admin'
 const canViewRevenue = () => getAdminRole() === 'super_admin'
 
 // Día (yyyy-MM-dd) en hora de CDMX; con slice(0, 10) un paquete comprado de noche caía al día siguiente (UTC).
-const cdmxDay = (iso) => (iso ? new Date(iso).toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }) : '')
 const todayCdmx = () => cdmxDay(new Date().toISOString())
 
 // 'purchased' = comprado dentro del rango | 'active' = vigente en algún momento del rango
@@ -739,11 +739,21 @@ function Admin() {
                 >
                   Renta de salón
                 </button>
+                <button
+                  onClick={() => setActiveTab('compare')}
+                  className={`px-4 py-2 font-body font-medium transition-colors ${
+                    activeTab === 'compare'
+                      ? 'text-primary border-b-2 border-primary'
+                      : 'text-body hover:text-primary'
+                  }`}
+                >
+                  Comparar meses
+                </button>
               </div>
             </div>
 
             {/* Filtros */}
-            {activeTab !== 'talleres' && activeTab !== 'salon' && (
+            {activeTab !== 'talleres' && activeTab !== 'salon' && activeTab !== 'compare' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
                 <label className="block text-body font-body font-medium mb-2">
@@ -1071,7 +1081,7 @@ function Admin() {
             )}
 
             {/* Estadísticas (operadores no ven ingresos). Si hay filtro de fecha, solo cuentan lo del rango. */}
-            <div className={`grid grid-cols-1 gap-4 mb-6 ${canViewRevenue() ? 'md:grid-cols-4' : 'md:grid-cols-2'}`}>
+            <div className={`grid grid-cols-1 gap-4 mb-6 ${canViewRevenue() ? 'md:grid-cols-4' : 'md:grid-cols-2'} ${activeTab === 'compare' ? 'hidden' : ''}`}>
               <div className="bg-quaternary rounded-lg p-4">
                 <p className="text-body font-body text-sm mb-1">
                   Total Reservas{filterDate && <span className="text-neutral-500"> (rango)</span>}
@@ -1109,6 +1119,8 @@ function Admin() {
             {/* Contenido según tab activo */}
             {activeTab === 'talleres' ? (
               <TalleresAdmin />
+            ) : activeTab === 'compare' ? (
+              <MonthComparison bookings={bookings} packages={packages} />
             ) : activeTab === 'salon' ? (
               <SalonRentalAdmin />
             ) : activeTab === 'bookings' ? (

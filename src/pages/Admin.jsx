@@ -11,8 +11,32 @@ import DateInput, { formatDateMx } from '../components/ui/DateInput'
 import MonthComparison, { cdmxDay } from '../components/admin/MonthComparison'
 
 // Verificar si el usuario es administrador
+// El token dura 24 h; si ya venció, el servidor responde 401 y el panel se veía vacío
+// sin avisar. Ahora se manda al login con un aviso.
+const adminTokenExpired = (token) => {
+  try {
+    const body = token.split('.')[0].replace(/-/g, '+').replace(/_/g, '/')
+    const { exp } = JSON.parse(atob(body))
+    return !!exp && Date.now() > exp
+  } catch (_) {
+    return false
+  }
+}
+
+const expireAdminSession = () => {
+  localStorage.removeItem('admin_token')
+  localStorage.removeItem('admin_role')
+  sessionStorage.setItem('admin_session_expired', '1')
+}
+
 const isAdminAuthenticated = () => {
-  return !!localStorage.getItem('admin_token')
+  const token = localStorage.getItem('admin_token')
+  if (!token) return false
+  if (adminTokenExpired(token)) {
+    expireAdminSession()
+    return false
+  }
+  return true
 }
 
 // Cerrar sesión de administrador
@@ -74,8 +98,9 @@ function Admin() {
   const [filteredBookings, setFilteredBookings] = useState([])
   const [filteredPackages, setFilteredPackages] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterDate, setFilterDate] = useState('')
-  const [filterDateEnd, setFilterDateEnd] = useState('')
+  // Por defecto: del día 1 del mes actual a hoy (hora CDMX), para no tener que filtrar al entrar.
+  const [filterDate, setFilterDate] = useState(() => `${todayCdmx().slice(0, 7)}-01`)
+  const [filterDateEnd, setFilterDateEnd] = useState(() => todayCdmx())
   const [packageDateMode, setPackageDateMode] = useState('purchased') // 'purchased' | 'active'
   const [bookingsViewMode, setBookingsViewMode] = useState('general') // 'general' | 'class' | 'teacher'
   const [selectedGroup, setSelectedGroup] = useState(null) // { type: 'class'|'teacher', name: string } | null
@@ -147,6 +172,11 @@ function Admin() {
       const response = await fetch(`${BACKEND_URL}/api/packages`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
+      if (response.status === 401) {
+        expireAdminSession()
+        window.location.href = '/admin/login'
+        return
+      }
       if (response.ok) {
         const allPackages = await response.json()
         // Ordenar por fecha más reciente primero

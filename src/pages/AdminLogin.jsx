@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
 import { BACKEND_URL } from '../config/api.js'
@@ -15,6 +15,8 @@ function AdminLogin() {
   const [adminForm, setAdminForm] = useState({ email: '', password: '' })
   const [adminError, setAdminError] = useState('')
   const [adminLoading, setAdminLoading] = useState(false)
+  const [sessionExpired] = useState(() => sessionStorage.getItem('admin_session_expired') === '1')
+  useEffect(() => { sessionStorage.removeItem('admin_session_expired') }, [])
 
   // Coaches
   const [teacherForm, setTeacherForm] = useState({ email: '', password: '' })
@@ -141,6 +143,11 @@ function AdminLogin() {
               Acceso al panel de administración
             </p>
 
+            {sessionExpired && !adminError && (
+              <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+                <p className="text-sm font-body text-yellow-800">Tu sesión expiró. Vuelve a iniciar sesión para ver reservas y paquetes.</p>
+              </div>
+            )}
             {adminError && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
                 <p className="text-sm font-body text-red-800">{adminError}</p>

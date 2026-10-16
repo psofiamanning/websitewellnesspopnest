@@ -73,6 +73,7 @@ function adaptCustomerPackageRow(row, options = {}) {
     purchaseDate: row.created_at,
     createdAt: row.created_at,
     expiresAt: row.expires_at,
+    referredBy: row.referred_by ?? null,
     status: row.payment_status === 'succeeded' ? 'confirmed' : 'pending',
     classesRemaining: rem,
     classesUsed: used,

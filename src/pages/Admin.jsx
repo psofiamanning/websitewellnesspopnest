@@ -1378,6 +1378,9 @@ function Admin() {
                               <p>
                                 <span className="font-medium">Teléfono:</span> {pkg.customer?.phone || 'N/A'}
                               </p>
+                              <p>
+                                <span className="font-medium">Referido por:</span> {pkg.referredBy || '—'}
+                              </p>
                               {pkg.expiresAt && (
                                 <p>
                                   <span className="font-medium">Vigencia:</span> {format(new Date(pkg.createdAt || pkg.purchaseDate), 'dd/MM/yyyy')} – {format(new Date(pkg.expiresAt), 'dd/MM/yyyy')}
@@ -1551,6 +1554,7 @@ function Admin() {
                         </span>
                       </p>
                       <p><span className="font-medium">Fecha de compra:</span> {format(new Date(selectedPackage.createdAt || selectedPackage.purchaseDate), "dd/MM/yyyy HH:mm:ss", { locale: es })}</p>
+                      <p><span className="font-medium">Referido por:</span> {selectedPackage.referredBy || '—'}</p>
                       {selectedPackage.lastUsed && (
                         <p><span className="font-medium">Última clase usada:</span> {format(new Date(selectedPackage.lastUsed), "dd/MM/yyyy HH:mm:ss", { locale: es })}</p>
                       )}

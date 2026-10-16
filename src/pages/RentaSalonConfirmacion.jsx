@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { formatDateMx } from '../components/ui/DateInput'
 import { Link, useSearchParams } from 'react-router-dom'
 import { fetchSalonCheckoutStatus } from '../services/salonRentalService'
 
@@ -70,7 +71,7 @@ function RentaSalonConfirmacion() {
                 Te enviamos los detalles a {booking.customer_email}.
               </p>
               <dl className="text-left text-sm font-body space-y-2 rounded-lg p-4" style={{ backgroundColor: '#F9FAFB', color: DARK }}>
-                <div className="flex justify-between"><dt className="font-semibold">Fecha</dt><dd>{booking.booking_date}</dd></div>
+                <div className="flex justify-between"><dt className="font-semibold">Fecha</dt><dd>{formatDateMx(booking.booking_date)}</dd></div>
                 <div className="flex justify-between"><dt className="font-semibold">Horario</dt><dd>{booking.start_time}–{booking.end_time}</dd></div>
                 <div className="flex justify-between"><dt className="font-semibold">Personas</dt><dd>{booking.num_people}</dd></div>
                 <div className="flex justify-between font-bold pt-2 border-t" style={{ borderColor: '#E5E7EB' }}><dt>Total pagado</dt><dd>{formatMoney(booking.total_amount)}</dd></div>

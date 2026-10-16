@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import DateInput from '../components/ui/DateInput'
 import {
   SALON_SLOTS,
   SALON_PRICE_TIERS,
@@ -9,6 +10,7 @@ import {
   dayOfWeekFromDateStr,
   addHoursToTime,
   computeSalonPrice,
+  isSalonHoliday,
 } from '../config/salonPricing'
 import { fetchSalonAvailability, createSalonCheckout, submitSalonSpecialRequest } from '../services/salonRentalService'
 
@@ -163,8 +165,9 @@ function ReservaForm() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
+  const isHoliday = useMemo(() => isSalonHoliday(date), [date])
   const dayOfWeek = useMemo(() => dayOfWeekFromDateStr(date), [date])
-  const availableSlots = useMemo(() => getSlotsForDay(dayOfWeek), [dayOfWeek])
+  const availableSlots = useMemo(() => (isHoliday ? [] : getSlotsForDay(dayOfWeek)), [isHoliday, dayOfWeek])
 
   useEffect(() => {
     if (!availableSlots.find((s) => s.key === slotKey)) {
@@ -226,6 +229,10 @@ function ReservaForm() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    if (isHoliday) {
+      setError('Esa fecha no está disponible para reservar (día feriado).')
+      return
+    }
     if (!slot) {
       setError('Ese día no tiene franjas de renta automática disponibles. Usa la pestaña "Sobre horario de clase".')
       return
@@ -254,7 +261,12 @@ function ReservaForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 rounded-2xl bg-white ring-1 ring-black/[0.06] p-5 md:p-6 space-y-5">
-      {!slot && (
+      {isHoliday && (
+        <p className="text-sm font-body rounded-lg p-3" style={{ backgroundColor: '#FEF2F2', color: RED }}>
+          Esa fecha es día feriado y no está disponible para renta de salón. Elige otra fecha.
+        </p>
+      )}
+      {!isHoliday && !slot && (
         <p className="text-sm font-body rounded-lg p-3" style={{ backgroundColor: '#FFF7ED', color: '#9A5B13' }}>
           Ese día no tiene franjas de renta automática. Usa la pestaña "Sobre horario de clase" para solicitar un horario especial.
         </p>
@@ -262,7 +274,7 @@ function ReservaForm() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Fecha">
-          <input type="date" min={todayStr()} value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} style={inputStyle} required />
+          <DateInput min={todayStr()} value={date} onChange={setDate} className={inputClass} style={inputStyle} required />
         </Field>
         <Field label="Franja">
           <select value={slotKey} onChange={(e) => setSlotKey(e.target.value)} className={inputClass} style={inputStyle} disabled={!availableSlots.length}>
@@ -333,7 +345,7 @@ function ReservaForm() {
 
       <button
         type="submit"
-        disabled={submitting || !slot || overlapsExisting}
+        disabled={submitting || isHoliday || !slot || overlapsExisting}
         className="w-full rounded-lg px-5 py-3 text-sm font-body font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         style={{ backgroundColor: RED }}
       >
@@ -357,6 +369,10 @@ function SolicitudEspecialForm() {
     setError('')
     if (!form.firstName.trim() || !form.email.trim()) {
       setError('Nombre y correo son obligatorios.')
+      return
+    }
+    if (form.desiredDate && isSalonHoliday(form.desiredDate)) {
+      setError('Esa fecha es día feriado y no está disponible.')
       return
     }
     setSubmitting(true)
@@ -407,7 +423,7 @@ function SolicitudEspecialForm() {
           <input type="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className={inputClass} style={inputStyle} />
         </Field>
         <Field label="Fecha deseada">
-          <input type="date" value={form.desiredDate} onChange={(e) => setForm((f) => ({ ...f, desiredDate: e.target.value }))} className={inputClass} style={inputStyle} />
+          <DateInput min={todayStr()} value={form.desiredDate} onChange={(value) => setForm((f) => ({ ...f, desiredDate: value }))} className={inputClass} style={inputStyle} />
         </Field>
         <Field label="Hora deseada">
           <input type="text" placeholder="ej. 18:00" value={form.desiredTime} onChange={(e) => setForm((f) => ({ ...f, desiredTime: e.target.value }))} className={inputClass} style={inputStyle} />

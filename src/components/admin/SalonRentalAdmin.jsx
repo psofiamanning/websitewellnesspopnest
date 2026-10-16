@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { formatDateMx } from '../ui/DateInput'
 import {
   adminListSalonBookings,
   adminListSalonSpecialRequests,
@@ -77,7 +78,7 @@ export default function SalonRentalAdmin() {
               <tbody>
                 {bookings.map((b) => (
                   <tr key={b.id} className="border-t border-gray-100">
-                    <td className="px-3 py-2">{b.booking_date}</td>
+                    <td className="px-3 py-2">{formatDateMx(b.booking_date)}</td>
                     <td className="px-3 py-2">{b.start_time}–{b.end_time}</td>
                     <td className="px-3 py-2">
                       <div className="font-medium">{b.customer_name}</div>

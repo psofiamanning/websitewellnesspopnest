@@ -7,6 +7,7 @@ import { es } from 'date-fns/locale'
 import { BACKEND_URL } from '../config/api.js'
 import TalleresAdmin from '../components/admin/TalleresAdmin'
 import SalonRentalAdmin from '../components/admin/SalonRentalAdmin'
+import DateInput from '../components/ui/DateInput'
 
 // Verificar si el usuario es administrador
 const isAdminAuthenticated = () => {
@@ -24,6 +25,22 @@ const adminLogout = () => {
 const getAdminRole = () => localStorage.getItem('admin_role') || 'super_admin'
 const canViewRevenue = () => getAdminRole() === 'super_admin'
 
+// Día (yyyy-MM-dd) en hora de CDMX; con slice(0, 10) un paquete comprado de noche caía al día siguiente (UTC).
+const cdmxDay = (iso) => (iso ? new Date(iso).toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }) : '')
+const todayCdmx = () => cdmxDay(new Date().toISOString())
+
+// 'purchased' = comprado dentro del rango | 'active' = vigente en algún momento del rango
+// (comprado antes de que termine y vence después de que empieza).
+const packageInRange = (pkg, start, end, mode) => {
+  const bought = cdmxDay(pkg.createdAt || pkg.purchaseDate)
+  if (!bought) return false
+  if (mode === 'active') {
+    const expires = cdmxDay(pkg.expiresAt)
+    return bought <= end && (!expires || expires >= start)
+  }
+  return bought >= start && bought <= end
+}
+
 function Admin() {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
@@ -33,6 +50,7 @@ function Admin() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterDate, setFilterDate] = useState('')
   const [filterDateEnd, setFilterDateEnd] = useState('')
+  const [packageDateMode, setPackageDateMode] = useState('purchased') // 'purchased' | 'active'
   const [bookingsViewMode, setBookingsViewMode] = useState('general') // 'general' | 'class' | 'teacher'
   const [selectedGroup, setSelectedGroup] = useState(null) // { type: 'class'|'teacher', name: string } | null
   const [selectedBooking, setSelectedBooking] = useState(null)
@@ -83,7 +101,7 @@ function Admin() {
   useEffect(() => {
     filterBookings()
     filterPackages()
-  }, [bookings, packages, searchTerm, filterDate, filterDateEnd])
+  }, [bookings, packages, searchTerm, filterDate, filterDateEnd, packageDateMode, activeTab])
 
   const loadBookings = async () => {
     try {
@@ -153,11 +171,16 @@ function Admin() {
   const bookingsForStats = filterDate
     ? bookings.filter(b => b.date >= filterDate && b.date <= (filterDateEnd || filterDate))
     : bookings
+  // En la pestaña Paquetes se cuenta según el modo (compradas / activas); en Reservas, por compra.
+  const statsPackageMode = activeTab === 'packages' ? packageDateMode : 'purchased'
   const packagesForStats = filterDate
-    ? packages.filter(p => {
-        const day = (p.createdAt || p.purchaseDate || '').slice(0, 10)
-        return day && day >= filterDate && day <= (filterDateEnd || filterDate)
-      })
+    ? packages.filter(p => packageInRange(p, filterDate, filterDateEnd || filterDate, statsPackageMode))
+    : statsPackageMode === 'active'
+      ? packages.filter(p => packageInRange(p, todayCdmx(), todayCdmx(), 'active'))
+      : packages
+  // Ingresos siempre por fecha de compra, aunque se estén viendo los activos.
+  const packagesPurchasedForStats = filterDate
+    ? packages.filter(p => packageInRange(p, filterDate, filterDateEnd || filterDate, 'purchased'))
     : packages
 
   // Agrupar por clase
@@ -211,6 +234,7 @@ function Admin() {
 
   const filterPackages = () => {
     let filtered = [...packages]
+    const mode = activeTab === 'packages' ? packageDateMode : 'purchased'
 
     // Filtrar por búsqueda
     if (searchTerm) {
@@ -224,12 +248,12 @@ function Admin() {
     }
 
     // Filtrar por fecha (rango: sin "hasta", se compara solo el día exacto)
+    // Sin fecha en modo "activos" se muestran los vigentes hoy.
     if (filterDate) {
       const end = filterDateEnd || filterDate
-      filtered = filtered.filter(pkg => {
-        const day = (pkg.createdAt || pkg.purchaseDate || '').slice(0, 10)
-        return day && day >= filterDate && day <= end
-      })
+      filtered = filtered.filter(pkg => packageInRange(pkg, filterDate, end, mode))
+    } else if (mode === 'active') {
+      filtered = filtered.filter(pkg => packageInRange(pkg, todayCdmx(), todayCdmx(), 'active'))
     }
 
     setFilteredPackages(filtered)
@@ -725,12 +749,12 @@ function Admin() {
                 <label className="block text-body font-body font-medium mb-2">
                   Desde
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   value={filterDate}
-                  onChange={(e) => {
-                    setFilterDate(e.target.value)
-                    if (!e.target.value) setFilterDateEnd('')
+                  onChange={(value) => {
+                    setFilterDate(value)
+                    if (!value) setFilterDateEnd('')
+                    else if (filterDateEnd && filterDateEnd < value) setFilterDateEnd('')
                     setSelectedGroup(null)
                   }}
                   className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body text-body"
@@ -740,16 +764,15 @@ function Admin() {
                 <label className="block text-body font-body font-medium mb-2">
                   Hasta <span className="text-neutral-500 font-normal">(opcional, para un rango)</span>
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   value={filterDateEnd}
                   min={filterDate || undefined}
                   disabled={!filterDate}
-                  onChange={(e) => {
-                    setFilterDateEnd(e.target.value)
+                  onChange={(value) => {
+                    setFilterDateEnd(value)
                     setSelectedGroup(null)
                   }}
-                  className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body text-body disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body text-body"
                 />
               </div>
               <div>
@@ -765,6 +788,36 @@ function Admin() {
                 />
               </div>
             </div>
+            )}
+
+            {activeTab === 'packages' && (
+              <div className="mb-6">
+                <div className="inline-flex rounded-lg border-2 border-neutral overflow-hidden font-body text-sm" role="group" aria-label="Qué paquetes mostrar">
+                  {[
+                    { key: 'purchased', label: 'Comprados en el periodo' },
+                    { key: 'active', label: 'Activos en el periodo' },
+                  ].map(opt => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setPackageDateMode(opt.key)}
+                      aria-pressed={packageDateMode === opt.key}
+                      className={`px-4 py-2 transition-colors ${packageDateMode === opt.key ? 'bg-primary text-white' : 'bg-white text-body hover:bg-quaternary/40'}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs font-body text-neutral-500">
+                  {packageDateMode === 'active'
+                    ? (filterDate
+                        ? 'Paquetes vigentes en algún día del periodo (comprados antes de que termine y que no habían vencido), sin importar cuándo se compraron.'
+                        : 'Sin fechas: paquetes vigentes hoy.')
+                    : (filterDate
+                        ? 'Paquetes comprados entre las fechas seleccionadas (hora de CDMX).'
+                        : 'Sin fechas: todos los paquetes.')}
+                </p>
+              </div>
             )}
 
             {/* Formulario Añadir reserva manual (se muestra al hacer clic en el botón del header) */}
@@ -789,7 +842,7 @@ function Admin() {
                     <form onSubmit={handleAddBooking} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
                       <div>
                         <label className="block text-body font-body font-medium mb-1">Fecha *</label>
-                        <input type="date" value={addBookingDate} onChange={(e) => { setAddBookingDate(e.target.value); setAddBookingError(''); loadAddBookingSchedules(e.target.value) }} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
+                        <DateInput value={addBookingDate} onChange={(value) => { setAddBookingDate(value); setAddBookingError(''); loadAddBookingSchedules(value) }} className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body" required />
                       </div>
                       <div>
                         <label className="block text-body font-body font-medium mb-1">Clase *</label>
@@ -1027,7 +1080,7 @@ function Admin() {
               </div>
               <div className="bg-quaternary rounded-lg p-4">
                 <p className="text-body font-body text-sm mb-1">
-                  Total Paquetes{filterDate && <span className="text-neutral-500"> (rango)</span>}
+                  {statsPackageMode === 'active' ? 'Paquetes activos' : 'Total Paquetes'}{filterDate ? <span className="text-neutral-500"> (rango)</span> : statsPackageMode === 'active' ? <span className="text-neutral-500"> (hoy)</span> : null}
                 </p>
                 <p className="text-h2 font-heading text-primary">{packagesForStats.length}</p>
               </div>
@@ -1046,7 +1099,7 @@ function Admin() {
                       Ingresos por Paquetes{filterDate && <span className="text-neutral-500"> (rango)</span>}
                     </p>
                     <p className="text-h2 font-heading text-primary">
-                      {formatCurrency(packagesForStats.reduce((sum, p) => sum + (p.payment?.amount || 0), 0))}
+                      {formatCurrency(packagesPurchasedForStats.reduce((sum, p) => sum + (p.payment?.amount || 0), 0))}
                     </p>
                   </div>
                 </>
@@ -1325,6 +1378,11 @@ function Admin() {
                               <p>
                                 <span className="font-medium">Teléfono:</span> {pkg.customer?.phone || 'N/A'}
                               </p>
+                              {pkg.expiresAt && (
+                                <p>
+                                  <span className="font-medium">Vigencia:</span> {format(new Date(pkg.createdAt || pkg.purchaseDate), 'dd/MM/yyyy')} – {format(new Date(pkg.expiresAt), 'dd/MM/yyyy')}
+                                </p>
+                              )}
                               <p>
                                 <span className="font-medium">Clases totales:</span> {pkg.classes || 10}
                               </p>

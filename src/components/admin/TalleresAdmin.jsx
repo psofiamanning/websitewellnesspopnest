@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import DateInput, { formatDateMx } from '../ui/DateInput'
 import {
   adminListTalleres,
   adminCreateTaller,
@@ -247,7 +248,7 @@ export default function TalleresAdmin() {
                   </div>
                   <p className="mt-0.5 text-xs font-body" style={{ color: '#6B7280' }}>
                     {t.tema ? `${t.tema} · ` : ''}{Number(t.price) > 0 ? `$${Number(t.price).toLocaleString('es-MX')} MXN` : 'Gratis'}
-                    {t.fecha ? ` · ${t.fecha}${t.hora ? ' ' + t.hora : ''}` : ''}
+                    {t.fecha ? ` · ${formatDateMx(t.fecha)}${t.hora ? ' ' + t.hora : ''}` : ''}
                   </p>
                   <p className="mt-0.5 text-xs font-body" style={{ color: '#9CA3AF' }}>
                     {sold} vendidos · {t.spots_available}/{t.spots_total} disponibles
@@ -338,7 +339,7 @@ export default function TalleresAdmin() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-body font-semibold" style={{ color: '#6B7280' }}>Fecha</label>
-                  <input type="date" className={inputCls} style={fieldStyle} value={form.fecha} onChange={(e) => setField('fecha', e.target.value)} />
+                  <DateInput className={inputCls} style={fieldStyle} value={form.fecha} onChange={(value) => setField('fecha', value)} />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-body font-semibold" style={{ color: '#6B7280' }}>Hora</label>

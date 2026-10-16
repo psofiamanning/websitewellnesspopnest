@@ -7,7 +7,7 @@ import { es } from 'date-fns/locale'
 import { BACKEND_URL } from '../config/api.js'
 import TalleresAdmin from '../components/admin/TalleresAdmin'
 import SalonRentalAdmin from '../components/admin/SalonRentalAdmin'
-import DateInput from '../components/ui/DateInput'
+import DateInput, { formatDateMx } from '../components/ui/DateInput'
 import MonthComparison, { cdmxDay } from '../components/admin/MonthComparison'
 
 // Verificar si el usuario es administrador
@@ -29,6 +29,30 @@ const canViewRevenue = () => getAdminRole() === 'super_admin'
 // Día (yyyy-MM-dd) en hora de CDMX; con slice(0, 10) un paquete comprado de noche caía al día siguiente (UTC).
 const todayCdmx = () => cdmxDay(new Date().toISOString())
 
+// Operadores solo ven reservas y paquetes del mes actual y los 2 anteriores (desde el día 1, hora CDMX).
+// La pestaña "Comparar meses" sí usa todo el histórico (solo conteos).
+const operatorCutoffDay = () => {
+  const [y, m] = todayCdmx().split('-').map(Number)
+  const d = new Date(Date.UTC(y, m - 1 - 2, 1))
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-01`
+}
+const isOperator = () => getAdminRole() === 'operator'
+const limitBookingsForRole = (list) => {
+  if (!isOperator()) return list
+  const cutoff = operatorCutoffDay()
+  return list.filter(b => (b.date && b.date >= cutoff) || cdmxDay(b.createdAt) >= cutoff)
+}
+// Paquete visible si se compró en el periodo o si seguía vigente en él.
+const limitPackagesForRole = (list) => {
+  if (!isOperator()) return list
+  const cutoff = operatorCutoffDay()
+  return list.filter(p => {
+    const bought = cdmxDay(p.createdAt || p.purchaseDate)
+    const expires = cdmxDay(p.expiresAt)
+    return bought >= cutoff || (!!expires && expires >= cutoff)
+  })
+}
+
 // 'purchased' = comprado dentro del rango | 'active' = vigente en algún momento del rango
 // (comprado antes de que termine y vence después de que empieza).
 const packageInRange = (pkg, start, end, mode) => {
@@ -45,6 +69,8 @@ function Admin() {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [packages, setPackages] = useState([])
+  const [allBookings, setAllBookings] = useState([]) // histórico completo, solo para "Comparar meses"
+  const [allPackages, setAllPackages] = useState([])
   const [filteredBookings, setFilteredBookings] = useState([])
   const [filteredPackages, setFilteredPackages] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -108,7 +134,8 @@ function Admin() {
       const allBookings = await getBookings()
       // Ordenar por fecha más reciente primero
       const sorted = allBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      setBookings(sorted)
+      setAllBookings(sorted)
+      setBookings(limitBookingsForRole(sorted))
     } catch (error) {
       console.error('Error loading bookings:', error)
     }
@@ -121,7 +148,8 @@ function Admin() {
         const allPackages = await response.json()
         // Ordenar por fecha más reciente primero
         const sorted = allPackages.sort((a, b) => new Date(b.createdAt || b.purchaseDate) - new Date(a.createdAt || a.purchaseDate))
-        setPackages(sorted)
+        setAllPackages(sorted)
+        setPackages(limitPackagesForRole(sorted))
       }
     } catch (error) {
       console.error('Error loading packages:', error)
@@ -752,6 +780,12 @@ function Admin() {
               </div>
             </div>
 
+            {isOperator() && (activeTab === 'bookings' || activeTab === 'packages') && (
+              <p className="mb-4 text-xs font-body text-neutral-500">
+                Se muestran reservas y paquetes desde el {formatDateMx(operatorCutoffDay())} (mes actual y los 2 anteriores). Para ver meses anteriores usa “Comparar meses”.
+              </p>
+            )}
+
             {/* Filtros */}
             {activeTab !== 'talleres' && activeTab !== 'salon' && activeTab !== 'compare' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -761,6 +795,7 @@ function Admin() {
                 </label>
                 <DateInput
                   value={filterDate}
+                  min={isOperator() ? operatorCutoffDay() : undefined}
                   onChange={(value) => {
                     setFilterDate(value)
                     if (!value) setFilterDateEnd('')
@@ -776,7 +811,7 @@ function Admin() {
                 </label>
                 <DateInput
                   value={filterDateEnd}
-                  min={filterDate || undefined}
+                  min={filterDate || (isOperator() ? operatorCutoffDay() : undefined)}
                   disabled={!filterDate}
                   onChange={(value) => {
                     setFilterDateEnd(value)
@@ -1120,7 +1155,7 @@ function Admin() {
             {activeTab === 'talleres' ? (
               <TalleresAdmin />
             ) : activeTab === 'compare' ? (
-              <MonthComparison bookings={bookings} packages={packages} />
+              <MonthComparison bookings={allBookings} packages={allPackages} />
             ) : activeTab === 'salon' ? (
               <SalonRentalAdmin />
             ) : activeTab === 'bookings' ? (

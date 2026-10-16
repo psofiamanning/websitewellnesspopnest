@@ -98,7 +98,10 @@ function Admin() {
 
   const loadPackages = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/packages`)
+      const token = localStorage.getItem('admin_token')
+      const response = await fetch(`${BACKEND_URL}/api/packages`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
       if (response.ok) {
         const allPackages = await response.json()
         // Ordenar por fecha más reciente primero

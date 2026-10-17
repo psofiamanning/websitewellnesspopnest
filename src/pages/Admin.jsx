@@ -89,6 +89,25 @@ const packageInRange = (pkg, start, end, mode) => {
   return bought >= start && bought <= end
 }
 
+// Fila compacta para celular (las tablas se ven en pantallas ≥ sm).
+function MobileRow({ title, subtitle, meta, status, badge, badgeClass, onClick }) {
+  const statusLabel = status === 'confirmed' ? 'Confirmada' : status === 'cancelled' ? 'Cancelada' : 'Pendiente'
+  const statusClass = status === 'confirmed' ? 'bg-green-100 text-green-800' : status === 'cancelled' ? 'bg-gray-200 text-gray-700' : 'bg-amber-100 text-amber-800'
+  return (
+    <li>
+      <button type="button" onClick={onClick} className="w-full text-left py-3 flex items-start justify-between gap-3 active:bg-quaternary/40">
+        <span className="min-w-0">
+          {badge && <span className={`inline-block mb-1 px-2 py-0.5 rounded-full text-xs ${badgeClass}`}>{badge}</span>}
+          <span className="block font-body font-medium text-body truncate">{title}</span>
+          <span className="block font-body text-sm text-body truncate">{subtitle}</span>
+          <span className="block font-body text-xs text-neutral-500 capitalize">{meta}</span>
+        </span>
+        <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-body ${statusClass}`}>{statusLabel}</span>
+      </button>
+    </li>
+  )
+}
+
 function Admin() {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
@@ -612,19 +631,19 @@ function Admin() {
       </div>
       
       <div className="wellness-content overflow-visible">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pr-6 sm:pr-6 lg:pr-10 py-8 md:py-12 pt-28 lg:pt-36 overflow-visible">
-          <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 overflow-visible">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 lg:pr-10 pb-8 md:pb-12 pt-4 sm:pt-28 lg:pt-36 overflow-visible">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8 overflow-visible">
             {/* Header */}
-            <div className="mb-8 flex flex-wrap justify-between items-start gap-4">
-              <div className="min-w-0 flex-1">
-                <h1 className="text-h1 font-heading text-body mb-2">
+            <div className="mb-6 sm:mb-8 flex flex-wrap justify-between items-start gap-4">
+              <div className="min-w-0 flex-1 basis-full sm:basis-auto">
+                <h1 className="text-h1 max-sm:!text-[1.75rem] max-sm:!leading-tight font-heading text-body mb-1 sm:mb-2">
                   Panel de Administración
                 </h1>
                 <p className="text-body font-body">
                   Gestión de reservas, paquetes y pagos
                 </p>
               </div>
-              <div className="flex flex-shrink-0 items-center gap-2 flex-wrap">
+              <div className="flex w-full sm:w-auto flex-shrink-0 items-stretch sm:items-center gap-2 flex-wrap">
                 {canViewRevenue() && (
                   <button
                     type="button"
@@ -638,7 +657,7 @@ function Admin() {
                         setAddBookingSuccess('')
                       }
                     }}
-                    className="px-4 py-2 rounded-lg font-body font-medium transition-all duration-300 border-2 whitespace-nowrap text-white"
+                    className="flex-1 sm:flex-none text-center px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg font-body font-medium transition-all duration-300 border-2 sm:whitespace-nowrap text-white"
                     style={{ backgroundColor: '#B73D37', borderColor: '#B73D37' }}
                   >
                     {showGrantPackage ? 'Ocultar otorgar clases' : 'Otorgar clases (sin fecha)'}
@@ -653,7 +672,7 @@ function Admin() {
                     setActiveTab('bookings')
                     if (!showAddBooking) setShowGrantPackage(false)
                   }}
-                  className="px-4 py-2 rounded-lg font-body transition-all duration-300 border-2 whitespace-nowrap"
+                  className="flex-1 sm:flex-none text-center px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg font-body transition-all duration-300 border-2 sm:whitespace-nowrap"
                   style={{ borderColor: '#B73D37', color: '#B73D37' }}
                 >
                   {showAddBooking ? 'Ocultar registro' : 'Registrar en clase'}
@@ -662,7 +681,7 @@ function Admin() {
                   <button
                     type="button"
                     onClick={() => { setShowAddOperator(!showAddOperator); setAddOperatorError(''); setAddOperatorSuccess(''); }}
-                    className="px-4 py-2 rounded-lg font-body transition-all duration-300 border-2"
+                    className="flex-1 sm:flex-none text-center px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg font-body transition-all duration-300 border-2"
                     style={{ borderColor: '#B73D37', color: '#B73D37' }}
                   >
                     {showAddOperator ? 'Ocultar' : 'Añadir operador'}
@@ -670,7 +689,7 @@ function Admin() {
                 )}
                 <button
                   onClick={adminLogout}
-                  className="px-4 py-2 rounded-lg font-body transition-all duration-300 text-white hover:bg-opacity-90 whitespace-nowrap"
+                  className="flex-1 sm:flex-none text-center px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg font-body transition-all duration-300 text-white hover:bg-opacity-90 sm:whitespace-nowrap"
                   style={{ backgroundColor: '#B73D37' }}
                 >
                   Cerrar Sesión
@@ -758,11 +777,11 @@ function Admin() {
             )}
 
             {/* Tabs */}
-            <div className="mb-6 border-b border-neutral">
-              <div className="flex gap-4">
+            <div className="mb-6 border-b border-neutral -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto">
+              <div className="flex gap-1 sm:gap-4 min-w-max">
                 <button
                   onClick={() => setActiveTab('bookings')}
-                  className={`px-4 py-2 font-body font-medium transition-colors ${
+                  className={`px-3 sm:px-4 py-2 whitespace-nowrap font-body font-medium transition-colors ${
                     activeTab === 'bookings'
                       ? 'text-primary border-b-2 border-primary'
                       : 'text-body hover:text-primary'
@@ -772,7 +791,7 @@ function Admin() {
                 </button>
                 <button
                   onClick={() => setActiveTab('packages')}
-                  className={`px-4 py-2 font-body font-medium transition-colors ${
+                  className={`px-3 sm:px-4 py-2 whitespace-nowrap font-body font-medium transition-colors ${
                     activeTab === 'packages'
                       ? 'text-primary border-b-2 border-primary'
                       : 'text-body hover:text-primary'
@@ -782,7 +801,7 @@ function Admin() {
                 </button>
                 <button
                   onClick={() => setActiveTab('talleres')}
-                  className={`px-4 py-2 font-body font-medium transition-colors ${
+                  className={`px-3 sm:px-4 py-2 whitespace-nowrap font-body font-medium transition-colors ${
                     activeTab === 'talleres'
                       ? 'text-primary border-b-2 border-primary'
                       : 'text-body hover:text-primary'
@@ -792,7 +811,7 @@ function Admin() {
                 </button>
                 <button
                   onClick={() => setActiveTab('salon')}
-                  className={`px-4 py-2 font-body font-medium transition-colors ${
+                  className={`px-3 sm:px-4 py-2 whitespace-nowrap font-body font-medium transition-colors ${
                     activeTab === 'salon'
                       ? 'text-primary border-b-2 border-primary'
                       : 'text-body hover:text-primary'
@@ -802,7 +821,7 @@ function Admin() {
                 </button>
                 <button
                   onClick={() => setActiveTab('compare')}
-                  className={`px-4 py-2 font-body font-medium transition-colors ${
+                  className={`px-3 sm:px-4 py-2 whitespace-nowrap font-body font-medium transition-colors ${
                     activeTab === 'compare'
                       ? 'text-primary border-b-2 border-primary'
                       : 'text-body hover:text-primary'
@@ -821,7 +840,7 @@ function Admin() {
 
             {/* Filtros */}
             {activeTab !== 'talleres' && activeTab !== 'salon' && activeTab !== 'compare' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6">
               <div>
                 <label className="block text-body font-body font-medium mb-2">
                   Desde
@@ -840,7 +859,7 @@ function Admin() {
               </div>
               <div>
                 <label className="block text-body font-body font-medium mb-2">
-                  Hasta <span className="text-neutral-500 font-normal">(opcional, para un rango)</span>
+                  Hasta <span className="hidden sm:inline text-neutral-500 font-normal">(opcional, para un rango)</span>
                 </label>
                 <DateInput
                   value={filterDateEnd}
@@ -853,9 +872,9 @@ function Admin() {
                   className="w-full px-4 py-2 rounded-lg border-2 border-neutral focus:border-primary focus:outline-none font-body text-body"
                 />
               </div>
-              <div>
+              <div className="col-span-2 md:col-span-1">
                 <label className="block text-body font-body font-medium mb-2">
-                  Buscar (nombre, email, teléfono, clase)
+                  Buscar <span className="hidden sm:inline">(nombre, email, teléfono, clase)</span>
                 </label>
                 <input
                   type="text"
@@ -870,7 +889,7 @@ function Admin() {
 
             {activeTab === 'packages' && (
               <div className="mb-6">
-                <div className="inline-flex rounded-lg border-2 border-neutral overflow-hidden font-body text-sm" role="group" aria-label="Qué paquetes mostrar">
+                <div className="flex sm:inline-flex rounded-lg border-2 border-neutral overflow-hidden font-body text-xs sm:text-sm" role="group" aria-label="Qué paquetes mostrar">
                   {[
                     { key: 'purchased', label: 'Comprados en el periodo' },
                     { key: 'active', label: 'Activos en el periodo' },
@@ -880,7 +899,7 @@ function Admin() {
                       type="button"
                       onClick={() => setPackageDateMode(opt.key)}
                       aria-pressed={packageDateMode === opt.key}
-                      className={`px-4 py-2 transition-colors ${packageDateMode === opt.key ? 'bg-primary text-white' : 'bg-white text-body hover:bg-quaternary/40'}`}
+                      className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 transition-colors ${packageDateMode === opt.key ? 'bg-primary text-white' : 'bg-white text-body hover:bg-quaternary/40'}`}
                     >
                       {opt.label}
                     </button>
@@ -1149,7 +1168,7 @@ function Admin() {
             )}
 
             {/* Estadísticas (operadores no ven ingresos). Si hay filtro de fecha, solo cuentan lo del rango. */}
-            <div className={`grid grid-cols-1 gap-4 mb-6 ${canViewRevenue() ? 'md:grid-cols-4' : 'md:grid-cols-2'} ${activeTab === 'compare' ? 'hidden' : ''}`}>
+            <div className={`grid grid-cols-2 gap-3 sm:gap-4 mb-6 ${canViewRevenue() ? 'md:grid-cols-4' : 'md:grid-cols-2'} ${activeTab === 'compare' ? 'hidden' : ''}`}>
               <div className="bg-quaternary rounded-lg p-4">
                 <p className="text-body font-body text-sm mb-1">
                   Total Reservas{filterDate && <span className="text-neutral-500"> (rango)</span>}
@@ -1207,7 +1226,20 @@ function Admin() {
                         </p>
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
+                      <>
+                      <ul className="sm:hidden divide-y divide-neutral border-y border-neutral">
+                        {allBookingsSortedByDate.map((booking) => (
+                          <MobileRow
+                            key={booking.id}
+                            onClick={() => setSelectedBooking(booking)}
+                            title={booking.className || '—'}
+                            subtitle={booking.customer?.fullName || [booking.customer?.firstName, booking.customer?.lastName].filter(Boolean).join(' ') || '—'}
+                            meta={`${booking.date ? format(new Date(booking.date + 'T12:00:00'), 'EEE d MMM', { locale: es }) : '—'}${booking.time ? ' · ' + booking.time.slice(0, 5) : ''}`}
+                            status={booking.status}
+                          />
+                        ))}
+                      </ul>
+                      <div className="hidden sm:block overflow-x-auto">
                         <table className="w-full border-collapse">
                           <thead>
                             <tr className="border-b-2 border-neutral">
@@ -1247,6 +1279,7 @@ function Admin() {
                           </tbody>
                         </table>
                       </div>
+                      </>
                     )}
                     <p className="text-body font-body text-sm text-neutral-600">
                       Usa el filtro por fecha para ver las reservas agrupadas por clase o coach. Haz clic en una fila para ver el detalle.
@@ -1259,7 +1292,7 @@ function Admin() {
                       <button
                         type="button"
                         onClick={() => { setBookingsViewMode('general'); setSelectedGroup(null) }}
-                        className={`px-4 py-2 rounded-t-lg font-body font-medium transition-colors ${
+                        className={`flex-1 sm:flex-none whitespace-nowrap px-2 sm:px-4 py-2 text-sm sm:text-base rounded-t-lg font-body font-medium transition-colors ${
                           bookingsViewMode === 'general'
                             ? 'text-white'
                             : 'bg-quaternary text-body hover:bg-gray-200'
@@ -1271,7 +1304,7 @@ function Admin() {
                       <button
                         type="button"
                         onClick={() => { setBookingsViewMode('class'); setSelectedGroup(null) }}
-                        className={`px-4 py-2 rounded-t-lg font-body font-medium transition-colors ${
+                        className={`flex-1 sm:flex-none whitespace-nowrap px-2 sm:px-4 py-2 text-sm sm:text-base rounded-t-lg font-body font-medium transition-colors ${
                           bookingsViewMode === 'class'
                             ? 'bg-primary text-white'
                             : 'bg-quaternary text-body hover:bg-gray-200'
@@ -1283,7 +1316,7 @@ function Admin() {
                       <button
                         type="button"
                         onClick={() => { setBookingsViewMode('teacher'); setSelectedGroup(null) }}
-                        className={`px-4 py-2 rounded-t-lg font-body font-medium transition-colors ${
+                        className={`flex-1 sm:flex-none whitespace-nowrap px-2 sm:px-4 py-2 text-sm sm:text-base rounded-t-lg font-body font-medium transition-colors ${
                           bookingsViewMode === 'teacher'
                             ? 'text-white'
                             : 'bg-quaternary text-body hover:bg-gray-200'
@@ -1302,7 +1335,27 @@ function Admin() {
                             <p className="text-body font-body">No hay reservas ni paquetes para {filterDateEnd ? 'este rango de fechas' : 'esta fecha'}.</p>
                           </div>
                         ) : (
-                          <table className="w-full border-collapse">
+                          <>
+                          <ul className="sm:hidden divide-y divide-neutral border-y border-neutral">
+                            {combinedRecentList.map(({ type, data }) => {
+                              const isBooking = type === 'booking'
+                              return (
+                                <MobileRow
+                                  key={`m-${type}-${data.id}`}
+                                  onClick={() => isBooking ? setSelectedBooking(data) : setSelectedPackage(data)}
+                                  badge={isBooking ? 'Clase suelta' : 'Paquete'}
+                                  badgeClass={isBooking ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}
+                                  title={isBooking ? (data.className || '—') : (data.packageName || '—')}
+                                  subtitle={data.customer?.fullName || [data.customer?.firstName, data.customer?.lastName].filter(Boolean).join(' ') || '—'}
+                                  meta={isBooking
+                                    ? `${data.date ? format(new Date(data.date + 'T12:00:00'), 'EEE d MMM', { locale: es }) : '—'}${data.time ? ' · ' + data.time.slice(0, 5) : ''}`
+                                    : `Comprado ${format(new Date(data.createdAt || data.purchaseDate), 'EEE d MMM', { locale: es })}`}
+                                  status={isBooking ? data.status : (data.payment?.status === 'succeeded' || data.status === 'confirmed' ? 'confirmed' : 'pending')}
+                                />
+                              )
+                            })}
+                          </ul>
+                          <table className="hidden sm:table w-full border-collapse">
                             <thead>
                               <tr className="border-b-2 border-neutral">
                                 <th className="text-left py-3 px-2 font-body font-medium text-body">Fecha</th>
@@ -1352,6 +1405,7 @@ function Admin() {
                               })}
                             </tbody>
                           </table>
+                          </>
                         )}
                       </div>
                     ) : selectedGroup ? (

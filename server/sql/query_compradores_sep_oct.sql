@@ -1,7 +1,7 @@
 -- Personas que COMPRARON paquete o clase suelta en SEPTIEMBRE y OCTUBRE 2026
 -- (Supabase → SQL Editor → Run). Exportable a CSV.
 --
--- Solo cobros exitosos (succeeded). Excluye créditos otorgados por administración.
+-- Solo cobros exitosos (succeeded) con monto > 0 (excluye créditos gratis de administración).
 -- Rango: 1 sep 00:00 → 1 nov 00:00, hora CDMX.
 -- Montos: payments_new.amount y customer_packages.amount_paid están en CENTAVOS (/100).
 
@@ -18,7 +18,7 @@ WITH compras AS (
   FROM public.customer_packages cp
   LEFT JOIN public.packages pkg ON pkg.id = cp.package_id
   WHERE cp.payment_status = 'succeeded'
-    AND NOT cp.admin_granted
+    AND cp.amount_paid > 0   -- excluye créditos gratis de administración
 
   UNION ALL
 

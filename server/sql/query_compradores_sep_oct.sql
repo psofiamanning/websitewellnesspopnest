@@ -6,7 +6,8 @@
 -- Montos: payments_new.amount y customer_packages.amount_paid están en CENTAVOS (/100).
 
 -- =============================================================================
--- 1) UNA FILA POR PERSONA: nombre, apellido, email y todo lo que compró
+-- UNA FILA POR COMPRA: nombre, apellido, email, qué compró, fecha, monto
+-- y la fecha de la última compra de esa persona
 -- =============================================================================
 WITH compras AS (
   -- Paquetes
@@ -37,29 +38,16 @@ WITH compras AS (
     AND pay.amount > 0
 )
 SELECT
-  p.first_name                                         AS nombre,
-  p.last_name                                          AS apellido,
-  p.email                                              AS email,
-  string_agg(
-    c.compra || ' (' || to_char(c.fecha AT TIME ZONE 'America/Mexico_City', 'DD/MM') || ')',
-    ', ' ORDER BY c.fecha
-  )                                                    AS que_compro,
-  count(*)                                             AS num_compras,
-  sum(c.monto_mxn)                                     AS total_mxn
+  p.first_name                                                               AS nombre,
+  p.last_name                                                                AS apellido,
+  p.email                                                                    AS email,
+  c.compra                                                                   AS que_compro,
+  to_char(c.fecha AT TIME ZONE 'America/Mexico_City', 'YYYY-MM-DD HH24:MI')  AS fecha_compra,
+  c.monto_mxn                                                                AS monto_mxn,
+  to_char(max(c.fecha) OVER (PARTITION BY c.customer_id)
+          AT TIME ZONE 'America/Mexico_City', 'YYYY-MM-DD')                  AS ultima_compra
 FROM compras c
 JOIN public.profiles p ON p.id = c.customer_id
 WHERE c.fecha >= timestamptz '2026-09-01 00:00 America/Mexico_City'
   AND c.fecha <  timestamptz '2026-11-01 00:00 America/Mexico_City'
-GROUP BY p.id, p.first_name, p.last_name, p.email
-ORDER BY p.first_name, p.last_name;
-
--- =============================================================================
--- 2) (Opcional) DETALLE: una fila por compra
--- =============================================================================
--- WITH compras AS ( ...mismo CTE de arriba... )
--- SELECT to_char(c.fecha AT TIME ZONE 'America/Mexico_City', 'YYYY-MM-DD HH24:MI') AS fecha_cdmx,
---        p.first_name AS nombre, p.last_name AS apellido, p.email, c.compra, c.monto_mxn
--- FROM compras c JOIN public.profiles p ON p.id = c.customer_id
--- WHERE c.fecha >= timestamptz '2026-09-01 00:00 America/Mexico_City'
---   AND c.fecha <  timestamptz '2026-11-01 00:00 America/Mexico_City'
--- ORDER BY c.fecha;
+ORDER BY p.first_name, p.last_name, c.fecha;

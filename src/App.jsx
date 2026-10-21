@@ -14,6 +14,7 @@ import Classes from './pages/Classes'
 import Schedule from './pages/Schedule'
 import Talleres from './pages/Talleres'
 import RentaSalon from './pages/RentaSalon'
+import Coworking from './pages/Coworking'
 import RentaSalonConfirmacion from './pages/RentaSalonConfirmacion'
 import TallerDetalle from './pages/TallerDetalle'
 import Booking from './pages/Booking'
@@ -140,6 +141,7 @@ export function AppContent() {
         <Route path="/talleres/:id" element={<TallerDetalle />} />
         <Route path="/renta-salon" element={<RentaSalon />} />
         <Route path="/renta-salon/confirmacion" element={<RentaSalonConfirmacion />} />
+        <Route path="/coworking" element={<Coworking />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/booking/package/:id" element={<PackagePurchase />} />
         <Route path="/booking/:type/:id" element={<Booking />} />

@@ -155,7 +155,7 @@ export const ROUTE_SEO = {
   },
   '/renta-salon': {
     title: 'Renta de Salón en Coyoacán | Estudio Popnest Wellness',
-    description: 'Renta nuestro salón en Coyoacán para tu evento, clase privada o celebración. Precios por hora, paga en línea y reserva al instante.'
+    description: 'Renta nuestro salón en Coyoacán para tu evento, clase privada o celebración. Precios por hora y reservas por WhatsApp.'
   },
   '/packages': {
     title: 'Paquetes de Clases | Yoga en Coyoacán | Estudio Popnest Wellness',

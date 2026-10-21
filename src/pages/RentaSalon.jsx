@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import WhatsAppFloatingButton from '../components/WhatsAppFloatingButton'
 import heroPhoto from '../assets/studio-hero-mirrors.jpg'
 import wallPhoto from '../assets/studio-photo-1.png'
 import windowPhoto from '../assets/studio-photo-4.png'
@@ -53,6 +54,7 @@ function RentaSalon() {
         <StudioPhotos />
         <FinePrint />
       </div>
+      <WhatsAppFloatingButton message="Hola, me interesa rentar el salón de Popnest." />
     </div>
   )
 }

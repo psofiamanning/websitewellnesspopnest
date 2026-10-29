@@ -37,6 +37,15 @@ import {
 } from './db/talleres.js'
 import { isTalleresAiConfigured, generateTallerFromPrompt } from './talleresAi.js'
 import {
+  signupIpLimiter,
+  forgotIpLimiter,
+  forgotEmailLimiter,
+  canResendConfirm,
+  checkFormSignals,
+  isValidPersonName,
+  escapeHtml,
+} from './antiBot.js'
+import {
   checkSalonOverlap,
   listBookedRangesForDate,
   createPendingSalonBooking,
@@ -120,6 +129,9 @@ if (!envExists) {
 }
 
 const app = express()
+// Railway pone un proxy delante: sin esto req.ip sería la IP del proxy y el rate limit
+// trataría a todas las clientas como una sola.
+app.set('trust proxy', 1)
 const PORT = process.env.PORT || 3000
 
 // Middleware
@@ -347,7 +359,7 @@ async function sendWelcomeEmail(user) {
   }
   const subject = 'Bienvenido a Estudio Popnest Wellness'
   const text = `Hola ${user.firstName || ''},\n\nGracias por registrarte en Estudio Popnest Wellness. Ya puedes reservar clases y disfrutar de nuestro estudio.\n\nSaludos,\nEl equipo de Estudio Popnest Wellness`
-  const html = `<p>Hola <strong>${user.firstName || ''}</strong>,</p><p>Gracias por registrarte en <strong>Estudio Popnest Wellness</strong>. Ya puedes reservar clases y disfrutar de nuestro estudio.</p><p>Saludos,<br>El equipo de Estudio Popnest Wellness</p>`
+  const html = `<p>Hola <strong>${escapeHtml(user.firstName)}</strong>,</p><p>Gracias por registrarte en <strong>Estudio Popnest Wellness</strong>. Ya puedes reservar clases y disfrutar de nuestro estudio.</p><p>Saludos,<br>El equipo de Estudio Popnest Wellness</p>`
   try {
     await sendEmail({ to: user.email, toName: user.firstName, subject, text, html })
     console.log('✅ Email de bienvenida enviado a:', user.email)
@@ -379,7 +391,7 @@ async function sendConfirmEmail(email, firstName, confirmLink) {
   }
   const subject = 'Confirma tu correo - Estudio Popnest Wellness'
   const text = `Hola ${firstName || ''},\n\nPara activar tu cuenta en Estudio Popnest Wellness confirma tu correo en este enlace:\n\n${confirmLink}\n\nDespués inicia sesión con tu correo y tu contraseña.\n\nSaludos,\nEl equipo de Estudio Popnest Wellness`
-  const html = `<p>Hola <strong>${firstName || ''}</strong>,</p><p>Para activar tu cuenta en <strong>Estudio Popnest Wellness</strong> confirma tu correo:</p><p><a href="${confirmLink}" style="color:#B73D37;font-weight:bold;">Confirmar mi correo</a></p><p>Después inicia sesión con tu correo y tu contraseña.</p><p>Saludos,<br>El equipo de Estudio Popnest Wellness</p>`
+  const html = `<p>Hola <strong>${escapeHtml(firstName)}</strong>,</p><p>Para activar tu cuenta en <strong>Estudio Popnest Wellness</strong> confirma tu correo:</p><p><a href="${confirmLink}" style="color:#B73D37;font-weight:bold;">Confirmar mi correo</a></p><p>Después inicia sesión con tu correo y tu contraseña.</p><p>Saludos,<br>El equipo de Estudio Popnest Wellness</p>`
   try {
     await sendEmail({ to: email, toName: firstName, subject, text, html })
     console.log('✅ Email de confirmación enviado a:', email)
@@ -1948,9 +1960,19 @@ app.post('/api/auth/admin/force-reset-password', async (req, res) => {
 })
 
 // Endpoint: Registro de usuario (Supabase Auth + profiles)
-app.post('/api/auth/signup', async (req, res) => {
+const SIGNUP_FAKE_SUCCESS = {
+  success: true,
+  user: null,
+  token: null,
+  message: 'Te enviamos un correo para confirmar tu cuenta. Ábrelo y después inicia sesión.',
+}
+
+app.post('/api/auth/signup', signupIpLimiter, async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
+
+    const botCheck = checkFormSignals(req, { minMs: 3000, fakeSuccess: SIGNUP_FAKE_SUCCESS })
+    if (botCheck) return res.status(botCheck.status).json(botCheck.body)
 
     const { firstName, lastName, email, phone, password } = req.body
 
@@ -1958,6 +1980,13 @@ app.post('/api/auth/signup', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Todos los campos son requeridos',
+      })
+    }
+
+    if (!isValidPersonName(firstName) || !isValidPersonName(lastName)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Escribe tu nombre y apellido solo con letras.',
       })
     }
 
@@ -2051,9 +2080,16 @@ app.post('/api/auth/set-password', async (req, res) => {
 })
 
 // Endpoint: Olvidé mi contraseña (Supabase envía el correo)
-app.post('/api/auth/forgot-password', async (req, res) => {
+const FORGOT_OK_MESSAGE = 'Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña.'
+
+app.post('/api/auth/forgot-password', forgotIpLimiter, forgotEmailLimiter, async (req, res) => {
   try {
     res.setHeader('Content-Type', 'application/json')
+    const botCheck = checkFormSignals(req, {
+      minMs: 1500,
+      fakeSuccess: { success: true, message: FORGOT_OK_MESSAGE },
+    })
+    if (botCheck) return res.status(botCheck.status).json(botCheck.body)
     const { email } = req.body
     if (!email || typeof email !== 'string' || !email.trim()) {
       return res.status(400).json({ success: false, error: 'El correo es requerido' })
@@ -2066,16 +2102,20 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       email: normalizedEmail,
       options: { redirectTo: `${FRONTEND_URL}/reset-password` },
     })
+    // Patrón de los bots: registrarse y pedir recuperación segundos después, sin haber
+    // confirmado. Una clienta real que acaba de registrarse tiene ya su enlace de confirmación.
+    const user = data?.user
+    const justCreatedUnconfirmed =
+      user && !user.email_confirmed_at && Date.now() - new Date(user.created_at).getTime() < 15 * 60 * 1000
     if (error) {
       // Correo sin cuenta (u otro error): misma respuesta para no revelar quién tiene cuenta.
       console.warn('Supabase generateLink (recovery):', error.message)
+    } else if (justCreatedUnconfirmed) {
+      console.warn('🤖 Recuperación pedida por cuenta recién creada sin confirmar, no se envía:', normalizedEmail, 'ip=', req.ip)
     } else {
       await sendPasswordResetEmail(normalizedEmail, data.properties.action_link)
     }
-    res.json({
-      success: true,
-      message: 'Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña.',
-    })
+    res.json({ success: true, message: FORGOT_OK_MESSAGE })
   } catch (error) {
     console.error('Error in forgot-password:', error)
     res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' })
@@ -2112,6 +2152,12 @@ app.post('/api/auth/login', async (req, res) => {
     // en vez de «Credenciales inválidas», reenviar el enlace de confirmación y decirlo.
     if (error?.code === 'email_not_confirmed') {
       const normalizedEmail = email.trim().toLowerCase()
+      if (!canResendConfirm(normalizedEmail)) {
+        return res.status(403).json({
+          code: 'EMAIL_NOT_CONFIRMED',
+          error: `Tu correo aún no está confirmado. Ya te enviamos un enlace a ${normalizedEmail} hace unos minutos: búscalo en tu bandeja (y en spam) y vuelve a iniciar sesión.`,
+        })
+      }
       const { data: linkData, error: linkError } = await getSupabaseAdmin().auth.admin.generateLink({
         type: 'magiclink',
         email: normalizedEmail,

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { forgotPassword } from '../services/authService'
 import AuthEditorialLayout from '../components/auth/AuthEditorialLayout'
+import AuthHoneypot from '../components/auth/AuthHoneypot'
 import '../styles/authShell.css'
 
 function ForgotPasswordAside() {
@@ -42,6 +43,9 @@ function ForgotPassword() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  // Señales anti-bots que revisa el servidor: honeypot y cuánto tardó en llenarse.
+  const [honeypot, setHoneypot] = useState('')
+  const startedAtRef = useRef(Date.now())
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -52,7 +56,10 @@ function ForgotPassword() {
     }
     setIsLoading(true)
     try {
-      const result = await forgotPassword(email.trim())
+      const result = await forgotPassword(email.trim(), {
+        website: honeypot,
+        elapsedMs: Date.now() - startedAtRef.current,
+      })
       if (result.success) {
         setSent(true)
       } else {
@@ -99,6 +106,7 @@ function ForgotPassword() {
         </>
       ) : (
         <form onSubmit={handleSubmit}>
+          <AuthHoneypot value={honeypot} onChange={setHoneypot} />
           <div className="auth-field">
             <label htmlFor="email">Correo electrónico</label>
             <input

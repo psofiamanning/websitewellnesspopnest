@@ -111,12 +111,12 @@ export const setPassword = async () => ({
   error: 'Usa «Olvidé mi contraseña» para restablecer tu acceso.',
 })
 
-export const forgotPassword = async (email) => {
+export const forgotPassword = async (email, botSignals = {}) => {
   try {
     const response = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim() }),
+      body: JSON.stringify({ email: email.trim(), ...botSignals }),
     })
     const data = await response.json()
     if (!response.ok) {

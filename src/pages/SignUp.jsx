@@ -5,6 +5,7 @@ import { PENDING_FREE_CLASS_CODE_KEY } from '../config/freeClassPromo'
 import { trackMetaLead } from '../utils/metaPixel'
 import AuthEditorialLayout from '../components/auth/AuthEditorialLayout'
 import AuthPasswordField from '../components/auth/AuthPasswordField'
+import AuthHoneypot from '../components/auth/AuthHoneypot'
 import '../styles/authShell.css'
 
 function SignUpAside() {
@@ -61,6 +62,9 @@ function SignUp() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
   const errorRef = useRef(null)
+  // Señales anti-bots que revisa el servidor: honeypot y cuánto tardó en llenarse.
+  const [honeypot, setHoneypot] = useState('')
+  const startedAtRef = useRef(Date.now())
 
   // El aviso de error vive arriba del formulario y el botón está hasta abajo:
   // sin esto, en móvil parece que el clic "no hizo nada".
@@ -99,6 +103,8 @@ function SignUp() {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
+        website: honeypot,
+        elapsedMs: Date.now() - startedAtRef.current,
       })
 
       if (result.success) {
@@ -161,6 +167,7 @@ function SignUp() {
           ) : null}
 
           <form onSubmit={handleSubmit}>
+            <AuthHoneypot value={honeypot} onChange={setHoneypot} />
             <div className="auth-field-row">
               <div className="auth-field">
                 <label htmlFor="firstName">Nombre</label>

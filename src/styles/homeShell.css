@@ -193,6 +193,18 @@ a.home-practice-card {
   display: block;
 }
 
+/* El video va encima del poster (<img>) y aparece cuando empieza a reproducirse. */
+.home-hero__visual .home-hero__video {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.home-hero__visual .home-hero__video.is-playing {
+  opacity: 1;
+}
+
 .home-ticker {
   overflow: hidden;
   background: var(--pn-color-bg-secondary);

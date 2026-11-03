@@ -25,6 +25,7 @@ const HERO_VIDEO_POSTER = '/videos/hero-classes-poster.jpg'
 
 /**
  * El HTML sale con preload="none" y sin autoplay (autoplay obliga a descargar el video).
+ * Mientras no reproduce se ve el <img> del poster que está debajo.
  * Escritorio: arranca al montar. Móvil: espera al evento load para no competir con el LCP.
  * Ahorro de datos o movimiento reducido: se queda el poster.
  */
@@ -36,16 +37,22 @@ function useDeferredHeroVideo(videoRef) {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (saveData || reducedMotion) return undefined
 
+    // El poster es un <img> debajo (elemento LCP); el video aparece encima cuando ya reproduce.
+    const onPlaying = () => video.classList.add('is-playing')
+    video.addEventListener('playing', onPlaying, { once: true })
     const start = () => {
       video.preload = 'auto'
       video.play().catch(() => {})
     }
     if (window.matchMedia('(min-width: 768px)').matches || document.readyState === 'complete') {
       start()
-      return undefined
+    } else {
+      window.addEventListener('load', start, { once: true })
     }
-    window.addEventListener('load', start, { once: true })
-    return () => window.removeEventListener('load', start)
+    return () => {
+      window.removeEventListener('load', start)
+      video.removeEventListener('playing', onPlaying)
+    }
   }, [videoRef])
 }
 
@@ -112,11 +119,19 @@ function Home() {
         <main>
           <section id="inicio" className="home-hero">
             <figure className="home-hero__visual">
+              <img
+                className="home-hero__poster"
+                src={HERO_VIDEO_POSTER}
+                alt=""
+                width="432"
+                height="768"
+                fetchpriority="high"
+                decoding="async"
+              />
               <video
                 ref={heroVideoRef}
                 className="home-hero__video"
                 src={HERO_VIDEO_SRC}
-                poster={HERO_VIDEO_POSTER}
                 width="432"
                 height="768"
                 muted

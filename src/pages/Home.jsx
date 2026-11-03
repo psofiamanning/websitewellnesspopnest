@@ -155,7 +155,10 @@ function Home() {
                 const landingSlug = getLandingSlugForClassId(c.id)
                 return (
                   <article key={c.id} className="home-class-spotlight">
-                    <Link to={`/booking/class/${c.id}`} className="home-class-spotlight__link">
+                    <Link
+                      to={landingSlug ? `/clases/${landingSlug}` : `/booking/class/${c.id}`}
+                      className="home-class-spotlight__link"
+                    >
                       <div className="home-class-spotlight__img">
                         <img src={c.image} alt={`Clase de ${c.name} en Coyoacán — Estudio Popnest Wellness`} loading="lazy" decoding="async" />
                       </div>
@@ -169,11 +172,6 @@ function Home() {
                         </p>
                       </div>
                     </Link>
-                    {landingSlug ? (
-                      <Link to={`/clases/${landingSlug}`} className="home-class-spotlight__guide">
-                        Guía · {c.name} en Coyoacán
-                      </Link>
-                    ) : null}
                   </article>
                 )
               })}

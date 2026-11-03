@@ -13,9 +13,11 @@ import '../styles/classesShell.css'
 function PracticeCard({ c }) {
   const dot = dotClassForClassId(c.id)
   const landingSlug = getLandingSlugForClassId(c.id)
+  // La tarjeta enlaza a la landing indexable; /booking/* solo desde botones de reservar.
+  const href = landingSlug ? `/clases/${landingSlug}` : `/booking/class/${c.id}`
   return (
     <article id={`cl-class-${c.id}`} className="pn-practice-card pn-practice-card--mosaic">
-      <Link to={`/booking/class/${c.id}`} className="cl-pcard__mosaic-link">
+      <Link to={href} className="cl-pcard__mosaic-link">
         <div className="pn-practice-card__image pn-practice-card__image--mosaic pn-practice-card__image--class-icon">
           <img src={c.image} alt={getClassImageAlt(c.name)} loading="lazy" decoding="async" />
         </div>
@@ -33,16 +35,11 @@ function PracticeCard({ c }) {
               ${SINGLE_CLASS_PRICE_MXN.toFixed(0)} MXN · clase
             </span>
             <span className="cl-pcard__link-mosaic" aria-hidden>
-              Reservar →
+              Ver clase →
             </span>
           </div>
         </div>
       </Link>
-      {landingSlug && (
-        <Link to={`/clases/${landingSlug}`} className="cl-pcard__guide-link">
-          Guía de {c.name} en Coyoacán
-        </Link>
-      )}
     </article>
   )
 }

@@ -2,27 +2,146 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/clases/meditacion-sound-healing-coyoacan", "destination": "/clases/sound-healing-coyoacan", "permanent": true },
-    { "source": "/clases/meditacion-coyoacan", "destination": "/classes", "permanent": true },
-    { "source": "/coaches", "destination": "/classes", "permanent": true },
-    { "source": "/teachers", "destination": "/classes", "permanent": true },
-    { "source": "/profesores", "destination": "/classes", "permanent": true },
-    { "source": "/profesores/login", "destination": "/coaches/login", "permanent": true }
+    {
+      "source": "/clases/meditacion-sound-healing-coyoacan",
+      "destination": "/clases/sound-healing-coyoacan",
+      "permanent": true
+    },
+    {
+      "source": "/clases/meditacion-coyoacan",
+      "destination": "/classes",
+      "permanent": true
+    },
+    {
+      "source": "/coaches",
+      "destination": "/classes",
+      "permanent": true
+    },
+    {
+      "source": "/teachers",
+      "destination": "/classes",
+      "permanent": true
+    },
+    {
+      "source": "/profesores",
+      "destination": "/classes",
+      "permanent": true
+    },
+    {
+      "source": "/profesores/login",
+      "destination": "/coaches/login",
+      "permanent": true
+    }
   ],
   "rewrites": [
-    { "source": "/talleres/:id", "destination": "/app-shell.html" },
-    { "source": "/renta-salon/confirmacion", "destination": "/app-shell.html" },
-    { "source": "/coaches/login", "destination": "/app-shell.html" },
-    { "source": "/coaches/panel", "destination": "/app-shell.html" },
-    { "source": "/booking/:path*", "destination": "/app-shell.html" },
-    { "source": "/login", "destination": "/app-shell.html" },
-    { "source": "/signup", "destination": "/app-shell.html" },
-    { "source": "/forgot-password", "destination": "/app-shell.html" },
-    { "source": "/reset-password", "destination": "/app-shell.html" },
-    { "source": "/admin", "destination": "/app-shell.html" },
-    { "source": "/admin/:path*", "destination": "/app-shell.html" },
-    { "source": "/mis-reservas", "destination": "/app-shell.html" },
-    { "source": "/mis-paquetes", "destination": "/app-shell.html" },
-    { "source": "/espacios", "destination": "/app-shell.html" }
+    {
+      "source": "/booking/:path*",
+      "destination": "/booking-shell.html"
+    },
+    {
+      "source": "/talleres/:id",
+      "destination": "/taller-shell.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/booking/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/login",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/signup",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/forgot-password",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/reset-password",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/coaches/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/mis-reservas",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/mis-paquetes",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/espacios/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/renta-salon/confirmacion",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
   ]
 }

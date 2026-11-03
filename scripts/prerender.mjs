@@ -13,7 +13,8 @@ import {
   getBreadcrumbItems,
   getSitemapMeta,
   shouldNoindex,
-  SITE_URL
+  SITE_URL,
+  APP_SHELL_ROUTES
 } from '../src/utils/seo.js'
 import { buildCourseSchemaForLanding } from '../src/data/classLandingRoutes.js'
 
@@ -191,18 +192,24 @@ async function main() {
   await fs.writeFile(path.join(distDir, '404.html'), notFoundPage, 'utf8')
   console.log('prerender: 404 → dist/404.html')
 
-  // Shell vacío para rutas de la app que no se pre-renderizan (login, admin, reservas…):
-  // así no hidratan el HTML del Home. Los rewrites de vercel.json apuntan aquí.
-  const shell = replaceTag(
-    template.replace(/\s*<link rel="canonical" href="[^"]*"\s*\/?>/, ''),
-    /<meta name="robots" content="[^"]*"\s*\/?>/,
-    '<meta name="robots" content="noindex, nofollow" />'
-  )
-  const shellHtml = shell.includes('name="robots"')
-    ? shell
-    : shell.replace('</head>', '    <meta name="robots" content="noindex, nofollow" />\n  </head>')
-  await fs.writeFile(path.join(distDir, 'app-shell.html'), shellHtml, 'utf8')
-  console.log('prerender: shell SPA → dist/app-shell.html')
+  // Rutas de la app sin contenido para crawlers (login, admin, cuenta…): HTML con #root vacío
+  // (React monta en cliente) pero con su propio title y noindex, no el del Home.
+  for (const route of APP_SHELL_ROUTES) {
+    const outPath = outputPathForRoute(route)
+    await fs.mkdir(path.dirname(outPath), { recursive: true })
+    await fs.writeFile(outPath, applyRouteHead(template, route), 'utf8')
+    console.log(`prerender: shell ${route} → ${path.relative(rootDir, outPath)}`)
+  }
+
+  // Rutas dinámicas: vercel.json reescribe /booking/* y /talleres/:id a estos shells.
+  // Sin canonical fijo: PageSEO lo pone en cliente con la URL real.
+  const stripCanonical = (html) =>
+    html
+      .replace(/\s*<link rel="canonical" href="[^"]*"\s*\/?>/, '')
+      .replace(/\s*<meta property="og:url" content="[^"]*"\s*\/?>/, '')
+  await fs.writeFile(path.join(distDir, 'booking-shell.html'), stripCanonical(applyRouteHead(template, '/booking/')), 'utf8')
+  await fs.writeFile(path.join(distDir, 'taller-shell.html'), stripCanonical(applyRouteHead(template, '/talleres')), 'utf8')
+  console.log('prerender: shells dinámicos → dist/booking-shell.html, dist/taller-shell.html')
 
   await writeSitemap(lastmod)
   console.log(`prerender: ${PRERENDER_ROUTES.length} rutas listas.`)

@@ -204,8 +204,54 @@ export const ROUTE_SEO = {
   '/espacios': {
     title: 'Espacios | Estudio Popnest',
     description: 'Wellness y oficinas en Londres 105, Del Carmen, Coyoacán.'
+  },
+  '/forgot-password': {
+    title: 'Recuperar contraseña | Estudio Popnest Wellness',
+    description: 'Recupera el acceso a tu cuenta de Estudio Popnest Wellness.'
+  },
+  '/reset-password': {
+    title: 'Nueva contraseña | Estudio Popnest Wellness',
+    description: 'Crea una nueva contraseña para tu cuenta de Estudio Popnest Wellness.'
+  },
+  '/admin': {
+    title: 'Admin | Estudio Popnest Wellness',
+    description: 'Panel de administración de Estudio Popnest Wellness.'
+  },
+  '/admin/login': {
+    title: 'Admin · Iniciar sesión | Estudio Popnest Wellness',
+    description: 'Acceso al panel de administración de Estudio Popnest Wellness.'
+  },
+  '/admin/forgot-password': {
+    title: 'Admin · Recuperar contraseña | Estudio Popnest Wellness',
+    description: 'Recupera el acceso al panel de administración de Estudio Popnest Wellness.'
+  },
+  '/admin/reset-password': {
+    title: 'Admin · Nueva contraseña | Estudio Popnest Wellness',
+    description: 'Crea una nueva contraseña para el panel de administración de Estudio Popnest Wellness.'
+  },
+  '/renta-salon/confirmacion': {
+    title: 'Reserva de salón confirmada | Estudio Popnest Wellness',
+    description: 'Confirmación de tu reserva del salón en Estudio Popnest Wellness, Coyoacán.'
   }
 }
+
+/** Rutas de la app (cuenta, admin, coaches) que se publican como HTML vacío con su propio title y noindex. */
+export const APP_SHELL_ROUTES = [
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/mis-reservas',
+  '/mis-paquetes',
+  '/admin',
+  '/admin/login',
+  '/admin/forgot-password',
+  '/admin/reset-password',
+  '/coaches/login',
+  '/coaches/panel',
+  '/espacios',
+  '/renta-salon/confirmacion'
+]
 
 /** Nombre legible por slug de clase (para breadcrumb Reservar X). */
 const CLASS_SLUG_TO_NAME = {

@@ -182,6 +182,28 @@ async function main() {
     console.log(`prerender: ${route} → ${path.relative(rootDir, outPath)}`)
   }
 
+  // 404.html: Vercel lo sirve con status 404 para cualquier URL que no exista
+  // (ni archivo estático ni rewrite en vercel.json). Ruta ficticia → <NotFound />.
+  const notFoundRoute = '/__pagina-no-encontrada'
+  const { html: notFoundHtml } = await render(notFoundRoute)
+  let notFoundPage = applyRouteHead(injectAppHtml(template, notFoundHtml), notFoundRoute)
+  notFoundPage = notFoundPage.replace(/\s*<link rel="canonical" href="[^"]*"\s*\/?>/, '')
+  await fs.writeFile(path.join(distDir, '404.html'), notFoundPage, 'utf8')
+  console.log('prerender: 404 → dist/404.html')
+
+  // Shell vacío para rutas de la app que no se pre-renderizan (login, admin, reservas…):
+  // así no hidratan el HTML del Home. Los rewrites de vercel.json apuntan aquí.
+  const shell = replaceTag(
+    template.replace(/\s*<link rel="canonical" href="[^"]*"\s*\/?>/, ''),
+    /<meta name="robots" content="[^"]*"\s*\/?>/,
+    '<meta name="robots" content="noindex, nofollow" />'
+  )
+  const shellHtml = shell.includes('name="robots"')
+    ? shell
+    : shell.replace('</head>', '    <meta name="robots" content="noindex, nofollow" />\n  </head>')
+  await fs.writeFile(path.join(distDir, 'app-shell.html'), shellHtml, 'utf8')
+  console.log('prerender: shell SPA → dist/app-shell.html')
+
   await writeSitemap(lastmod)
   console.log(`prerender: ${PRERENDER_ROUTES.length} rutas listas.`)
 }

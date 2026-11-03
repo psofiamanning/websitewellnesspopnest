@@ -1,7 +1,28 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/clases/meditacion-sound-healing-coyoacan", "destination": "/clases/sound-healing-coyoacan", "permanent": true },
+    { "source": "/clases/meditacion-coyoacan", "destination": "/classes", "permanent": true },
+    { "source": "/coaches", "destination": "/classes", "permanent": true },
+    { "source": "/teachers", "destination": "/classes", "permanent": true },
+    { "source": "/profesores", "destination": "/classes", "permanent": true },
+    { "source": "/profesores/login", "destination": "/coaches/login", "permanent": true }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/talleres/:id", "destination": "/app-shell.html" },
+    { "source": "/renta-salon/confirmacion", "destination": "/app-shell.html" },
+    { "source": "/coaches/login", "destination": "/app-shell.html" },
+    { "source": "/coaches/panel", "destination": "/app-shell.html" },
+    { "source": "/booking/:path*", "destination": "/app-shell.html" },
+    { "source": "/login", "destination": "/app-shell.html" },
+    { "source": "/signup", "destination": "/app-shell.html" },
+    { "source": "/forgot-password", "destination": "/app-shell.html" },
+    { "source": "/reset-password", "destination": "/app-shell.html" },
+    { "source": "/admin", "destination": "/app-shell.html" },
+    { "source": "/admin/:path*", "destination": "/app-shell.html" },
+    { "source": "/mis-reservas", "destination": "/app-shell.html" },
+    { "source": "/mis-paquetes", "destination": "/app-shell.html" },
+    { "source": "/espacios", "destination": "/app-shell.html" }
   ]
 }

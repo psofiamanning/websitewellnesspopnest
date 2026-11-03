@@ -19,7 +19,7 @@ export const loadStripe = async () => {
   
   try {
     // Importación dinámica - solo se ejecuta cuando se llama la función
-    const stripeModule = await import('@stripe/stripe-js')
+    const stripeModule = await import('@stripe/stripe-js/pure')
     const { loadStripe: loadStripeJS } = stripeModule
     return await loadStripeJS(stripeConfig.publishableKey)
   } catch (error) {

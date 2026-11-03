@@ -54,7 +54,7 @@ const loadStripe = async () => {
     // Intentar importar Stripe dinámicamente
     // Usamos @vite-ignore para evitar que Vite intente resolverlo en tiempo de compilación
     // Si el módulo no existe, el catch lo manejará
-    const stripeModule = await import(/* @vite-ignore */ '@stripe/stripe-js').catch(() => null)
+    const stripeModule = await import(/* @vite-ignore */ '@stripe/stripe-js/pure').catch(() => null)
     
     if (!stripeModule || !stripeModule.loadStripe) {
       console.warn('⚠️ @stripe/stripe-js no está instalado. Ejecuta: npm install @stripe/stripe-js')

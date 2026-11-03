@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
-import { loadStripe } from '@stripe/stripe-js'
+// '/pure': no inyecta js.stripe.com al importar; el script se descarga hasta que se llama loadStripe.
+import { loadStripe } from '@stripe/stripe-js/pure'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 
-// Cargar Stripe con la clave pública
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
-  : null
+// Se crea la primera vez que se muestra un formulario de tarjeta (no al cargar la app),
+// para no bajar ~800 KB de Stripe en Home y demás páginas sin pago.
+let stripePromise = null
+function getStripePromise() {
+  if (!stripePromise && import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
+    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+  }
+  return stripePromise
+}
 
 // Componente interno que maneja el formulario de tarjeta
 function CardForm({ onCardReady, cardholderName, setCardholderName }) {
@@ -106,6 +112,7 @@ function CardForm({ onCardReady, cardholderName, setCardholderName }) {
 // Componente principal que envuelve con Elements
 export default function StripeCardElement({ onCardReady, cardholderName, setCardholderName }) {
   const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+  const [stripePromise] = useState(getStripePromise)
 
   if (!publishableKey) {
     return (

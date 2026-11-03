@@ -22,6 +22,7 @@ const PUBLIC_STATIC_ROUTES = [
   '/talleres',
   '/renta-salon',
   '/coworking',
+  '/run-club',
   '/packages',
   '/ubicacion',
   '/privacidad',
@@ -42,6 +43,7 @@ const SITEMAP_META_BY_ROUTE = {
   '/talleres': { changefreq: 'weekly', priority: 0.8 },
   '/renta-salon': { changefreq: 'monthly', priority: 0.7 },
   '/coworking': { changefreq: 'monthly', priority: 0.7 },
+  '/run-club': { changefreq: 'monthly', priority: 0.8 },
   '/packages': { changefreq: 'monthly', priority: 0.8 },
   '/ubicacion': { changefreq: 'monthly', priority: 0.8 },
   '/privacidad': { changefreq: 'yearly', priority: 0.4 },
@@ -59,7 +61,7 @@ export function getSitemapMeta(pathname) {
 /** Rutas estáticas conocidas de la app (deben coincidir con las de App.jsx). */
 const KNOWN_STATIC_PATHS = new Set([
   '/', '/classes', '/coaches', '/coaches/login', '/coaches/panel', '/teachers',
-  '/horario', '/talleres', '/renta-salon', '/renta-salon/confirmacion', '/coworking', '/packages', '/ubicacion', '/espacios',
+  '/horario', '/talleres', '/renta-salon', '/renta-salon/confirmacion', '/coworking', '/run-club', '/packages', '/ubicacion', '/espacios',
   '/privacidad', '/terminos', '/login', '/signup', '/forgot-password', '/reset-password',
   '/admin', '/admin/login', '/admin/forgot-password', '/admin/reset-password',
   '/profesores', '/profesores/login', '/mis-reservas', '/mis-paquetes',
@@ -162,6 +164,10 @@ export const ROUTE_SEO = {
   '/coworking': {
     title: 'Coworking y Oficinas en Coyoacán | Estudio Popnest',
     description: 'Oficinas privadas por día, medio día o largo plazo en Coyoacán, además de coworking flexible, pase por día y salas de juntas en Estudio Popnest.'
+  },
+  '/run-club': {
+    title: 'Run Club Gratis en Coyoacán | Estudio Popnest Wellness',
+    description: 'Run club gratuito en Coyoacán: salidas en grupo miércoles 6:30 a.m. y sábado 7:30 a.m. desde Estudio Popnest, Del Carmen. Todos los niveles, sin reservación.'
   },
   '/packages': {
     title: 'Paquetes de Clases | Yoga en Coyoacán | Estudio Popnest Wellness',
@@ -281,6 +287,7 @@ export function getBreadcrumbItems(pathname) {
     talleres: 'Talleres',
     'renta-salon': 'Renta de salón',
     coworking: 'Coworking',
+    'run-club': 'Run Club',
     packages: 'Planes',
     ubicacion: 'Ubicación',
     espacios: 'Espacios',

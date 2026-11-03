@@ -17,6 +17,7 @@ const MENU_ITEMS = [
   { id: 'talleres', label: 'Talleres', path: '/talleres', hash: 'talleres' },
   { id: 'renta-salon', label: 'Renta de salón', path: '/renta-salon', hash: 'renta-salon' },
   { id: 'coworking', label: 'Coworking', path: '/coworking', hash: 'coworking' },
+  { id: 'run-club', label: 'Run Club', path: '/run-club', hash: 'run-club' },
   { id: 'planes', label: 'Planes', path: '/packages', hash: 'planes' },
 ]
 

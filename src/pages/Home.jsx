@@ -4,7 +4,6 @@ import studioPhoto1 from '../assets/studio-photo-1.png'
 import studioPhoto2 from '../assets/studio-photo-2.png'
 import studioPhoto3 from '../assets/studio-photo-3.png'
 import studioPhoto4 from '../assets/studio-photo-4.png'
-import studioHeroMirrors from '../assets/studio-hero-mirrors.jpg'
 import logoEstudioPopnest from '../assets/logo-estudio-popnest.png'
 import { classTypes, getClassTeachersLabel } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
@@ -20,6 +19,35 @@ const MAPS_URL =
   'https://www.google.com/maps/search/?api=1&query=Londres+105,+Del+Carmen,+Coyoacán,+04100+Ciudad+de+México,+CDMX'
 const WA_WELLNESS =
   'https://wa.me/525554379644?text=' + encodeURIComponent('Hola, me interesa wellness corporativo para equipos.')
+
+const HERO_VIDEO_SRC = '/videos/hero-classes.mp4'
+const HERO_VIDEO_POSTER = '/videos/hero-classes-poster.jpg'
+
+/**
+ * El HTML sale con preload="none" y sin autoplay (autoplay obliga a descargar el video).
+ * Escritorio: arranca al montar. Móvil: espera al evento load para no competir con el LCP.
+ * Ahorro de datos o movimiento reducido: se queda el poster.
+ */
+function useDeferredHeroVideo(videoRef) {
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return undefined
+    const saveData = navigator.connection?.saveData === true
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (saveData || reducedMotion) return undefined
+
+    const start = () => {
+      video.preload = 'auto'
+      video.play().catch(() => {})
+    }
+    if (window.matchMedia('(min-width: 768px)').matches || document.readyState === 'complete') {
+      start()
+      return undefined
+    }
+    window.addEventListener('load', start, { once: true })
+    return () => window.removeEventListener('load', start)
+  }, [videoRef])
+}
 
 const HERO_TICKER_ITEMS = [
   'Hatha Yoga',
@@ -41,6 +69,8 @@ const SPACE_SLIDES = [
 function Home() {
   const location = useLocation()
   const sliderRef = useRef(null)
+  const heroVideoRef = useRef(null)
+  useDeferredHeroVideo(heroVideoRef)
   const nextBtnRef = useRef(null)
 
   const scheduleSnippets = useMemo(() => buildRedesignScheduleSnippets(new Date()), [])
@@ -83,14 +113,16 @@ function Home() {
           <section id="inicio" className="home-hero">
             <figure className="home-hero__visual">
               <video
+                ref={heroVideoRef}
                 className="home-hero__video"
-                src="/videos/hero-classes.mp4"
-                poster={studioHeroMirrors}
-                autoPlay
+                src={HERO_VIDEO_SRC}
+                poster={HERO_VIDEO_POSTER}
+                width="432"
+                height="768"
                 muted
                 loop
                 playsInline
-                preload="auto"
+                preload="none"
                 aria-label="Práctica de yoga en el Estudio Popnest"
               />
             </figure>

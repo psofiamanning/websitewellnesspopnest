@@ -39,7 +39,7 @@ function Footer() {
             {/* Redes sociales */}
             <div className="flex gap-4">
               <a 
-                href="https://www.instagram.com/estudiopopnest" 
+                href="https://www.instagram.com/estudio_popnest/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-white hover:text-white/80 transition-colors duration-200"

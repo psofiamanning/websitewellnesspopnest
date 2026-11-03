@@ -95,7 +95,7 @@ function Talleres() {
           <p className="mt-3 max-w-2xl text-sm font-body" style={{ color: '#6B7280' }}>
             Para ver fotos e información más actualizada, síguenos en{' '}
             <a
-              href="https://www.instagram.com/estudiopopnest"
+              href="https://www.instagram.com/estudio_popnest/"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold underline underline-offset-2"

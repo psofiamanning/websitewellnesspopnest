@@ -1,11 +1,11 @@
 /**
- * Logo oficial (marca) — asset `src/assets/logo.svg`.
+ * Logo oficial (marca) — `src/assets/logo-nav.webp` (raster ligero de `logo.svg`).
  *
  * Tamanos: sm · base · lg (altura del glifo)
  */
 
 import React from 'react'
-import logoSrc from '../../assets/logo.svg'
+import logoSrc from '../../assets/logo-nav.webp'
 
 const heights = {
   sm: '30px',

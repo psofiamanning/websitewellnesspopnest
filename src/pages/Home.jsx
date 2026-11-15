@@ -4,7 +4,7 @@ import studioPhoto1 from '../assets/studio-photo-1.png'
 import studioPhoto2 from '../assets/studio-photo-2.png'
 import studioPhoto3 from '../assets/studio-photo-3.png'
 import studioPhoto4 from '../assets/studio-photo-4.png'
-import logoEstudioPopnest from '../assets/logo-estudio-popnest.png'
+import logoEstudioPopnest from '../assets/logo-estudio-popnest.webp'
 import { classTypes, getClassTeachersLabel } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
@@ -147,8 +147,8 @@ function Home() {
                 src={logoEstudioPopnest}
                 alt="Estudio Popnest"
                 className="home-hero__logo"
-                width="900"
-                height="353"
+                width="640"
+                height="251"
               />
               <h1 className="home-hero__title">
                 Tu pausa diaria

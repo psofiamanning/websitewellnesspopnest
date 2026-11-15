@@ -1,4 +1,5 @@
-import logo from '../assets/logo.svg'
+// WebP 400x200 rasterizado de logo.svg (el SVG trazado pesa 283 KB y sale en todas las páginas).
+import logo from '../assets/logo-nav.webp'
 
 function Logo({ 
   className = '', 

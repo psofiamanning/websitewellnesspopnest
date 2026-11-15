@@ -4,12 +4,7 @@
    Importa tokens.css antes de este archivo
    ============================================================ */
 
-/* ----------------------------------------
-   IMPORTAR FUENTES
-   ---------------------------------------- */
-@import url('https://cdn.jsdelivr.net/npm/@fontsource/dm-sans/400.css');
-@import url('https://cdn.jsdelivr.net/npm/@fontsource/dm-sans/500.css');
-@import url('https://cdn.jsdelivr.net/npm/@fontsource/instrument-serif/400.css');
+/* Fuentes: se cargan una sola vez desde index.html (Google Fonts, sin bloquear el render). */
 
 /* ----------------------------------------
    RESET MINIMAL

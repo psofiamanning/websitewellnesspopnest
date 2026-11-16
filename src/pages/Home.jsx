@@ -23,20 +23,24 @@ const WA_WELLNESS =
 
 const HERO_VIDEO_SRC = '/videos/hero-classes.mp4'
 const HERO_VIDEO_POSTER = '/videos/hero-classes-poster.webp'
+/** Móvil: espera extra tras `load` antes de descargar el video. */
+const MOBILE_VIDEO_DELAY_MS = 2500
 
 /**
  * El HTML sale con preload="none" y sin autoplay (autoplay obliga a descargar el video).
  * Mientras no reproduce se ve el <img> del poster que está debajo.
- * Escritorio: arranca al montar. Móvil: espera al evento load para no competir con el LCP.
- * Ahorro de datos o movimiento reducido: se queda el poster.
+ * Escritorio: arranca al montar. Móvil: espera al evento load + unos segundos (en reposo) para
+ * que el video de 2.2 MB no compita con el poster (LCP) ni con fuentes/JS en redes lentas.
+ * Ahorro de datos, conexión 2G/3G o movimiento reducido: se queda el poster.
  */
 function useDeferredHeroVideo(videoRef) {
   useEffect(() => {
     const video = videoRef.current
     if (!video) return undefined
     const saveData = navigator.connection?.saveData === true
+    const slowNetwork = ['slow-2g', '2g', '3g'].includes(navigator.connection?.effectiveType)
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (saveData || reducedMotion) return undefined
+    if (saveData || slowNetwork || reducedMotion) return undefined
 
     // El poster es un <img> debajo (elemento LCP); el video aparece encima cuando ya reproduce.
     const onPlaying = () => video.classList.add('is-playing')
@@ -45,13 +49,25 @@ function useDeferredHeroVideo(videoRef) {
       video.preload = 'auto'
       video.play().catch(() => {})
     }
-    if (window.matchMedia('(min-width: 768px)').matches || document.readyState === 'complete') {
+    let timer
+    let idleId
+    const startWhenIdle = () => {
+      timer = window.setTimeout(() => {
+        if (window.requestIdleCallback) idleId = window.requestIdleCallback(start, { timeout: 2000 })
+        else start()
+      }, MOBILE_VIDEO_DELAY_MS)
+    }
+    if (window.matchMedia('(min-width: 768px)').matches) {
       start()
+    } else if (document.readyState === 'complete') {
+      startWhenIdle()
     } else {
-      window.addEventListener('load', start, { once: true })
+      window.addEventListener('load', startWhenIdle, { once: true })
     }
     return () => {
-      window.removeEventListener('load', start)
+      window.clearTimeout(timer)
+      if (idleId && window.cancelIdleCallback) window.cancelIdleCallback(idleId)
+      window.removeEventListener('load', startWhenIdle)
       video.removeEventListener('playing', onPlaying)
     }
   }, [videoRef])

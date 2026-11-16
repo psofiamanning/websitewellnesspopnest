@@ -5,6 +5,7 @@ import studioPhoto2 from '../assets/studio-photo-2.png'
 import studioPhoto3 from '../assets/studio-photo-3.png'
 import studioPhoto4 from '../assets/studio-photo-4.png'
 import logoEstudioPopnest from '../assets/logo-estudio-popnest.webp'
+import logoEstudioPopnest480 from '../assets/logo-estudio-popnest-480.webp'
 import { classTypes, getClassTeachersLabel } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
@@ -21,7 +22,7 @@ const WA_WELLNESS =
   'https://wa.me/525554379644?text=' + encodeURIComponent('Hola, me interesa wellness corporativo para equipos.')
 
 const HERO_VIDEO_SRC = '/videos/hero-classes.mp4'
-const HERO_VIDEO_POSTER = '/videos/hero-classes-poster.jpg'
+const HERO_VIDEO_POSTER = '/videos/hero-classes-poster.webp'
 
 /**
  * El HTML sale con preload="none" y sin autoplay (autoplay obliga a descargar el video).
@@ -123,8 +124,8 @@ function Home() {
                 className="home-hero__poster"
                 src={HERO_VIDEO_POSTER}
                 alt=""
-                width="432"
-                height="768"
+                width="720"
+                height="1280"
                 fetchpriority="high"
                 decoding="async"
               />
@@ -132,8 +133,8 @@ function Home() {
                 ref={heroVideoRef}
                 className="home-hero__video"
                 src={HERO_VIDEO_SRC}
-                width="432"
-                height="768"
+                width="720"
+                height="1280"
                 muted
                 loop
                 playsInline
@@ -145,6 +146,8 @@ function Home() {
             <div className="home-hero__copy">
               <img
                 src={logoEstudioPopnest}
+                srcSet={`${logoEstudioPopnest480} 480w, ${logoEstudioPopnest} 640w`}
+                sizes="(max-width: 860px) 240px, 420px"
                 alt="Estudio Popnest"
                 className="home-hero__logo"
                 width="640"
@@ -411,7 +414,7 @@ function Home() {
             <div className="home-about-locate__grid">
               <div className="home-about-locate__copy">
                 <h2 className="pn-h1" style={{ color: 'var(--pn-color-on-dark)' }}>
-                  En el corazón de <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>Coyoacán.</span>
+                  En el corazón de <span className="pn-serif" style={{ color: 'var(--pn-color-secondary)' }}>Coyoacán.</span>
                 </h2>
                 <p className="pn-text-lg" style={{ marginTop: 22, color: 'var(--pn-color-on-dark-muted)' }}>
                   Estamos al fondo de un lugar que combina galería de arte, cafetería y espacio de coworking. Ahí,

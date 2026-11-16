@@ -86,7 +86,7 @@ function Teachers() {
                     {coach.image ? (
                       <img
                         src={coach.image}
-                        alt=""
+                        alt={`${coach.name}, coach en Estudio Popnest Coyoacán`}
                         className="coach-card__img"
                         data-coach-focus={focus || undefined}
                         loading="lazy"

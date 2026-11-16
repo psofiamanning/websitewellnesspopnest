@@ -17,8 +17,8 @@
   /* Body & text */
   --pn-color-text: #2d2e35;             /* Texto principal */
   --pn-color-text-soft: #4a4a4f;        /* Texto secundario / parrafos */
-  --pn-color-text-muted: #6b6960;       /* Texto terciario */
-  --pn-color-text-subtle: #7a6b54;      /* Eyebrows, labels */
+  --pn-color-text-muted: #5f5d55;       /* Texto terciario */
+  --pn-color-text-subtle: #6b5d48;      /* Eyebrows, labels */
   --pn-color-text-faint: #998f7e;       /* Texto deshabilitado / muy sutil */
 
   /* Backgrounds */

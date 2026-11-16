@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import PostLoginClassesBanner from './components/PostLoginClassesBanner'
@@ -16,38 +16,40 @@ import Talleres from './pages/Talleres'
 import RentaSalon from './pages/RentaSalon'
 import Coworking from './pages/Coworking'
 import RunClub from './pages/RunClub'
-import RentaSalonConfirmacion from './pages/RentaSalonConfirmacion'
-import TallerDetalle from './pages/TallerDetalle'
-import Booking from './pages/Booking'
-import Admin from './pages/Admin'
-import AdminLogin from './pages/AdminLogin'
 import Packages from './pages/Packages'
-import PackagePurchase from './pages/PackagePurchase'
-import Login from './pages/Login'
-import SignUp from './pages/SignUp'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import AdminForgotPassword from './pages/AdminForgotPassword'
-import AdminResetPassword from './pages/AdminResetPassword'
-import TeacherLogin from './pages/TeacherLogin'
-import TeacherDashboard from './pages/TeacherDashboard'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
-import MyBookings from './pages/MyBookings'
-import MyPackages from './pages/MyPackages'
 import Ubicacion from './pages/Ubicacion'
 import ClassLanding from './pages/ClassLanding'
 import YogaCoyoacan from './pages/YogaCoyoacan'
-import Espacios from './pages/Espacios'
-import DesignSystem from './pages/DesignSystem'
-import HomeRedesign from './pages/HomeRedesign'
-import ScheduleRedesign from './pages/ScheduleRedesign'
-import PackagesRedesign from './pages/PackagesRedesign'
-import MyBookingsRedesign from './pages/MyBookingsRedesign'
-import ClassesRedesign from './pages/ClassesRedesign'
-import Previews from './pages/Previews'
 import NotFound from './pages/NotFound'
 import DevOnlyRoute from './components/DevOnlyRoute'
+// Páginas que nunca se pre-renderizan (login, cuenta, reservas, admin, previews de diseño):
+// se descargan solo al visitarlas, así el Home y las landings no cargan su código.
+const RentaSalonConfirmacion = lazy(() => import('./pages/RentaSalonConfirmacion'))
+const TallerDetalle = lazy(() => import('./pages/TallerDetalle'))
+const Booking = lazy(() => import('./pages/Booking'))
+const Admin = lazy(() => import('./pages/Admin'))
+const AdminLogin = lazy(() => import('./pages/AdminLogin'))
+const PackagePurchase = lazy(() => import('./pages/PackagePurchase'))
+const Login = lazy(() => import('./pages/Login'))
+const SignUp = lazy(() => import('./pages/SignUp'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const AdminForgotPassword = lazy(() => import('./pages/AdminForgotPassword'))
+const AdminResetPassword = lazy(() => import('./pages/AdminResetPassword'))
+const TeacherLogin = lazy(() => import('./pages/TeacherLogin'))
+const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'))
+const MyBookings = lazy(() => import('./pages/MyBookings'))
+const MyPackages = lazy(() => import('./pages/MyPackages'))
+const Espacios = lazy(() => import('./pages/Espacios'))
+const DesignSystem = lazy(() => import('./pages/DesignSystem'))
+const HomeRedesign = lazy(() => import('./pages/HomeRedesign'))
+const ScheduleRedesign = lazy(() => import('./pages/ScheduleRedesign'))
+const PackagesRedesign = lazy(() => import('./pages/PackagesRedesign'))
+const MyBookingsRedesign = lazy(() => import('./pages/MyBookingsRedesign'))
+const ClassesRedesign = lazy(() => import('./pages/ClassesRedesign'))
+const Previews = lazy(() => import('./pages/Previews'))
 import './App.css'
 
 /** Solo inicializa y hace tracking con Meta Pixel si el usuario aceptó cookies de marketing. */
@@ -124,6 +126,7 @@ export function AppContent() {
       <PageSEO />
       {!hideGlobalNavbar && !isBareLayout && <Navbar />}
       {!isBareLayout && <PostLoginClassesBanner />}
+      <Suspense fallback={<div className="route-loading" aria-busy="true" style={{ minHeight: '60vh' }} />}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/classes" element={<Classes />} />
@@ -173,6 +176,7 @@ export function AppContent() {
         <Route path="/previews" element={<DevOnlyRoute><Previews /></DevOnlyRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
       {!isBareLayout && <Footer />}
       {!isStandalonePreview && <CookieConsent />}
       {!isBareLayout && isMarketingRoute && <FreeClassPopup />}

@@ -27,6 +27,8 @@ function Logo({
     <img 
       src={logo} 
       alt="Estudio Popnest Wellness" 
+      width={400}
+      height={200}
       className={`logo ${className}`}
       style={{
         height: height,

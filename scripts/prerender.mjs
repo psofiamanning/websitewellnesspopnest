@@ -17,6 +17,7 @@ import {
   APP_SHELL_ROUTES
 } from '../src/utils/seo.js'
 import { buildCourseSchemaForLanding } from '../src/data/classLandingRoutes.js'
+import Beasties from 'beasties'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.join(__dirname, '..')
@@ -122,6 +123,26 @@ function injectAppHtml(template, appHtml) {
   return template.replace(marker, `<div id="root">${appHtml}</div>`)
 }
 
+// CSS crítico: incrusta en <head> solo las reglas que usa el HTML pre-renderizado y carga
+// el resto del CSS sin bloquear el primer pintado (PageSpeed: "Render-blocking requests").
+const beasties = new Beasties({
+  path: distDir,
+  publicPath: '/',
+  preload: 'swap',
+  pruneSource: false,
+  reduceInlineStyles: false,
+  logLevel: 'warn'
+})
+
+async function inlineCriticalCss(html) {
+  try {
+    return await beasties.process(html)
+  } catch (err) {
+    console.warn('prerender: CSS crítico falló, se deja el <link> normal:', err.message)
+    return html
+  }
+}
+
 function outputPathForRoute(route) {
   if (route === '/') return path.join(distDir, 'index.html')
   const segment = route.replace(/^\//, '')
@@ -177,6 +198,7 @@ async function main() {
     const { html: appHtml } = await render(route)
     let pageHtml = injectAppHtml(template, appHtml)
     pageHtml = applyRouteHead(pageHtml, route)
+    pageHtml = await inlineCriticalCss(pageHtml)
     const outPath = outputPathForRoute(route)
     await fs.mkdir(path.dirname(outPath), { recursive: true })
     await fs.writeFile(outPath, pageHtml, 'utf8')

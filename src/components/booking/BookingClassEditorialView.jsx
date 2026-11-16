@@ -586,7 +586,7 @@ function BookingClassEditorialView({
             {teacher ? (
               <div className="bk-coach-card">
                 {teacher.image ? (
-                  <img src={teacher.image} alt="" loading="lazy" decoding="async" />
+                  <img src={teacher.image} alt={`${teacher.name}, coach en Estudio Popnest Coyoacán`} loading="lazy" decoding="async" />
                 ) : (
                   <div style={{ width: 72, height: 72, background: 'var(--pn-color-bg-secondary)' }} />
                 )}

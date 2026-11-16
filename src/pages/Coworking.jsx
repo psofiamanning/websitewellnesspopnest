@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import WhatsAppFloatingButton from '../components/WhatsAppFloatingButton'
+import { STUDIO_PLACE } from '../utils/tallerSchema'
+import { SITE_URL } from '../utils/seo'
 import heroPhoto from '../assets/cowork-sala-azul.jpg'
 import officePhoto from '../assets/cowork-oficina-privada.jpg'
 import muralPhoto from '../assets/cowork-sala-mural.jpg'
@@ -82,6 +84,33 @@ const OTHER_PRODUCTS = [
   },
 ]
 
+/** '$1,200' / 'Desde $300' → 1200 / 300 */
+const priceNumber = (label) => Number(String(label).replace(/[^0-9.]/g, ''))
+
+/** Schema `Service` + catálogo de ofertas (oficinas por día y planes de coworking), con los precios de esta página. */
+const SERVICE_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Coworking y oficinas privadas en Coyoacán',
+  serviceType: 'Coworking y renta de oficinas',
+  description:
+    'Oficinas privadas por día, medio día o largo plazo, coworking flexible, pase por día y salas de juntas en Coyoacán, CDMX.',
+  url: `${SITE_URL}/coworking`,
+  areaServed: { '@type': 'City', name: 'Ciudad de México' },
+  provider: { '@type': 'LocalBusiness', name: 'Estudio Popnest', url: SITE_URL, address: STUDIO_PLACE.address },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Oficinas y planes de coworking',
+    itemListElement: [...DAY_OFFICE_RATES, ...OTHER_PRODUCTS].map((item) => ({
+      '@type': 'Offer',
+      name: item.title,
+      price: priceNumber(item.price),
+      priceCurrency: 'MXN',
+      description: `${item.unit}${item.text ? ` — ${item.text}` : ''}`,
+    })),
+  },
+}
+
 const cardClass = 'rounded-3xl bg-white ring-1 ring-black/[0.06] shadow-[0_1px_2px_rgba(45,46,53,0.04),0_8px_24px_-12px_rgba(45,46,53,0.12)]'
 const primaryBtn =
   'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-body font-semibold text-white transition-colors hover:bg-[#9d342e]'
@@ -99,6 +128,7 @@ function ExternalArrow() {
 function Coworking() {
   return (
     <div className="pn-page-with-site-nav min-h-screen" style={{ background: 'var(--pn-color-bg-base)' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_SCHEMA) }} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-28 pb-20">
         <Hero />
         <OfficesSection />

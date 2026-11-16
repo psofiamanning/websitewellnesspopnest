@@ -231,7 +231,7 @@ const previewHtml = `<!doctype html>
         <div class="pkg-nav__links">
           <a class="pkg-nav__link" href="#">Practicas</a>
           <a class="pkg-nav__link" href="#">Horario</a>
-          <a class="pkg-nav__link" href="#">Maestras</a>
+          <a class="pkg-nav__link" href="#">Coaches</a>
           <a class="pkg-nav__link" href="#">Paquetes</a>
           <button class="pn-btn pn-btn--primary pn-btn--sm">Comprar</button>
         </div>
@@ -338,7 +338,7 @@ const previewHtml = `<!doctype html>
             <div class="pkg-include">
               <span class="pn-dot pn-dot--taichi"></span>
               <h3>Equipo humano</h3>
-              <p>Maestras presentes, grupos contenidos y atencion cercana.</p>
+              <p>Coaches presentes, grupos contenidos y atencion cercana.</p>
             </div>
             <div class="pkg-include">
               <span class="pn-dot pn-dot--yoga"></span>
@@ -387,7 +387,7 @@ const previewHtml = `<!doctype html>
           <div>
             <div class="pn-footer__col-title">Estudio</div>
             <a class="pn-footer__link">Horario</a>
-            <a class="pn-footer__link">Maestras</a>
+            <a class="pn-footer__link">Coaches</a>
             <a class="pn-footer__link">Paquetes</a>
           </div>
           <div>

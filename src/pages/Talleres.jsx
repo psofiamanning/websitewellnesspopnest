@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchTalleres } from '../services/talleresService'
+import { buildUpcomingTallerEvents } from '../utils/tallerSchema'
 
 /** Precio legible: sin precio cargado → "Precio por confirmar", si no "$1,200 MXN". */
 function formatPrice(price) {
@@ -78,8 +79,13 @@ function Talleres() {
     }
   }, [])
 
+  const upcomingEvents = buildUpcomingTallerEvents(talleres)
+
   return (
     <div className="pn-page-with-site-nav min-h-screen" style={{ background: 'var(--pn-color-bg-base)' }}>
+      {upcomingEvents.length > 0 && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(upcomingEvents) }} />
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
         <header className="mb-10 md:mb-14">
           <p className="text-xs font-body font-semibold uppercase tracking-[0.2em] mb-3" style={{ color: '#B73D37' }}>

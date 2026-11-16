@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchTaller } from '../services/talleresService'
+import { buildTallerEvent } from '../utils/tallerSchema'
 
 const WHATSAPP_NUMBER = '525554379644'
 
@@ -76,8 +77,13 @@ function TallerDetalle() {
     )
   }
 
+  const eventSchema = buildTallerEvent(taller)
+
   return (
     <div className="pn-page-with-site-nav min-h-screen" style={{ background: 'var(--pn-color-bg-base)' }}>
+      {eventSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventSchema) }} />
+      )}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
         <button onClick={() => navigate('/talleres')} className="mb-5 text-sm font-body underline" style={{ color: '#B73D37' }}>
           ← Talleres

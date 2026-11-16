@@ -265,9 +265,9 @@ function Packages() {
             <div className="pn-eyebrow" style={{ marginBottom: 14 }}>
               Tarifas
             </div>
-            <h2 id="pkg-pricing-heading" className="pn-h1">
+            <h1 id="pkg-pricing-heading" className="pn-h1">
               Elige tu <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>paquete.</span>
-            </h2>
+            </h1>
             <p className="pkg-section__sub">Toca un plan para ver el detalle completo.</p>
           </div>
           <div className="pkg-grid">

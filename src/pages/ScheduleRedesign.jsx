@@ -558,7 +558,7 @@ function buildSchedulePreviewHtml(referenceDate) {
         <div class="schedule-nav__links">
           <a class="schedule-nav__link" href="#">Practicas</a>
           <a class="schedule-nav__link" href="#">Horario</a>
-          <a class="schedule-nav__link" href="#">Maestras</a>
+          <a class="schedule-nav__link" href="#">Coaches</a>
           <a class="schedule-nav__link" href="#">Contacto</a>
           <button class="pn-btn pn-btn--primary pn-btn--sm">Reservar</button>
         </div>
@@ -577,7 +577,7 @@ function buildSchedulePreviewHtml(referenceDate) {
               <span class="pn-serif" style="color: var(--pn-color-primary);">ritmo.</span>
             </h1>
             <p class="pn-text schedule-copy">
-              Una semana completa de practicas, con maestras presentes y grupos pequenos.
+              Una semana completa de practicas, con coaches presentes y grupos pequenos.
               Filtra por disciplina y reserva con un clic.
             </p>
           </div>
@@ -659,7 +659,7 @@ function buildSchedulePreviewHtml(referenceDate) {
             <div class="pn-footer__col-title">Estudio</div>
             <a class="pn-footer__link">Practicas</a>
             <a class="pn-footer__link">Horario</a>
-            <a class="pn-footer__link">Maestras</a>
+            <a class="pn-footer__link">Coaches</a>
             <a class="pn-footer__link">Paquetes</a>
           </div>
         </div>

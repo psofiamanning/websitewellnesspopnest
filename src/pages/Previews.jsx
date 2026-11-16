@@ -53,7 +53,7 @@ const liveSiteItems = [
 ]
 
 const staffItems = [
-  { to: '/coaches/login', title: 'Login maestras', note: 'Panel /coaches/panel tras autenticarse' },
+  { to: '/coaches/login', title: 'Login coaches', note: 'Panel /coaches/panel tras autenticarse' },
   { to: '/admin/login', title: 'Login admin', note: 'Solo si usas el panel /admin' },
 ]
 

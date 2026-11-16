@@ -13,6 +13,8 @@ import {
   SALON_MAX_CAPACITY,
   SALON_MIN_HOURS,
 } from '../config/salonPricing'
+import { STUDIO_PLACE } from '../utils/tallerSchema'
+import { SITE_URL } from '../utils/seo'
 
 const RED = 'var(--pn-color-primary)'
 const DARK = 'var(--pn-color-text)'
@@ -41,12 +43,35 @@ function formatShortMoney(n) {
 }
 
 const minPrice = Math.min(...SALON_PRICE_TIERS.flatMap((t) => Object.values(t.prices)))
+const maxPrice = Math.max(...SALON_PRICE_TIERS.flatMap((t) => Object.values(t.prices)))
+
+/** Schema `Service` con rango de precio por hora (se construye desde la tabla de tarifas real). */
+const SERVICE_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: 'Renta de salón en Coyoacán',
+  serviceType: 'Renta de salón para eventos, clases privadas y sesiones de fotos',
+  description:
+    'Salón luminoso en Coyoacán para clases privadas, talleres, sesiones de fotos y video, ensayos y celebraciones. Precio por hora según número de personas; pago en línea.',
+  url: `${SITE_URL}/renta-salon`,
+  areaServed: { '@type': 'City', name: 'Ciudad de México' },
+  provider: { '@type': 'HealthClub', name: 'Estudio Popnest Wellness', url: SITE_URL, address: STUDIO_PLACE.address },
+  offers: {
+    '@type': 'AggregateOffer',
+    priceCurrency: 'MXN',
+    lowPrice: minPrice,
+    highPrice: maxPrice,
+    offerCount: SALON_PRICE_TIERS.length,
+    url: `${SITE_URL}/renta-salon#precios`,
+  },
+}
 
 const cardClass = 'rounded-3xl bg-white ring-1 ring-black/[0.06] shadow-[0_1px_2px_rgba(45,46,53,0.04),0_8px_24px_-12px_rgba(45,46,53,0.12)]'
 
 function RentaSalon() {
   return (
     <div className="pn-page-with-site-nav min-h-screen" style={{ background: 'var(--pn-color-bg-base)' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SERVICE_SCHEMA) }} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-28 pb-20">
         <Hero />
         <Gallery />

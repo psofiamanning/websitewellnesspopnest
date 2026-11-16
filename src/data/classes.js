@@ -16,7 +16,7 @@ export const teachers = [
     name: 'Blanca Bear',
     specialty: 'Movimiento y Yoga',
     image: blancaBearPhoto,
-    bio: 'Maestra de movimiento con más de diez años de experiencia y una formación profunda y continua en yoga, tai chi, meditación, pilates y movimiento somático. Su práctica une estructura y sensibilidad, observando con atención, ajustando con cuidado y acompañando cada práctica desde la escucha corporal. Sus clases se sienten contenidas, claras y humanas, invitando al movimiento con presencia, estabilidad y confianza.',
+    bio: 'Coach de movimiento con más de diez años de experiencia y una formación profunda y continua en yoga, tai chi, meditación, pilates y movimiento somático. Su práctica une estructura y sensibilidad, observando con atención, ajustando con cuidado y acompañando cada práctica desde la escucha corporal. Sus clases se sienten contenidas, claras y humanas, invitando al movimiento con presencia, estabilidad y confianza.',
     classes: ['Hatha Yoga', 'Pilates', 'Tai Chi']
   },
   {
@@ -24,7 +24,7 @@ export const teachers = [
     name: 'Rocío Enciso',
     specialty: 'Power Yoga · Yoga deportivo',
     image: rocioEncisoPhoto,
-    bio: 'Preparadora física y maestra en Hatha Yoga & Fitness con certificación internacional Yoga Alliance (+500 h) y más de quince años de trayectoria. Referente en yoga deportivo: dos veces campeona nacional en México, jefa nacional de entrenadores de la Fundación Mexicana de Yoga y años en el circuito internacional con presencia en el top ten mundial. Formación en Anusara y Vinyasa, Pilates Stott y Total Barre (Akrostudio España), y talleres en pre y postnatal, espalda y rehabilitación. Embajadora oficial de la IYSF.',
+    bio: 'Preparadora física y coach de Hatha Yoga & Fitness con certificación internacional Yoga Alliance (+500 h) y más de quince años de trayectoria. Referente en yoga deportivo: dos veces campeona nacional en México, jefa nacional de entrenadores de la Fundación Mexicana de Yoga y años en el circuito internacional con presencia en el top ten mundial. Formación en Anusara y Vinyasa, Pilates Stott y Total Barre (Akrostudio España), y talleres en pre y postnatal, espalda y rehabilitación. Embajadora oficial de la IYSF.',
     classes: ['Power Yoga', 'Stretching']
   },
   {

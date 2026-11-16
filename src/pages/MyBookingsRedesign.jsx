@@ -260,7 +260,7 @@ const previewHtml = `<!doctype html>
         <div class="mb-nav__center">
           <span class="mb-nav__link">Practicas</span>
           <span class="mb-nav__link">Horario</span>
-          <span class="mb-nav__link">Maestras</span>
+          <span class="mb-nav__link">Coaches</span>
           <span class="mb-nav__link" style="color:var(--pn-color-primary);">Paquetes</span>
         </div>
         <div style="display:flex;align-items:center;gap:16px;">
@@ -290,7 +290,7 @@ const previewHtml = `<!doctype html>
             <div class="pn-text-xs" style="margin-top:6px;color:var(--pn-color-text-muted);">Paquete vigente hasta 12 jun</div>
           </div>
           <div class="mb-stat">
-            <div class="mb-stat__label">Maestra favorita</div>
+            <div class="mb-stat__label">Coach favorito</div>
             <div class="pn-text-sm"><strong>Mariana R.</strong></div>
             <div class="pn-text-xs" style="margin-top:6px;">8 clases contigo</div>
           </div>

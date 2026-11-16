@@ -79,7 +79,8 @@
 }
 
 .home-faq__row a {
-  color: var(--pn-color-primary);
+  /* Rojo oscuro: el rojo de marca da 4.45:1 sobre el crema medio (mínimo WCAG 4.5:1). */
+  color: var(--pn-color-primary-hover);
   text-decoration: underline;
   text-underline-offset: 3px;
 }

@@ -43,6 +43,17 @@ function startDateFor(taller) {
   return hhmm ? `${fecha}T${hhmm}:00${MX_OFFSET}` : fecha
 }
 
+/** Si `hora` es un rango ("12:00–13:00", "10 a 12 pm"), la hora final en ISO; si no, null. */
+function endDateFor(taller) {
+  if (!taller.fecha || !taller.hora) return null
+  const parts = String(taller.hora).split(/\s*(?:–|—|-|\ba\b)\s*/)
+  if (parts.length < 2) return null
+  const start = parseHora(parts[0])
+  const end = parseHora(parts[parts.length - 1])
+  if (!start || !end || end <= start) return null
+  return `${String(taller.fecha).slice(0, 10)}T${end}:00${MX_OFFSET}`
+}
+
 function isUpcoming(taller) {
   if (!taller.fecha) return false
   const today = new Date().toISOString().slice(0, 10)
@@ -72,6 +83,8 @@ export function buildTallerEvent(taller) {
       url,
     },
   }
+  const endDate = endDateFor(taller)
+  if (endDate) event.endDate = endDate
   const description = taller.descripcion || taller.tema
   if (description) event.description = String(description).slice(0, 500)
   if (taller.image_url) event.image = [taller.image_url]

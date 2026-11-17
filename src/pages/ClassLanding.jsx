@@ -91,6 +91,38 @@ function ClassLanding() {
               </p>
             </section>
 
+            {data.teacherProfiles.length > 0 && (
+              <section className="clp-section">
+                <h2 className="pn-h3">{data.teacherProfiles.length > 1 ? 'Tus coaches' : 'Tu coach'}</h2>
+                <div className="clp-coaches">
+                  {data.teacherProfiles.map((t) => (
+                    <div key={t.id} className="clp-coach">
+                      {t.image ? (
+                        <img
+                          className="clp-coach__photo"
+                          src={t.image}
+                          alt={`${t.name}, coach en Estudio Popnest Coyoacán`}
+                          width={72}
+                          height={72}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      ) : (
+                        <span className="clp-coach__photo clp-coach__photo--initials" aria-hidden>
+                          {t.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
+                        </span>
+                      )}
+                      <div className="clp-coach__head">
+                        <p className="pn-h4 clp-coach__name">{t.name}</p>
+                        <p className="pn-text-sm clp-muted">{t.specialty}</p>
+                      </div>
+                      <p className="pn-text clp-coach__bio">{t.bio}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {data.scheduleSummary && (
               <section className="clp-section">
                 <h2 className="pn-h3">Horario habitual</h2>

@@ -26,6 +26,17 @@ export const LANDING_SEO_TITLE = {
   stretching: 'Stretching en Coyoacán | Clases de Estiramiento | Estudio Popnest Wellness'
 }
 
+/** Coaches por clase para el schema (mantener en sync con classes.js: teacher + teachersByDayTime). */
+export const LANDING_INSTRUCTORS = {
+  'hatha-yoga': ['Blanca Bear'],
+  pilates: ['Blanca Bear'],
+  'sound-healing': ['Juan Martínez', 'Jimena'],
+  'power-yoga-1': ['Rocío Enciso'],
+  'tai-chi': ['Blanca Bear'],
+  'belly-dance': ['Nadia Navarrete'],
+  stretching: ['Rocío Enciso']
+}
+
 export const LANDING_CLASS_NAME = {
   'hatha-yoga': 'Hatha Yoga',
   pilates: 'Pilates',
@@ -240,6 +251,7 @@ export function buildCourseSchemaForLanding(pathname, siteUrl = 'https://popnest
     hasCourseInstance: {
       '@type': 'CourseInstance',
       courseMode: 'onsite',
+      instructor: (LANDING_INSTRUCTORS[classId] || []).map((n) => ({ '@type': 'Person', name: n, jobTitle: 'Coach' })),
       duration: 'PT60M',
       location: {
         '@type': 'Place',

@@ -1,4 +1,4 @@
-import { classTypes, classSchedules, getClassTeachersLabel } from './classes.js'
+import { classTypes, classSchedules, getClassTeachersLabel, getClassTeacherProfiles } from './classes.js'
 import {
   LANDING_SLUG_TO_CLASS_ID,
   CLASS_LANDING_PATHS,
@@ -51,6 +51,7 @@ export function getClassLandingData(slug) {
     name: c.name,
     h1: LANDING_H1_PREFIX[classId] ?? `${c.name} en Coyoacán`,
     teacher: getClassTeachersLabel(classId),
+    teacherProfiles: getClassTeacherProfiles(classId),
     duration: c.duration,
     image: c.image,
     imageAlt: `Clase de ${c.name} en Coyoacán — Estudio Popnest Wellness`,

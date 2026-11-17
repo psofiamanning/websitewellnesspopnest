@@ -269,6 +269,14 @@ export function getSlotTeacher(classId, day, time) {
 }
 
 /** Todas las coaches de una clase, para mostrar antes de elegir horario (ej. "Juan Martínez y Jimena"). */
+/** Coaches que imparten una clase (titular + quienes cubren horarios), con foto y bio. */
+export function getClassTeacherProfiles(classId) {
+  const base = classTypes.find((c) => c.id === classId)?.teacher
+  const overrides = Object.values(classSchedules[classId]?.teachersByDayTime || {}).flatMap((byTime) => Object.values(byTime))
+  const names = [...new Set([base, ...overrides].filter(Boolean))]
+  return names.map((name) => teachers.find((t) => t.name === name)).filter(Boolean)
+}
+
 export function getClassTeachersLabel(classId) {
   const base = classTypes.find((c) => c.id === classId)?.teacher
   const overrides = Object.values(classSchedules[classId]?.teachersByDayTime || {}).flatMap((byTime) => Object.values(byTime))

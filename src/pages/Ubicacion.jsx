@@ -9,6 +9,10 @@ const UBICACION_FAQ = [
     a: 'El estudio no tiene estacionamiento propio, pero es fácil encontrar lugar en las calles aledañas de la colonia Del Carmen.'
   },
   {
+    q: '¿Qué metro me queda más cerca?',
+    a: 'Metro Coyoacán (Línea 3), a 1.6 km: unos 20–25 minutos caminando por Av. Coyoacán y Av. México hasta la calle Londres, o 5 minutos en taxi. También están General Anaya (Línea 2) y Viveros / Derechos Humanos (Línea 3), a unos 25–27 minutos a pie. No hay Metrobús cercano.'
+  },
+  {
     q: '¿Cómo encuentro el salón de clases?',
     a: 'Entra por Londres 105: el inmueble comparte entrada con galería, cafetería y coworking. El salón de Estudio Popnest está al fondo del espacio.'
   },
@@ -114,6 +118,21 @@ function Ubicacion() {
               <h2 className="text-xl font-heading font-medium mb-3" style={{ color: '#1F2937' }}>
                 Cómo llegar
               </h2>
+              <h3 className="text-base font-heading font-medium mt-4 mb-2" style={{ color: '#1F2937' }}>
+                En Metro (lo más cercano): estación Coyoacán, Línea 3
+              </h3>
+              <p className="mb-2">
+                Son unos <strong>1.6 km, 20–25 minutos caminando</strong> (todo plano), o 5 minutos en taxi o app desde la estación:
+              </p>
+              <ol className="list-decimal pl-5 space-y-1 mb-4">
+                <li>Sal de Metro Coyoacán hacia <strong>Av. Universidad</strong> y camina unos 100 m hasta la esquina con <strong>Av. Coyoacán</strong> (Eje 3 Poniente).</li>
+                <li>Gira a la izquierda en Av. Coyoacán (hacia el oriente); más adelante la calle se convierte en <strong>Av. México</strong>.</li>
+                <li>Sigue por Av. México unos 600 m hasta la calle <strong>Londres</strong>.</li>
+                <li>Gira a la izquierda en Londres y camina hasta el <strong>número 105</strong>; el estudio queda a tu izquierda, a unos pasos del Museo Frida Kahlo.</li>
+              </ol>
+              <p className="mb-4">
+                Otras estaciones: <strong>General Anaya</strong> (Línea 2) y <strong>Viveros / Derechos Humanos</strong> (Línea 3), a unos 25–27 minutos caminando. No hay estación de Metrobús cercana: la más próxima es la Línea 1 sobre Insurgentes Sur (Félix Cuevas), a unos 30 minutos en transporte público.
+              </p>
               <p>
                 Puedes llegar en transporte público o en auto. El estudio no tiene estacionamiento propio, pero es fácil encontrar lugar en las calles aledañas. Revisa <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>Google Maps</a> para rutas. Si tienes dudas, escríbenos por <a href="https://wa.me/525554379644" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>WhatsApp</a> o a <a href="mailto:info@estudiopopnest.com" className="underline" style={{ color: '#B73D37' }}>info@estudiopopnest.com</a>.
               </p>

@@ -86,6 +86,8 @@ const OTHER_PRODUCTS = [
 
 /** '$1,200' / 'Desde $300' → 1200 / 300 */
 const priceNumber = (label) => Number(String(label).replace(/[^0-9.]/g, ''))
+const COWORKING_PRICES = [...DAY_OFFICE_RATES, ...OTHER_PRODUCTS].map((i) => priceNumber(i.price)).filter((n) => n > 0)
+const COWORKING_PRICE_RANGE = `$${Math.min(...COWORKING_PRICES).toLocaleString('es-MX')} – $${Math.max(...COWORKING_PRICES).toLocaleString('es-MX')} MXN`
 
 /** Schema `Service` + catálogo de ofertas (oficinas por día y planes de coworking), con los precios de esta página. */
 const SERVICE_SCHEMA = {
@@ -97,7 +99,7 @@ const SERVICE_SCHEMA = {
     'Oficinas privadas por día, medio día o largo plazo, coworking flexible, pase por día y salas de juntas en Coyoacán, CDMX.',
   url: `${SITE_URL}/coworking`,
   areaServed: { '@type': 'City', name: 'Ciudad de México' },
-  provider: { '@type': 'LocalBusiness', name: 'Estudio Popnest', url: SITE_URL, address: STUDIO_PLACE.address, telephone: '+525554379644', image: `${SITE_URL}/og-image.jpg` },
+  provider: { '@type': 'LocalBusiness', name: 'Estudio Popnest', url: SITE_URL, address: STUDIO_PLACE.address, telephone: '+525554379644', image: `${SITE_URL}/og-image.jpg`, priceRange: COWORKING_PRICE_RANGE },
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
     name: 'Oficinas y planes de coworking',

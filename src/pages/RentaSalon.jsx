@@ -55,7 +55,7 @@ const SERVICE_SCHEMA = {
     'Salón luminoso en Coyoacán para clases privadas, talleres, sesiones de fotos y video, ensayos y celebraciones. Precio por hora según número de personas; pago en línea.',
   url: `${SITE_URL}/renta-salon`,
   areaServed: { '@type': 'City', name: 'Ciudad de México' },
-  provider: { '@type': 'HealthClub', name: 'Estudio Popnest Wellness', url: SITE_URL, address: STUDIO_PLACE.address, telephone: '+525554379644', image: `${SITE_URL}/og-image.jpg` },
+  provider: { '@type': 'HealthClub', name: 'Estudio Popnest Wellness', url: SITE_URL, address: STUDIO_PLACE.address, telephone: '+525554379644', image: `${SITE_URL}/og-image.jpg`, priceRange: `${formatShortMoney(minPrice)} – ${formatShortMoney(maxPrice)} MXN por hora` },
   offers: {
     '@type': 'AggregateOffer',
     priceCurrency: 'MXN',

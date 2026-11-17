@@ -232,6 +232,9 @@ export function buildCourseSchemaForLanding(pathname, siteUrl = 'https://popnest
       '@type': 'HealthAndBeautyBusiness',
       name: 'Estudio Popnest Wellness',
       url: siteUrl,
+      telephone: '+525554379644',
+      image: `${siteUrl}/og-image.jpg`,
+      priceRange: '$250 – $1,800 MXN',
       address: {
         '@type': 'PostalAddress',
         streetAddress: 'Londres 105, Del Carmen',

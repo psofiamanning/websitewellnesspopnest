@@ -97,7 +97,7 @@ const SERVICE_SCHEMA = {
     'Oficinas privadas por día, medio día o largo plazo, coworking flexible, pase por día y salas de juntas en Coyoacán, CDMX.',
   url: `${SITE_URL}/coworking`,
   areaServed: { '@type': 'City', name: 'Ciudad de México' },
-  provider: { '@type': 'LocalBusiness', name: 'Estudio Popnest', url: SITE_URL, address: STUDIO_PLACE.address },
+  provider: { '@type': 'LocalBusiness', name: 'Estudio Popnest', url: SITE_URL, address: STUDIO_PLACE.address, telephone: '+525554379644', image: `${SITE_URL}/og-image.jpg` },
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
     name: 'Oficinas y planes de coworking',

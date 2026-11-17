@@ -74,9 +74,9 @@ export const classTypes = [
     teacherId: 1,
     duration: 60,
     description:
-      'Clase de Pilates mat en Coyoacán, en colchoneta y en grupos reducidos, enfocada en core, alineación y control del movimiento. Ideal para fortalecer el centro del cuerpo, mejorar postura y ganar estabilidad con guía experta.',
+      'Clase de Pilates mat en Coyoacán, en colchoneta y con máximo 10 personas, enfocada en core, alineación y control del movimiento. Ideal para fortalecer el centro del cuerpo, mejorar postura y ganar estabilidad con guía experta.',
     fullDescription:
-      'Nuestra clase es de Pilates mat (en colchoneta, sin reformer). Trabajamos desde los principios del método: respiración, precisión y fluidez, en grupos reducidos donde la coach corrige la técnica de cada persona. La clase integra ejercicios en colchoneta y opciones progresivas para distintos niveles, con atención a la columna y la pelvis.\n\nPuedes esperar calentamiento articular, series de fortalecimiento del abdomen y espalda, y cierre con estiramientos. Es una práctica clara y contenida, pensada para sentir el cuerpo con más consciencia y sin prisa.',
+      'Nuestra clase es de Pilates mat (en colchoneta, sin reformer). Trabajamos desde los principios del método: respiración, precisión y fluidez, en grupos de máximo 10 personas donde la coach corrige la técnica de cada persona. La clase integra ejercicios en colchoneta y opciones progresivas para distintos niveles, con atención a la columna y la pelvis.\n\nPuedes esperar calentamiento articular, series de fortalecimiento del abdomen y espalda, y cierre con estiramientos. Es una práctica clara y contenida, pensada para sentir el cuerpo con más consciencia y sin prisa.',
     image: classIconPilates,
     whatToBring: ['tu propio mat de yoga'],
   },

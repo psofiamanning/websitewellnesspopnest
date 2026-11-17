@@ -40,7 +40,7 @@ export const LANDING_SEO_DESCRIPTION = {
   'hatha-yoga':
     'Práctica tradicional de Hatha Yoga en Coyoacán para equilibrar cuerpo y mente con posturas, respiración y atención consciente.',
   pilates:
-    'Pilates mat en Coyoacán (Del Carmen): clases en colchoneta en grupos reducidos, enfocadas en core, alineación y postura. Aptas para principiantes. Reserva en línea.',
+    'Pilates mat en Coyoacán (Del Carmen): clases en colchoneta con máximo 10 personas, enfocadas en core, alineación y postura. Aptas para principiantes. Reserva en línea.',
   'sound-healing':
     'Experiencia de sanación sonora en Coyoacán con cuencos tibetanos, gongs y vibraciones terapéuticas para relajación profunda y equilibrio energético.',
   'power-yoga-1':
@@ -101,7 +101,7 @@ export const LANDING_FAQ_BY_CLASS_ID = {
   pilates: [
     {
       q: '¿Qué tipo de Pilates dan en Estudio Popnest: mat o reformer?',
-      a: 'Pilates mat: se practica en colchoneta, sin máquinas reformer. Trabajamos los principios del método (respiración, control, precisión) en grupos reducidos, con correcciones personalizadas de la coach Blanca Bear.'
+      a: 'Pilates mat: se practica en colchoneta, sin máquinas reformer. Trabajamos los principios del método (respiración, control, precisión) en grupos de máximo 10 personas, con correcciones personalizadas de la coach Blanca Bear.'
     },
     {
       q: '¿Pilates mat sirve si soy principiante o tengo poca condición física?',
@@ -109,7 +109,7 @@ export const LANDING_FAQ_BY_CLASS_ID = {
     },
     {
       q: '¿Cuántas personas hay por clase?',
-      a: 'Son grupos reducidos, para que la coach pueda observar y corregir la técnica de cada persona durante la sesión.'
+      a: 'Máximo 10 personas por clase, para que la coach pueda observar y corregir la técnica de cada persona durante la sesión.'
     },
     {
       q: '¿Qué días hay Pilates en Coyoacán?',

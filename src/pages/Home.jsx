@@ -91,6 +91,95 @@ const SPACE_SLIDES = [
   { src: studioPhoto2, alt: 'Ambiente del estudio', ey: 'Detalle del salón', em: 'Materiales y calma' },
 ]
 
+/**
+ * FAQ del home: respuestas directas (para Google y buscadores de IA). `a` es el texto del
+ * schema FAQPage; `node` (opcional) es la versión visible con enlaces — deben decir lo mismo.
+ */
+const HOME_FAQ = [
+  {
+    q: '¿Dónde está el estudio?',
+    a: 'En Londres 105, colonia Del Carmen, Coyoacán, CDMX. El estudio comparte entrada con galería, cafetería y coworking; el salón de clases está al fondo del inmueble.',
+    node: (
+      <>
+        Estamos en <strong>Coyoacán, CDMX</strong> — Colonia Del Carmen, en Londres 105. Es un espacio que comparte
+        entrada con galería, cafetería y coworking. <Link to="/ubicacion">Ver cómo llegar</Link>.
+      </>
+    ),
+  },
+  {
+    q: '¿Qué clases hay en Estudio Popnest?',
+    a: 'Pilates mat, Hatha Yoga, Power Yoga, Tai Chi, Sound Healing (sound bath), Belly Dance y Stretching, todas de 60 minutos, de lunes a domingo. Además, un Run Club gratuito los miércoles y sábados.',
+    node: (
+      <>
+        Pilates mat, Hatha Yoga, Power Yoga, Tai Chi, Sound Healing (sound bath), Belly Dance y Stretching, todas de 60
+        minutos, de lunes a domingo. Consulta el <Link to="/horario">horario semanal</Link>. Además, un{' '}
+        <Link to="/run-club">Run Club gratuito</Link> los miércoles y sábados.
+      </>
+    ),
+  },
+  {
+    q: '¿Cuánto cuesta una clase?',
+    a: 'La clase suelta cuesta $250 MXN. Hay paquetes desde $550 MXN por 3 clases, paquetes de 4 a 20 clases y un plan ilimitado mensual de $1,800 MXN.',
+    node: (
+      <>
+        La clase suelta cuesta <strong>$250 MXN</strong>. Hay paquetes desde $550 MXN por 3 clases, paquetes de 4 a 20
+        clases y un plan ilimitado mensual de $1,800 MXN. <Link to="/packages">Ver paquetes y precios</Link>.
+      </>
+    ),
+  },
+  {
+    q: '¿Necesito experiencia previa?',
+    a: 'No. Las clases son para todos los niveles y principiantes: las coaches dan opciones para cada cuerpo y los grupos son de máximo 10 personas, así que hay atención y correcciones personalizadas.',
+  },
+  {
+    q: '¿Qué tipo de Pilates dan: mat o reformer?',
+    a: 'Pilates mat, en colchoneta y sin máquinas reformer, enfocado en core, postura y control del movimiento, en grupos de máximo 10 personas.',
+    node: (
+      <>
+        <Link to="/clases/pilates-coyoacan">Pilates mat</Link>, en colchoneta y sin máquinas reformer, enfocado en core,
+        postura y control del movimiento, en grupos de máximo 10 personas.
+      </>
+    ),
+  },
+  {
+    q: '¿Qué debo llevar?',
+    a: 'Ropa cómoda y tu propio mat de yoga para Pilates, Yoga y Stretching; para Sound Healing, mat y una cobija.',
+  },
+  {
+    q: '¿Cómo reservo una clase?',
+    a: 'Elige tu clase en el horario, reserva y paga en línea; recibirás confirmación por correo. También puedes comprar un paquete para ahorrar por clase.',
+    node: (
+      <>
+        Elige tu clase en el <Link to="/horario">horario</Link>, reserva y paga en línea; recibirás confirmación por
+        correo. También puedes comprar un <Link to="/packages">paquete</Link> para ahorrar por clase.
+      </>
+    ),
+  },
+  {
+    q: '¿Dudas sobre reservas, paquetes o pagos?',
+    a: 'Escríbenos a info@estudiopopnest.com o por WhatsApp al +52 55 5437 9644.',
+    node: (
+      <>
+        Escríbenos por <a href="mailto:info@estudiopopnest.com">correo</a> o{' '}
+        <a href="https://wa.me/525554379644" target="_blank" rel="noopener noreferrer">
+          WhatsApp
+        </a>
+        .
+      </>
+    ),
+  },
+]
+
+const HOME_FAQ_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: HOME_FAQ.map(({ q, a }) => ({
+    '@type': 'Question',
+    name: q,
+    acceptedAnswer: { '@type': 'Answer', text: a },
+  })),
+}
+
 function Home() {
   const fituneLive = useFituneLive()
   const location = useLocation()
@@ -485,33 +574,17 @@ function Home() {
               Preguntas <span className="pn-serif" style={{ color: 'var(--pn-color-primary)' }}>frecuentes.</span>
             </h2>
             <dl className="home-faq__list">
-              <div className="home-faq__row">
-                <dt>¿Dónde está el estudio?</dt>
-                <dd>
-                  Estamos en <strong>Coyoacán, CDMX</strong> — Colonia Del Carmen, en Londres 105. Es un espacio que
-                  comparte entrada con galería, cafetería y coworking.{' '}
-                  <Link to="/ubicacion">Ver cómo llegar</Link>.
-                </dd>
-              </div>
-              <div className="home-faq__row">
-                <dt>¿Cómo reservo una clase?</dt>
-                <dd>
-                  Elige tu clase en <Link to="/classes">Clases</Link>, selecciona fecha y hora, completa tus datos y
-                  pago. Recibirás confirmación por correo.
-                </dd>
-              </div>
-              <div className="home-faq__row">
-                <dt>¿Dudas sobre reservas, paquetes o pagos?</dt>
-                <dd>
-                  Escríbenos por{' '}
-                  <a href="mailto:info@estudiopopnest.com">correo</a> o{' '}
-                  <a href="https://wa.me/525554379644" target="_blank" rel="noopener noreferrer">
-                    WhatsApp
-                  </a>
-                  .
-                </dd>
-              </div>
+              {HOME_FAQ.map((item) => (
+                <div className="home-faq__row" key={item.q}>
+                  <dt>{item.q}</dt>
+                  <dd>{item.node ?? item.a}</dd>
+                </div>
+              ))}
             </dl>
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_FAQ_SCHEMA) }}
+            />
           </section>
 
           <section className="home-work">

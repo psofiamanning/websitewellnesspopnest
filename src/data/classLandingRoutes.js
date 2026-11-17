@@ -19,7 +19,7 @@ export const CLASS_LANDING_PATHS = Object.keys(LANDING_SLUG_TO_CLASS_ID).map(
 export const LANDING_SEO_TITLE = {
   'hatha-yoga': 'Hatha Yoga en Coyoacán | Clases y Reserva | Estudio Popnest Wellness',
   pilates: 'Pilates Mat en Coyoacán | Grupos Reducidos | Estudio Popnest Wellness',
-  'sound-healing': 'Sound Healing en Coyoacán | Sanación Sonora | Estudio Popnest',
+  'sound-healing': 'Sound Healing y Sound Bath en Coyoacán | Terapia de Sonido | Estudio Popnest',
   'power-yoga-1': 'Power Yoga en Coyoacán | Clases Dinámicas | Estudio Popnest Wellness',
   'tai-chi': 'Tai Chi en Coyoacán | Clases y Reserva | Estudio Popnest Wellness',
   'belly-dance': 'Belly Dance en Coyoacán | Danza Árabe y Reserva | Estudio Popnest Wellness',
@@ -42,7 +42,7 @@ export const LANDING_SEO_DESCRIPTION = {
   pilates:
     'Pilates mat en Coyoacán (Del Carmen): clases en colchoneta con máximo 10 personas, enfocadas en core, alineación y postura. Aptas para principiantes. Reserva en línea.',
   'sound-healing':
-    'Experiencia de sanación sonora en Coyoacán con cuencos tibetanos, gongs y vibraciones terapéuticas para relajación profunda y equilibrio energético.',
+    'Sound Healing (sound bath o terapia de sonido) en Coyoacán: baño de sonido con cuencos tibetanos y gongs para relajación profunda. Sin experiencia previa.',
   'power-yoga-1':
     'Clase dinámica en Coyoacán que combina fuerza, resistencia y alineación en secuencias exigentes con guía experta.',
   'tai-chi':
@@ -124,6 +124,14 @@ export const LANDING_FAQ_BY_CLASS_ID = {
     {
       q: '¿Qué es una sesión de Sound Healing?',
       a: 'Es una experiencia pasiva con cuencos, gongs y otras frecuencias. Te recuestas mientras el sonido acompaña la relajación profunda.'
+    },
+    {
+      q: '¿Sound Healing, sound bath y terapia de sonido son lo mismo?',
+      a: 'Sí, son nombres para la misma práctica: un baño de sonido con cuencos tibetanos y gongs. En Estudio Popnest la sesión dura 60 minutos, te recuestas sobre tu mat con una cobija y no requiere experiencia.'
+    },
+    {
+      q: '¿Qué días hay Sound Healing en Coyoacán?',
+      a: 'Martes y miércoles 20:30, jueves 19:30 y domingo 9:00 y 10:30, con Juan Martínez y Jimena. Trae tu mat de yoga y una cobija.'
     },
     {
       q: '¿Puedo asistir si nunca he meditado?',

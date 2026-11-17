@@ -3,6 +3,31 @@ import { useFituneLive, FITUNE_URLS, FITUNE_LINK_PROPS } from '../config/fitune'
 
 const MAPS_URL = 'https://www.google.com/maps/search/?api=1&query=Londres+105,+Del+Carmen,+Coyoacán,+04100+Ciudad+de+México,+CDMX'
 
+const UBICACION_FAQ = [
+  {
+    q: '¿Hay estacionamiento?',
+    a: 'El estudio no tiene estacionamiento propio, pero es fácil encontrar lugar en las calles aledañas de la colonia Del Carmen.'
+  },
+  {
+    q: '¿Cómo encuentro el salón de clases?',
+    a: 'Entra por Londres 105: el inmueble comparte entrada con galería, cafetería y coworking. El salón de Estudio Popnest está al fondo del espacio.'
+  },
+  {
+    q: '¿En qué zona de Coyoacán están?',
+    a: 'En la colonia Del Carmen (C.P. 04100), cerca del centro de Coyoacán, entre cafés, galerías y calles peatonales.'
+  }
+]
+
+const UBICACION_FAQ_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: UBICACION_FAQ.map(({ q, a }) => ({
+    '@type': 'Question',
+    name: q,
+    acceptedAnswer: { '@type': 'Answer', text: a }
+  }))
+}
+
 function Ubicacion() {
   const fituneLive = useFituneLive()
   const navigate = useNavigate()
@@ -90,7 +115,7 @@ function Ubicacion() {
                 Cómo llegar
               </h2>
               <p>
-                Puedes llegar en transporte público o en auto. Te recomendamos revisar <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>Google Maps</a> para rutas y opciones de estacionamiento en la zona de Coyoacán. Si tienes dudas, escríbenos por <a href="https://wa.me/525554379644" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>WhatsApp</a> o a <a href="mailto:info@estudiopopnest.com" className="underline" style={{ color: '#B73D37' }}>info@estudiopopnest.com</a>.
+                Puedes llegar en transporte público o en auto. El estudio no tiene estacionamiento propio, pero es fácil encontrar lugar en las calles aledañas. Revisa <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>Google Maps</a> para rutas. Si tienes dudas, escríbenos por <a href="https://wa.me/525554379644" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#B73D37' }}>WhatsApp</a> o a <a href="mailto:info@estudiopopnest.com" className="underline" style={{ color: '#B73D37' }}>info@estudiopopnest.com</a>.
               </p>
             </section>
 
@@ -99,10 +124,28 @@ function Ubicacion() {
                 Clases de yoga y bienestar en Coyoacán
               </h2>
               <p>
-                Ofrecemos clases de hatha yoga, pilates, power yoga, tai chi, sound healing, belly dance y stretching. Todas se imparten en nuestro espacio en Coyoacán. Puedes ver el <Link to="/horario" className="underline" style={{ color: '#B73D37' }}>horario</Link> y reservar tu clase en línea.
+                Ofrecemos clases de hatha yoga, pilates mat, power yoga, tai chi, sound healing, belly dance y stretching. Todas se imparten en nuestro espacio en Coyoacán. Puedes ver el <Link to="/horario" className="underline" style={{ color: '#B73D37' }}>horario</Link> y reservar tu clase en línea.
               </p>
             </section>
           </div>
+
+          <section className="mt-10 font-body text-base leading-relaxed" style={{ color: '#4B5563' }}>
+            <h2 className="text-xl font-heading font-medium mb-3" style={{ color: '#1F2937' }}>
+              Preguntas frecuentes
+            </h2>
+            <dl className="space-y-4">
+              {UBICACION_FAQ.map((item) => (
+                <div key={item.q}>
+                  <dt className="font-medium" style={{ color: '#1F2937' }}>{item.q}</dt>
+                  <dd className="mt-1">{item.a}</dd>
+                </div>
+              ))}
+            </dl>
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(UBICACION_FAQ_SCHEMA) }}
+            />
+          </section>
 
           <div className="mt-12 pt-8 border-t" style={{ borderColor: '#E5E7EB' }}>
             <Link to="/" className="font-body text-sm hover:underline" style={{ color: '#B73D37' }}>

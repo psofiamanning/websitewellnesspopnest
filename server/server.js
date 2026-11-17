@@ -436,6 +436,22 @@ async function sendFreeClassEmail(email) {
     day: 'numeric',
     month: 'long',
   })
+  if (Date.now() >= FITUNE_CUTOVER_MS) {
+    // Desde el corte, la clase de regalo se reserva en Fitune: el estudio la carga a mano
+    // en la cuenta de Fitune de la persona cuando nos escribe.
+    const fituneLink = 'https://my.fitune.io/popnest-wellness/activities'
+    const waLink = `https://wa.me/525554379644?text=${encodeURIComponent(`Hola, quiero activar mi clase de regalo. Mi correo es ${email}`)}`
+    const subject = '🎁 Tu clase gratis en Estudio Popnest Wellness'
+    const text = `¡Hola!\n\nGracias por tu interés en Estudio Popnest Wellness. Tu clase de regalo ya te está esperando.\n\nAsí la reservas:\n1. Crea tu cuenta en Fitune, nuestra plataforma de reservas, con este correo (${email}): ${fituneLink}\n2. Escríbenos por WhatsApp para activar tu clase de regalo: ${waLink}\n3. Elige el día, la hora y la disciplina que prefieras en el horario de Fitune.\n\nTienes ${FREE_CLASS_PROMO_VALID_DAYS} días para reservarla (hasta el ${deadlineLabel}).\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
+    const html = `<p>¡Hola!</p><p>Gracias por tu interés en <strong>Estudio Popnest Wellness</strong>. Tu <strong>clase de regalo</strong> ya te está esperando 🎁</p><p>Así la reservas:</p><ol style="padding-left:20px;line-height:1.6;"><li>Crea tu cuenta en <a href="${fituneLink}" style="color:#B73D37;font-weight:bold;">Fitune</a>, nuestra plataforma de reservas, con este correo (<strong>${email}</strong>).</li><li><a href="${waLink}" style="color:#B73D37;font-weight:bold;">Escríbenos por WhatsApp</a> para activar tu clase de regalo.</li><li>Elige el día, la hora y la disciplina que prefieras en el horario de Fitune.</li></ol><p><strong>Tienes ${FREE_CLASS_PROMO_VALID_DAYS} días para reservarla</strong> (hasta el ${deadlineLabel}).</p><p>Te esperamos,<br>El equipo de Estudio Popnest Wellness</p>`
+    try {
+      await sendEmail({ to: email, subject, text, html })
+      console.log('✅ Email de clase gratis (Fitune) enviado a:', email)
+    } catch (err) {
+      console.error('❌ Error enviando email de clase gratis a', email, ':', err.message)
+    }
+    return
+  }
   const claimLink = `${FRONTEND_URL}/signup?promoCode=${encodeURIComponent(promoCode)}&promoEmail=${encodeURIComponent(email)}&from=${encodeURIComponent('/classes')}`
   const subject = '🎁 Tu clase gratis en Estudio Popnest Wellness'
   const text = `¡Hola!\n\nGracias por tu interés en Estudio Popnest Wellness. Tu clase de regalo ya te está esperando.\n\nAsí la reservas:\n1. Entra a este enlace y crea tu contraseña: ${claimLink}\n2. Inicia sesión con este correo (${email}) y la contraseña que acabas de crear.\n3. Elige el día, la hora y la disciplina que prefieras — tu clase queda apartada sin costo.\n\nTienes ${FREE_CLASS_PROMO_VALID_DAYS} días para reservarla (hasta el ${deadlineLabel}).\n\nTe esperamos,\nEl equipo de Estudio Popnest Wellness`
@@ -608,6 +624,8 @@ const ADMIN_RESET_TOKENS_FILE = join(__dirname, 'admin-password-reset-tokens.jso
 const TEACHERS_FILE = join(__dirname, 'teachers.json')
 const MARKETING_ASSETS_DIR = join(__dirname, 'marketing-assets')
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
+/** Desde esta fecha las reservas y compras de clases son en Fitune (ver src/config/fitune.js). */
+const FITUNE_CUTOVER_MS = Date.parse('2026-12-01T00:00:00-06:00')
 const ADMIN_RESET_TOKEN_EXPIRY_MS = 60 * 60 * 1000 // 1 hora
 // Debe coincidir con SINGLE_CLASS_AMOUNT_CENTS en src/config/pricing.js.
 const SINGLE_CLASS_AMOUNT_CENTS = 25000

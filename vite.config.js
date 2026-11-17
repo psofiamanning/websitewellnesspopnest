@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  // Momento del build: decide si el HTML pre-renderizado ya enlaza a Fitune (src/config/fitune.js).
+  define: {
+    __POPNEST_BUILD_TIME__: JSON.stringify(Date.now()),
+  },
   ssr: {
     // Evita import de directorio date-fns/locale al ejecutar el bundle SSR en Node.
     noExternal: ['date-fns'],

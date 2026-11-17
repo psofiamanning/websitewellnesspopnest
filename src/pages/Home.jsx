@@ -10,6 +10,7 @@ import { classTypes, getClassTeachersLabel } from '../data/classes'
 import { getLandingSlugForClassId } from '../data/classLandings'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
 import { shouldShowProposalPlans } from '../config/proposalPlans'
+import { useFituneLive, FITUNE_URLS, FITUNE_LINK_PROPS } from '../config/fitune'
 import { buildRedesignScheduleSnippets, dotClassForClassId } from '../utils/redesignScheduleFromData'
 import '../styles/tokens.css'
 import '../styles/base.css'
@@ -91,6 +92,7 @@ const SPACE_SLIDES = [
 ]
 
 function Home() {
+  const fituneLive = useFituneLive()
   const location = useLocation()
   const sliderRef = useRef(null)
   const heroVideoRef = useRef(null)
@@ -180,9 +182,15 @@ function Home() {
                 Clases de pilates, yoga, tai chi, sound bath y belly dance para bajar el ritmo, todos los días.
               </p>
               <div className="home-hero__actions">
-                <Link to="/classes" className="pn-btn pn-btn--primary">
-                  Reservar una clase
-                </Link>
+                {fituneLive ? (
+                  <a href={FITUNE_URLS.schedule} className="pn-btn pn-btn--primary" {...FITUNE_LINK_PROPS}>
+                    Reservar una clase
+                  </a>
+                ) : (
+                  <Link to="/classes" className="pn-btn pn-btn--primary">
+                    Reservar una clase
+                  </Link>
+                )}
                 <a href="#clases" className="pn-btn pn-btn--ghost">
                   Ver clases
                 </a>

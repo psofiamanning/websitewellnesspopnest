@@ -24,6 +24,7 @@ import ClassLanding from './pages/ClassLanding'
 import YogaCoyoacan from './pages/YogaCoyoacan'
 import NotFound from './pages/NotFound'
 import DevOnlyRoute from './components/DevOnlyRoute'
+import FituneRedirect from './components/FituneRedirect'
 // Páginas que nunca se pre-renderizan (login, cuenta, reservas, admin, previews de diseño):
 // se descargan solo al visitarlas, así el Home y las landings no cargan su código.
 const RentaSalonConfirmacion = lazy(() => import('./pages/RentaSalonConfirmacion'))
@@ -148,12 +149,12 @@ export function AppContent() {
         <Route path="/coworking" element={<Coworking />} />
         <Route path="/run-club" element={<RunClub />} />
         <Route path="/packages" element={<Packages />} />
-        <Route path="/booking/package/:id" element={<PackagePurchase />} />
-        <Route path="/booking/:type/:id" element={<Booking />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/booking/package/:id" element={<FituneRedirect kind="package"><PackagePurchase /></FituneRedirect>} />
+        <Route path="/booking/:type/:id" element={<FituneRedirect kind="class"><Booking /></FituneRedirect>} />
+        <Route path="/login" element={<FituneRedirect><Login /></FituneRedirect>} />
+        <Route path="/signup" element={<FituneRedirect><SignUp /></FituneRedirect>} />
+        <Route path="/forgot-password" element={<FituneRedirect><ForgotPassword /></FituneRedirect>} />
+        <Route path="/reset-password" element={<FituneRedirect><ResetPassword /></FituneRedirect>} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
         <Route path="/admin/reset-password" element={<AdminResetPassword />} />
@@ -165,8 +166,8 @@ export function AppContent() {
         <Route path="/espacios" element={<Espacios />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<TermsAndConditions />} />
-        <Route path="/mis-reservas" element={<MyBookings />} />
-        <Route path="/mis-paquetes" element={<MyPackages />} />
+        <Route path="/mis-reservas" element={<FituneRedirect><MyBookings /></FituneRedirect>} />
+        <Route path="/mis-paquetes" element={<FituneRedirect><MyPackages /></FituneRedirect>} />
         <Route path="/design-system" element={<DevOnlyRoute><DesignSystem /></DevOnlyRoute>} />
         <Route path="/home-redesign" element={<DevOnlyRoute><HomeRedesign /></DevOnlyRoute>} />
         <Route path="/schedule-redesign" element={<DevOnlyRoute><ScheduleRedesign /></DevOnlyRoute>} />

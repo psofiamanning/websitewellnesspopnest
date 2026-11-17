@@ -605,7 +605,7 @@ function BookingClassEditorialView({
               </div>
               <div className="bk-spec">
                 <dt>Cupo</dt>
-                <dd>8 personas</dd>
+                <dd>10 personas</dd>
               </div>
               <div className="bk-spec">
                 <dt>Duración</dt>

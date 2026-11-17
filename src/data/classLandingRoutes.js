@@ -226,7 +226,7 @@ export function buildCourseSchemaForLanding(pathname, siteUrl = 'https://popnest
       '@type': 'Offer',
       price: String(SINGLE_CLASS_PRICE_MXN),
       priceCurrency: 'MXN',
-      url: `${siteUrl}/booking/class/${classId}`,
+      url: `${siteUrl}/clases/${slug}`,
       availability: 'https://schema.org/InStock'
     },
     hasCourseInstance: {

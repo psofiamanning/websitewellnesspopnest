@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
 import { PACKAGE_OFFERS } from '../data/packageOffers'
 import { shouldShowProposalPlans } from '../config/proposalPlans'
+import { isFituneLive, fitunePackageUrl } from '../config/fitune'
 import '../styles/tokens.css'
 import '../styles/base.css'
 import '../styles/components.css'
@@ -15,7 +16,7 @@ const WA_URL =
 const FAQ_ITEMS = [
   {
     q: '¿Cómo compro un paquete?',
-    a: 'Elige tu plan, inicia sesión o crea cuenta, y completa el pago en línea de forma segura. Recibirás confirmación por correo.',
+    a: 'Elige tu plan y completa el pago en línea de forma segura con tu cuenta. Recibirás confirmación por correo.',
   },
   {
     q: '¿Puedo usar el paquete en cualquier clase?',
@@ -27,7 +28,7 @@ const FAQ_ITEMS = [
   },
   {
     q: '¿Qué pasa si no puedo asistir?',
-    a: 'Puedes cancelar o cambiar tu reserva desde Mis reservas con al menos 4 horas de anticipación, según nuestra política.',
+    a: 'Puedes cancelar o cambiar tu reserva desde tu cuenta con al menos 4 horas de anticipación, según nuestra política.',
   },
   {
     q: '¿El paquete de 20 incluye algo extra?',
@@ -63,6 +64,11 @@ function Packages() {
 
   // Clic en una tarjeta → página de detalle pública (el login se pide al comprar).
   function handlePurchase(packageId) {
+    // Desde el corte, la compra es en Fitune (checkout directo del paquete).
+    if (isFituneLive()) {
+      window.location.assign(fitunePackageUrl(packageId))
+      return
+    }
     navigate(`/booking/package/${packageId}`)
   }
 
@@ -237,6 +243,11 @@ function Packages() {
 
   function onPlanClick(plan) {
     if (!plan.purchaseId) {
+      // Clase suelta: en Fitune se compra desde precios (TODO: checkout directo cuando exista).
+      if (isFituneLive()) {
+        window.location.assign(fitunePackageUrl('single-class'))
+        return
+      }
       navigate('/classes')
       return
     }

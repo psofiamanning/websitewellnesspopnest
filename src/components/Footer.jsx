@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom'
 import Logo from './Logo'
 import { COOKIE_CONSENT_SHOW_EVENT } from '../utils/cookieConsent'
 import { getLandingNavItems } from '../data/classLandingRoutes'
+import { useFituneLive, FITUNE_URLS, FITUNE_LINK_PROPS } from '../config/fitune'
 
 function Footer() {
+  const fituneLive = useFituneLive()
   const practiceGuides = getLandingNavItems()
 
   return (
@@ -94,12 +96,22 @@ function Footer() {
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/classes" 
-                  className="text-white/90 font-body text-sm hover:text-white transition-colors duration-200"
-                >
-                  Reservar Clase
-                </Link>
+                {fituneLive ? (
+                  <a
+                    href={FITUNE_URLS.schedule}
+                    className="text-white/90 font-body text-sm hover:text-white transition-colors duration-200"
+                    {...FITUNE_LINK_PROPS}
+                  >
+                    Reservar Clase
+                  </a>
+                ) : (
+                  <Link
+                    to="/classes"
+                    className="text-white/90 font-body text-sm hover:text-white transition-colors duration-200"
+                  >
+                    Reservar Clase
+                  </Link>
+                )}
               </li>
             </ul>
           </div>

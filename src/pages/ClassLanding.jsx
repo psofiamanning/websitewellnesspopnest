@@ -4,6 +4,7 @@ import { getClassLandingData } from '../data/classLandings'
 import { buildCourseSchemaForLanding, buildFaqSchemaForLanding } from '../data/classLandingRoutes'
 import { SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
 import PracticeDot from '../components/ui/PracticeDot'
+import BookClassLink from '../components/BookClassLink'
 import { dotClassForClassId } from '../utils/redesignScheduleFromData'
 import '../styles/tokens.css'
 import '../styles/base.css'
@@ -59,9 +60,9 @@ function ClassLanding() {
             </span>
           </div>
           <div className="clp-hero__actions">
-            <Link to={data.bookingPath} className="pn-btn pn-btn--primary">
+            <BookClassLink classId={data.classId} to={data.bookingPath} className="pn-btn pn-btn--primary">
               Reservar {data.name}
-            </Link>
+            </BookClassLink>
             <Link to={data.horarioPath} className="pn-btn pn-btn--ghost">
               Ver horario
             </Link>
@@ -148,9 +149,13 @@ function ClassLanding() {
               <p className="clp-card__price">
                 ${SINGLE_CLASS_PRICE_MXN.toFixed(0)} MXN <span>por clase</span>
               </p>
-              <Link to={data.bookingPath} className="pn-btn pn-btn--primary clp-card__cta">
+              <BookClassLink
+                classId={data.classId}
+                to={data.bookingPath}
+                className="pn-btn pn-btn--primary clp-card__cta"
+              >
                 Reservar en línea
-              </Link>
+              </BookClassLink>
             </div>
           </aside>
         </div>

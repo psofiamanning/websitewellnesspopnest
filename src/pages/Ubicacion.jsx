@@ -1,8 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useFituneLive, FITUNE_URLS, FITUNE_LINK_PROPS } from '../config/fitune'
 
 const MAPS_URL = 'https://www.google.com/maps/search/?api=1&query=Londres+105,+Del+Carmen,+Coyoacán,+04100+Ciudad+de+México,+CDMX'
 
 function Ubicacion() {
+  const fituneLive = useFituneLive()
   const navigate = useNavigate()
 
   return (
@@ -32,7 +34,19 @@ function Ubicacion() {
             Estudio Popnest Wellness es el salón de clases en Londres 105 (al fondo del inmueble).
             En el mismo edificio pueden aparecer otras actividades — cafetería, coworking, galería — con
             perfiles distintos en Google Maps y redes sociales. Para reservar yoga, pilates o sound healing,
-            usa solo <strong>popnest.app</strong>.
+            {fituneLive ? (
+              <>
+                {' '}usa solo nuestro{' '}
+                <a href={FITUNE_URLS.schedule} className="underline" style={{ color: '#B73D37' }} {...FITUNE_LINK_PROPS}>
+                  horario de reservas en Fitune
+                </a>
+                {' '}(enlazado desde popnest.app).
+              </>
+            ) : (
+              <>
+                {' '}usa solo <strong>popnest.app</strong>.
+              </>
+            )}
           </div>
 
           <div className="space-y-8 font-body text-base leading-relaxed" style={{ color: '#4B5563' }}>
@@ -85,7 +99,7 @@ function Ubicacion() {
                 Clases de yoga y bienestar en Coyoacán
               </h2>
               <p>
-                Ofrecemos clases de hatha yoga, pilates, power yoga, tai chi, sound healing, belly dance y stretching. Todas se imparten en nuestro espacio en Coyoacán. Puedes ver el horario y <Link to="/classes" className="underline" style={{ color: '#B73D37' }}>reservar tu clase en línea</Link> desde esta misma web.
+                Ofrecemos clases de hatha yoga, pilates, power yoga, tai chi, sound healing, belly dance y stretching. Todas se imparten en nuestro espacio en Coyoacán. Puedes ver el <Link to="/horario" className="underline" style={{ color: '#B73D37' }}>horario</Link> y reservar tu clase en línea.
               </p>
             </section>
           </div>

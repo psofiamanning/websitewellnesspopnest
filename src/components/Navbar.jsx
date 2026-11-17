@@ -8,6 +8,7 @@ import {
   POST_LOGIN_CLASSES_SESSION_KEY,
 } from '../services/authService'
 import { getUserPackages, getUserPackagesAll } from '../services/bookingService'
+import { useFituneLive, FITUNE_URLS, FITUNE_LINK_PROPS } from '../config/fitune'
 import '../styles/navShell.css'
 
 const MENU_ITEMS = [
@@ -29,6 +30,7 @@ function Navbar() {
   const [showMyPackages, setShowMyPackages] = useState(false)
 
   const isHome = location.pathname === '/'
+  const fituneLive = useFituneLive()
 
   useEffect(() => {
     setAuthenticated(isAuthenticated())
@@ -37,7 +39,7 @@ function Navbar() {
   }, [location.pathname, location.hash])
 
   useEffect(() => {
-    if (!authenticated || !currentUser?.email) {
+    if (fituneLive || !authenticated || !currentUser?.email) {
       setShowMyPackages(false)
       return
     }
@@ -86,7 +88,7 @@ function Navbar() {
       cancelled = true
       window.removeEventListener('epw-post-login-classes', onLoginClasses)
     }
-  }, [authenticated, currentUser?.email])
+  }, [fituneLive, authenticated, currentUser?.email])
 
   const handleLogout = () => {
     logout()
@@ -124,6 +126,15 @@ function Navbar() {
 
   const renderAccountLinks = (mobile = false) => {
     const linkClass = mobile ? 'site-nav__link site-nav__link--muted' : 'site-nav__link site-nav__link--muted'
+
+    // Desde el corte, las cuentas de clientes viven en Fitune.
+    if (fituneLive) {
+      return (
+        <a href={FITUNE_URLS.account} className={linkClass} {...FITUNE_LINK_PROPS}>
+          Mi cuenta
+        </a>
+      )
+    }
 
     if (authenticated) {
       return (
@@ -214,9 +225,15 @@ function Navbar() {
             })}
           </div>
 
-          <Link to="/classes" className="site-nav__cta">
-            Reservar clase
-          </Link>
+          {fituneLive ? (
+            <a href={FITUNE_URLS.schedule} className="site-nav__cta" {...FITUNE_LINK_PROPS}>
+              Reservar clase
+            </a>
+          ) : (
+            <Link to="/classes" className="site-nav__cta">
+              Reservar clase
+            </Link>
+          )}
 
           <div className="site-nav__account">{renderAccountLinks(false)}</div>
         </div>
@@ -263,9 +280,15 @@ function Navbar() {
             )
           })}
         </div>
-        <Link to="/classes" className="site-nav__cta" onClick={() => setIsMenuOpen(false)}>
-          Reservar clase
-        </Link>
+        {fituneLive ? (
+          <a href={FITUNE_URLS.schedule} className="site-nav__cta" {...FITUNE_LINK_PROPS}>
+            Reservar clase
+          </a>
+        ) : (
+          <Link to="/classes" className="site-nav__cta" onClick={() => setIsMenuOpen(false)}>
+            Reservar clase
+          </Link>
+        )}
         <div className="site-nav__mobile-account">{renderAccountLinks(true)}</div>
       </div>
     </nav>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { getSlotsByDay } from '../data/scheduleSlots'
 import PracticeDot from '../components/ui/PracticeDot'
+import { isFituneLive, fituneScheduleUrl } from '../config/fitune'
 import {
   SCHEDULE_FILTERS,
   buildWeekDays,
@@ -37,6 +38,11 @@ function Schedule() {
   // Lleva el día y la hora tocados a la reserva para llegar al paso de
   // confirmar sin volver a elegir fecha ni horario.
   const handleSlotClick = (classId, date, time) => {
+    // Desde el corte, se reserva en Fitune (abierto en el mismo día).
+    if (isFituneLive()) {
+      window.location.assign(fituneScheduleUrl(date ? format(date, 'yyyy-MM-dd') : null))
+      return
+    }
     const params = new URLSearchParams()
     if (date) params.set('date', format(date, 'yyyy-MM-dd'))
     if (time) params.set('time', time)
@@ -222,7 +228,7 @@ function Schedule() {
                 Cupo limitado
               </p>
               <p className="sc-policy__text">
-                Máximo 8 personas por sesión para mantener grupos contenidos y atención cercana.
+                Máximo 10 personas por sesión para mantener grupos contenidos y atención cercana.
               </p>
             </div>
             <div className="sc-policy">
@@ -231,7 +237,7 @@ function Schedule() {
                 Cancelación
               </p>
               <p className="sc-policy__text">
-                Cancela o cambia tu reserva con al menos 4 horas de anticipación desde Mis reservas.
+                Cancela o cambia tu reserva con al menos 4 horas de anticipación desde tu cuenta.
               </p>
             </div>
             <Link to="/packages" className="sc-policies__cta">

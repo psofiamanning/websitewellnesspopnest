@@ -65,7 +65,7 @@ function Ubicacion() {
             <a href="https://www.estudiopopnest.com/" target="_blank" rel="noopener" className="underline" style={{ color: '#B73D37' }}>
               Estudio Popnest Coworking
             </a>{' '}
-            (coworking, salas de juntas y cafetería), un negocio distinto con su propio perfil en Google Maps, además de una galería.
+            (coworking, salas de juntas y cafetería), con su propio sitio web, además de una galería.
             Para reservar yoga, pilates o sound healing,
             {fituneLive ? (
               <>

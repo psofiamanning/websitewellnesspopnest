@@ -35,7 +35,7 @@ export const PRERENDER_ROUTES = [...PUBLIC_STATIC_ROUTES, ...CLASS_LANDING_PATHS
 
 /**
  * Páginas que existen para visitantes pero no deben competir en Google con otro sitio nuestro:
- * /coworking es un resumen; el coworking es otro negocio con su propio sitio y perfil de Google
+ * /coworking es un resumen; el coworking es otra unidad con su propio sitio
  * (estudiopopnest.com). `noindex, follow`: Google no la muestra pero sí sigue sus enlaces.
  */
 const NOINDEX_FOLLOW_ROUTES = ['/coworking']

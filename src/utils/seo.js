@@ -117,8 +117,8 @@ export function getCanonicalUrl(pathname) {
   return `${SITE_URL}${pathname}`.replace(/\/$/, '') || `${SITE_URL}/`
 }
 
-const DEFAULT_TITLE = 'Yoga y Bienestar en Coyoacán | Estudio Popnest Wellness'
-const DEFAULT_DESCRIPTION = 'Clases de yoga, pilates, tai chi y sound healing en Coyoacán. Reserva en línea en Estudio Popnest Wellness. Estudio boutique en el corazón de la ciudad.'
+const DEFAULT_TITLE = 'Yoga, Pilates y Bienestar en Coyoacán | Estudio Popnest Wellness'
+const DEFAULT_DESCRIPTION = 'Clases de yoga, Pilates mat, tai chi y sound healing en Coyoacán, en grupos reducidos. Reserva en línea en Estudio Popnest Wellness, estudio boutique en Del Carmen.'
 
 export const ROUTE_SEO = {
   '/': {

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { getClassLandingData } from '../data/classLandings'
-import { buildCourseSchemaForLanding } from '../data/classLandingRoutes'
+import { buildCourseSchemaForLanding, buildFaqSchemaForLanding } from '../data/classLandingRoutes'
 import { SINGLE_CLASS_PRICE_MXN } from '../config/pricing'
 import PracticeDot from '../components/ui/PracticeDot'
 import { dotClassForClassId } from '../utils/redesignScheduleFromData'
@@ -15,22 +15,27 @@ function ClassLanding() {
   const data = getClassLandingData(slug)
 
   useEffect(() => {
-    const id = 'course-schema'
-    const json = slug ? buildCourseSchemaForLanding(`/clases/${slug}`) : null
-    let script = document.getElementById(id)
-    if (json) {
-      if (!script) {
-        script = document.createElement('script')
-        script.id = id
-        script.type = 'application/ld+json'
-        document.head.appendChild(script)
+    const path = slug ? `/clases/${slug}` : null
+    const schemas = [
+      ['course-schema', path ? buildCourseSchemaForLanding(path) : null],
+      ['faq-schema', path ? buildFaqSchemaForLanding(path) : null]
+    ]
+    for (const [id, json] of schemas) {
+      let script = document.getElementById(id)
+      if (json) {
+        if (!script) {
+          script = document.createElement('script')
+          script.id = id
+          script.type = 'application/ld+json'
+          document.head.appendChild(script)
+        }
+        script.textContent = JSON.stringify(json)
+      } else if (script) {
+        script.remove()
       }
-      script.textContent = JSON.stringify(json)
-    } else if (script) {
-      script.remove()
     }
     return () => {
-      document.getElementById(id)?.remove()
+      for (const [id] of schemas) document.getElementById(id)?.remove()
     }
   }, [slug])
 

@@ -16,7 +16,7 @@ import {
   SITE_URL,
   APP_SHELL_ROUTES
 } from '../src/utils/seo.js'
-import { buildCourseSchemaForLanding } from '../src/data/classLandingRoutes.js'
+import { buildCourseSchemaForLanding, buildFaqSchemaForLanding } from '../src/data/classLandingRoutes.js'
 import Beasties from 'beasties'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -88,7 +88,7 @@ function applyRouteHead(html, pathname) {
     itemListElement
   }
   const breadcrumbScript = `<script id="breadcrumb-schema" type="application/ld+json">${JSON.stringify(breadcrumbJson)}</script>`
-  out = out.replace(/<script id="course-schema"[\s\S]*?<\/script>\s*/gi, '')
+  out = out.replace(/<script id="(?:course|faq)-schema"[\s\S]*?<\/script>\s*/gi, '')
   out = out.replace('</head>', `    ${breadcrumbScript}\n  </head>`)
 
   if (pathname.startsWith('/clases/')) {
@@ -96,6 +96,11 @@ function applyRouteHead(html, pathname) {
     if (course) {
       const courseScript = `<script id="course-schema" type="application/ld+json">${JSON.stringify(course)}</script>`
       out = out.replace('</head>', `    ${courseScript}\n  </head>`)
+    }
+    const faq = buildFaqSchemaForLanding(pathname)
+    if (faq) {
+      const faqScript = `<script id="faq-schema" type="application/ld+json">${JSON.stringify(faq)}</script>`
+      out = out.replace('</head>', `    ${faqScript}\n  </head>`)
     }
   }
 

@@ -18,7 +18,7 @@ export const CLASS_LANDING_PATHS = Object.keys(LANDING_SLUG_TO_CLASS_ID).map(
 
 export const LANDING_SEO_TITLE = {
   'hatha-yoga': 'Hatha Yoga en Coyoacán | Clases y Reserva | Estudio Popnest Wellness',
-  pilates: 'Pilates en Coyoacán | Clases y Reserva | Estudio Popnest Wellness',
+  pilates: 'Pilates Mat en Coyoacán | Grupos Reducidos | Estudio Popnest Wellness',
   'sound-healing': 'Sound Healing en Coyoacán | Sanación Sonora | Estudio Popnest',
   'power-yoga-1': 'Power Yoga en Coyoacán | Clases Dinámicas | Estudio Popnest Wellness',
   'tai-chi': 'Tai Chi en Coyoacán | Clases y Reserva | Estudio Popnest Wellness',
@@ -40,7 +40,7 @@ export const LANDING_SEO_DESCRIPTION = {
   'hatha-yoga':
     'Práctica tradicional de Hatha Yoga en Coyoacán para equilibrar cuerpo y mente con posturas, respiración y atención consciente.',
   pilates:
-    'Clase de Pilates en Coyoacán enfocada en core, alineación y control del movimiento. Ideal para fortalecer el centro del cuerpo y mejorar postura.',
+    'Pilates mat en Coyoacán (Del Carmen): clases en colchoneta en grupos reducidos, enfocadas en core, alineación y postura. Aptas para principiantes. Reserva en línea.',
   'sound-healing':
     'Experiencia de sanación sonora en Coyoacán con cuencos tibetanos, gongs y vibraciones terapéuticas para relajación profunda y equilibrio energético.',
   'power-yoga-1':
@@ -100,12 +100,24 @@ export const LANDING_FAQ_BY_CLASS_ID = {
   ],
   pilates: [
     {
-      q: '¿Pilates en Coyoacán es apto si tengo poca condición física?',
-      a: 'Sí. El trabajo es progresivo, con foco en alineación y control. Puedes adaptar la intensidad desde el primer día.'
+      q: '¿Qué tipo de Pilates dan en Estudio Popnest: mat o reformer?',
+      a: 'Pilates mat: se practica en colchoneta, sin máquinas reformer. Trabajamos los principios del método (respiración, control, precisión) en grupos reducidos, con correcciones personalizadas de la coach Blanca Bear.'
+    },
+    {
+      q: '¿Pilates mat sirve si soy principiante o tengo poca condición física?',
+      a: 'Sí. El trabajo es progresivo, con foco en alineación y control, y cada ejercicio tiene opciones para distintos niveles. Puedes adaptar la intensidad desde el primer día.'
+    },
+    {
+      q: '¿Cuántas personas hay por clase?',
+      a: 'Son grupos reducidos, para que la coach pueda observar y corregir la técnica de cada persona durante la sesión.'
+    },
+    {
+      q: '¿Qué días hay Pilates en Coyoacán?',
+      a: 'Lunes 8:30, martes 9:30 y 19:30, miércoles 8:30 y jueves 9:30. Cada sesión dura 60 minutos en Londres 105, Del Carmen, Coyoacán. Consulta fechas disponibles en el horario semanal.'
     },
     {
       q: '¿Qué debo llevar?',
-      a: 'Ropa cómoda. En el estudio hay mat y equipamiento básico; si tienes dudas, escríbenos antes de tu primera clase.'
+      a: 'Ropa cómoda y tu propio mat de yoga. Si tienes dudas antes de tu primera clase, escríbenos.'
     }
   ],
   'sound-healing': [
@@ -166,6 +178,23 @@ export function getLandingNavItems() {
     path: `/clases/${slug}`,
     name: LANDING_CLASS_NAME[classId]
   }))
+}
+
+/** Schema.org FAQPage para landings (build + prerender). */
+export function buildFaqSchemaForLanding(pathname) {
+  const slug = pathname.replace(/^\/clases\//, '').replace(/\/$/, '')
+  const classId = getClassIdFromLandingSlug(slug)
+  const faqs = classId ? LANDING_FAQ_BY_CLASS_ID[classId] : null
+  if (!faqs?.length) return null
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a }
+    }))
+  }
 }
 
 /** Schema.org Course para landings (build + prerender). */

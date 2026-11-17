@@ -4,22 +4,22 @@ import {
   getSeoForPath,
   getBreadcrumbItems,
   getCanonicalUrl,
-  shouldNoindex,
+  getRobotsContent,
   SITE_URL
 } from '../utils/seo'
 
 const BREADCRUMB_SCRIPT_ID = 'breadcrumb-schema'
 const ROBOTS_META_NAME = 'robots'
 
-function setRobotsMeta(noindex) {
+function setRobotsMeta(robots) {
   let meta = document.querySelector(`meta[name="${ROBOTS_META_NAME}"]`)
-  if (noindex) {
+  if (robots) {
     if (!meta) {
       meta = document.createElement('meta')
       meta.name = ROBOTS_META_NAME
       document.head.appendChild(meta)
     }
-    meta.setAttribute('content', 'noindex, nofollow')
+    meta.setAttribute('content', robots)
   } else if (meta) {
     meta.remove()
   }
@@ -31,7 +31,7 @@ function setRobotsMeta(noindex) {
 function PageSEO() {
   const { pathname } = useLocation()
   const { title, description } = getSeoForPath(pathname)
-  const noindex = shouldNoindex(pathname)
+  const robots = getRobotsContent(pathname)
 
   useEffect(() => {
     document.title = title
@@ -39,7 +39,7 @@ function PageSEO() {
     let meta = document.querySelector('meta[name="description"]')
     if (meta) meta.setAttribute('content', description)
 
-    setRobotsMeta(noindex)
+    setRobotsMeta(robots)
 
     const href = getCanonicalUrl(pathname)
     let canonical = document.querySelector('link[rel="canonical"]')
@@ -71,7 +71,7 @@ function PageSEO() {
     script.type = 'application/ld+json'
     script.textContent = JSON.stringify(breadcrumbJson)
     document.head.appendChild(script)
-  }, [pathname, title, description, noindex])
+  }, [pathname, title, description, robots])
 
   return null
 }

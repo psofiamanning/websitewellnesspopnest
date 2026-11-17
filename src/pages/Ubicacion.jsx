@@ -61,8 +61,12 @@ function Ubicacion() {
           >
             <strong style={{ color: '#1F2937' }}>Estudio de yoga y bienestar.</strong>{' '}
             Estudio Popnest Wellness es el salón de clases en Londres 105 (al fondo del inmueble).
-            En el mismo edificio pueden aparecer otras actividades — cafetería, coworking, galería — con
-            perfiles distintos en Google Maps y redes sociales. Para reservar yoga, pilates o sound healing,
+            En el mismo edificio está{' '}
+            <a href="https://www.estudiopopnest.com/" target="_blank" rel="noopener" className="underline" style={{ color: '#B73D37' }}>
+              Estudio Popnest Coworking
+            </a>{' '}
+            (coworking, salas de juntas y cafetería), un negocio distinto con su propio perfil en Google Maps, además de una galería.
+            Para reservar yoga, pilates o sound healing,
             {fituneLive ? (
               <>
                 {' '}usa solo nuestro{' '}

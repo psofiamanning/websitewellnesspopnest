@@ -33,8 +33,15 @@ const PUBLIC_STATIC_ROUTES = [
 /** Rutas públicas que se pre-renderizan en build (HTML estático para crawlers). */
 export const PRERENDER_ROUTES = [...PUBLIC_STATIC_ROUTES, ...CLASS_LANDING_PATHS]
 
-/** Mismas rutas que el sitemap (sin login, reservas ni áreas privadas). */
-export const SITEMAP_ROUTES = PRERENDER_ROUTES
+/**
+ * Páginas que existen para visitantes pero no deben competir en Google con otro sitio nuestro:
+ * /coworking es un resumen; el coworking es otro negocio con su propio sitio y perfil de Google
+ * (estudiopopnest.com). `noindex, follow`: Google no la muestra pero sí sigue sus enlaces.
+ */
+const NOINDEX_FOLLOW_ROUTES = ['/coworking']
+
+/** Rutas del sitemap (públicas e indexables; sin login, reservas ni áreas privadas). */
+export const SITEMAP_ROUTES = PRERENDER_ROUTES.filter((r) => !NOINDEX_FOLLOW_ROUTES.includes(r))
 
 const SITEMAP_META_BY_ROUTE = {
   '/': { changefreq: 'weekly', priority: 1.0 },
@@ -102,8 +109,16 @@ const NOINDEX_PREFIXES = [
 ]
 
 /** Rutas de cuenta, reserva, admin y previews: no indexar en buscadores. */
+/** Valor del meta robots para la ruta, o null si es indexable. */
+export function getRobotsContent(pathname) {
+  if (!pathname) return null
+  if (NOINDEX_FOLLOW_ROUTES.includes(pathname.replace(/\/$/, ''))) return 'noindex, follow'
+  return shouldNoindex(pathname) ? 'noindex, nofollow' : null
+}
+
 export function shouldNoindex(pathname) {
   if (!pathname) return false
+  if (NOINDEX_FOLLOW_ROUTES.includes(pathname.replace(/\/$/, ''))) return true
   if (SITEMAP_ROUTES.includes(pathname)) return false
   if (pathname === '/teachers' || pathname === '/coaches') return true
   if (!isKnownRoute(pathname)) return true

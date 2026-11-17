@@ -99,7 +99,8 @@ const SERVICE_SCHEMA = {
     'Oficinas privadas por día, medio día o largo plazo, coworking flexible, pase por día y salas de juntas en Coyoacán, CDMX.',
   url: `${SITE_URL}/coworking`,
   areaServed: { '@type': 'City', name: 'Ciudad de México' },
-  provider: { '@type': 'LocalBusiness', name: 'Estudio Popnest', url: SITE_URL, address: STUDIO_PLACE.address, telephone: '+525554379644', image: `${SITE_URL}/og-image.jpg`, priceRange: COWORKING_PRICE_RANGE },
+  // El coworking es otro negocio (mismo edificio) con su propio sitio y perfil de Google.
+  provider: { '@type': 'LocalBusiness', name: 'Estudio Popnest Coworking', url: COWORKING_URL, address: STUDIO_PLACE.address, telephone: '+525554379644', image: `${SITE_URL}/og-image.jpg`, priceRange: COWORKING_PRICE_RANGE },
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
     name: 'Oficinas y planes de coworking',

@@ -12,7 +12,7 @@ import {
   getCanonicalUrl,
   getBreadcrumbItems,
   getSitemapMeta,
-  shouldNoindex,
+  getRobotsContent,
   SITE_URL,
   APP_SHELL_ROUTES
 } from '../src/utils/seo.js'
@@ -104,14 +104,15 @@ function applyRouteHead(html, pathname) {
     }
   }
 
-  if (shouldNoindex(pathname)) {
+  const robots = getRobotsContent(pathname)
+  if (robots) {
     out = replaceTag(
       out,
       /<meta name="robots" content="[^"]*"\s*\/?>/,
-      '<meta name="robots" content="noindex, nofollow" />'
+      `<meta name="robots" content="${robots}" />`
     )
     if (!out.includes('name="robots"')) {
-      out = out.replace('</head>', '    <meta name="robots" content="noindex, nofollow" />\n  </head>')
+      out = out.replace('</head>', `    <meta name="robots" content="${robots}" />\n  </head>`)
     }
   } else {
     out = out.replace(/\s*<meta name="robots" content="[^"]*"\s*\/?>\n?/i, '\n')

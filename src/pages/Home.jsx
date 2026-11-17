@@ -98,10 +98,10 @@ const SPACE_SLIDES = [
 const HOME_FAQ = [
   {
     q: '¿Dónde está el estudio?',
-    a: 'En Londres 105, colonia Del Carmen, Coyoacán, CDMX. El estudio comparte entrada con galería, cafetería y coworking; el salón de clases está al fondo del inmueble.',
+    a: 'En Londres 105, colonia Del Carmen, Coyoacán, CDMX, a unos pasos del Museo Frida Kahlo. El estudio comparte entrada con galería, cafetería y coworking; el salón de clases está al fondo del inmueble.',
     node: (
       <>
-        Estamos en <strong>Coyoacán, CDMX</strong> — Colonia Del Carmen, en Londres 105. Es un espacio que comparte
+        Estamos en <strong>Coyoacán, CDMX</strong> — Colonia Del Carmen, en Londres 105, a unos pasos del Museo Frida Kahlo. Es un espacio que comparte
         entrada con galería, cafetería y coworking. <Link to="/ubicacion">Ver cómo llegar</Link>.
       </>
     ),

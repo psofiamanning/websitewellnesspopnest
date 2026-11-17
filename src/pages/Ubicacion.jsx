@@ -14,7 +14,7 @@ const UBICACION_FAQ = [
   },
   {
     q: '¿En qué zona de Coyoacán están?',
-    a: 'En la colonia Del Carmen (C.P. 04100), cerca del centro de Coyoacán, entre cafés, galerías y calles peatonales.'
+    a: 'En la colonia Del Carmen (C.P. 04100), a unos pasos del Museo Frida Kahlo (Casa Azul) y cerca del centro de Coyoacán, entre cafés, galerías y calles peatonales.'
   }
 ]
 
@@ -103,7 +103,7 @@ function Ubicacion() {
                 Nuestro espacio en Coyoacán
               </h2>
               <p>
-                Estudio Popnest Wellness está en <strong>Coyoacán</strong>, una de las alcaldías con más vida cultural y tranquila de la Ciudad de México. La colonia <strong>Del Carmen</strong> nos sitúa cerca de centros de arte, cafés y espacios peatonales, ideal para combinar tu práctica de yoga o meditación con un rato en la zona.
+                Estudio Popnest Wellness está en <strong>Coyoacán</strong>, una de las alcaldías con más vida cultural y tranquila de la Ciudad de México. La colonia <strong>Del Carmen</strong> nos sitúa a unos pasos del <strong>Museo Frida Kahlo (Casa Azul)</strong>, cerca de centros de arte, cafés y espacios peatonales, ideal para combinar tu práctica de yoga o meditación con un rato en la zona.
               </p>
               <p className="mt-4">
                 El estudio forma parte de un lugar que integra galería de arte, cafetería y zona de coworking. Al fondo del espacio encontrarás nuestro salón de yoga y meditación: un lugar reservado para las clases de hatha yoga, pilates, power yoga, tai chi, sound healing, belly dance y stretching en Coyoacán.

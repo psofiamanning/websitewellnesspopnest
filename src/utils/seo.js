@@ -128,6 +128,8 @@ export function shouldNoindex(pathname) {
 }
 
 export function getCanonicalUrl(pathname) {
+  // /renta-salon aquí es el flujo de reserva; la página informativa vive en estudiopopnest.com.
+  if ((pathname || '').replace(/\/$/, '') === '/renta-salon') return 'https://estudiopopnest.com/renta-salon'
   if (!pathname || pathname === '/') return `${SITE_URL}/`
   return `${SITE_URL}${pathname}`.replace(/\/$/, '') || `${SITE_URL}/`
 }

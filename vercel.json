@@ -4,32 +4,122 @@
   "redirects": [
     {
       "source": "/clases/meditacion-sound-healing-coyoacan",
-      "destination": "/clases/sound-healing-coyoacan",
+      "destination": "https://estudiopopnest.com/clases/sound-healing-coyoacan",
       "permanent": true
     },
     {
       "source": "/clases/meditacion-coyoacan",
-      "destination": "/classes",
+      "destination": "https://estudiopopnest.com/classes",
       "permanent": true
     },
     {
       "source": "/coaches",
-      "destination": "/classes",
+      "destination": "https://estudiopopnest.com/classes",
       "permanent": true
     },
     {
       "source": "/teachers",
-      "destination": "/classes",
+      "destination": "https://estudiopopnest.com/classes",
       "permanent": true
     },
     {
       "source": "/profesores",
-      "destination": "/classes",
+      "destination": "https://estudiopopnest.com/classes",
       "permanent": true
     },
     {
       "source": "/profesores/login",
       "destination": "/coaches/login",
+      "permanent": true
+    },
+    {
+      "source": "/",
+      "destination": "https://estudiopopnest.com/",
+      "permanent": true
+    },
+    {
+      "source": "/classes",
+      "destination": "https://estudiopopnest.com/classes",
+      "permanent": true
+    },
+    {
+      "source": "/horario",
+      "destination": "https://estudiopopnest.com/horario",
+      "permanent": true
+    },
+    {
+      "source": "/clases/pilates-coyoacan",
+      "destination": "https://estudiopopnest.com/clases/pilates-coyoacan",
+      "permanent": true
+    },
+    {
+      "source": "/clases/hatha-yoga-coyoacan",
+      "destination": "https://estudiopopnest.com/clases/hatha-yoga-coyoacan",
+      "permanent": true
+    },
+    {
+      "source": "/clases/power-yoga-coyoacan",
+      "destination": "https://estudiopopnest.com/clases/power-yoga-coyoacan",
+      "permanent": true
+    },
+    {
+      "source": "/clases/tai-chi-coyoacan",
+      "destination": "https://estudiopopnest.com/clases/tai-chi-coyoacan",
+      "permanent": true
+    },
+    {
+      "source": "/clases/sound-healing-coyoacan",
+      "destination": "https://estudiopopnest.com/clases/sound-healing-coyoacan",
+      "permanent": true
+    },
+    {
+      "source": "/clases/belly-dance-coyoacan",
+      "destination": "https://estudiopopnest.com/clases/belly-dance-coyoacan",
+      "permanent": true
+    },
+    {
+      "source": "/clases/stretching-coyoacan",
+      "destination": "https://estudiopopnest.com/clases/stretching-coyoacan",
+      "permanent": true
+    },
+    {
+      "source": "/clases/yoga-coyoacan",
+      "destination": "https://estudiopopnest.com/classes",
+      "permanent": true
+    },
+    {
+      "source": "/packages",
+      "destination": "https://estudiopopnest.com/classes",
+      "permanent": true
+    },
+    {
+      "source": "/ubicacion",
+      "destination": "https://estudiopopnest.com/contacto",
+      "permanent": true
+    },
+    {
+      "source": "/coworking",
+      "destination": "https://estudiopopnest.com/planes",
+      "permanent": true
+    },
+    {
+      "source": "/talleres",
+      "destination": "https://estudiopopnest.com/talleres",
+      "permanent": true
+    },
+    {
+      "source": "/run-club",
+      "destination": "https://estudiopopnest.com/run-club",
+      "permanent": true
+    },
+    {
+      "source": "/privacidad",
+      "destination": "https://estudiopopnest.com/privacidad",
+      "permanent": true
+    },
+    {
+      "source": "/terminos",
+      "destination": "https://estudiopopnest.com/terminos",
       "permanent": true
     }
   ],
